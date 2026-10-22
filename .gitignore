@@ -1,0 +1,7 @@
+﻿# Build artifacts and local caches
+.tmp/
+node_modules/
+.pnpm-store/
+*.log
+__pycache__/
+.pylibs/
