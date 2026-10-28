@@ -1,0 +1,56 @@
+# Findy 运行配置示例。复制为 config/findy.local.yaml 并按需修改（*.local.yaml 不入库）。
+app:
+  data_dir: data
+  db_path: data/findy.sqlite
+  images_dir: data/images
+  crops_dir: data/crops
+  tz: Asia/Shanghai
+  host: 127.0.0.1
+  port: 8765
+
+capture:
+  # esp32: 通过 Findy M1 固件 HTTP 接口抓拍（需设备在线）
+  # webcam: 本机摄像头（会拍到摄像头前的所有人/物，请在知情同意下使用）
+  # replay: 从本地图片目录按顺序回放（用于演示与回归测试）
+  source: replay
+  interval_seconds: 60
+  esp32:
+    base_url: "http://192.168.1.50"
+    timeout_seconds: 8
+  webcam:
+    device_index: 0
+    width: 1280
+    height: 720
+  replay:
+    dir: data/demo_frames    # 由 tools/make_demo_frames.py 生成；也可指向自己的图片目录
+    loop: false
+
+detector:
+  backend: owlv2
+  # 本地模型目录（先运行 tools/download_models.py 下载），也可改成 HuggingFace 仓库 id
+  model: models/owlv2-base
+  score_threshold: 0.12
+  nms_iou: 0.4
+  max_detections: 30
+  device: cpu
+
+embedder:
+  backend: dinov2
+  model: models/dinov2-small
+  image_size: 224
+  device: cpu
+
+matching:
+  accept_threshold: 0.82
+  uncertain_threshold: 0.70
+  weights:
+    embedding: 0.70
+    color: 0.15
+    zone: 0.10
+    recency: 0.05
+  recency_tau_hours: 24
+  prototype_alpha: 0.2
+
+files:
+  objects: config/objects.yaml
+  zones: config/zones.yaml

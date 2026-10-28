@@ -1,0 +1,146 @@
+﻿# Findy 物品词表：中文名 -> 开放词表英文提示词 + 中文别名
+# detect: 是否参与自动检测（context_only 的类别只用于区域上下文，不作为物品）
+# threshold: 该类别单独的 OWLv2 分数阈值（0-1，开放词表模型分数普遍偏低）
+#            默认值按 COCO 公开图 + 原型场景校准，实际部署应按现场数据重新校准（见 docs/research/A）
+# min_area: bbox 面积占画面比例下限，用于过滤极小的误检框
+classes:
+  - zh: 钥匙
+    en: keys
+    aliases: [钥匙, 门钥匙, 车钥匙, 家门钥匙, 一串钥匙, key, keychain]
+    threshold: 0.20
+    min_area: 0.0004
+  - zh: 钱包
+    en: wallet
+    aliases: [钱包, 皮夹, 钱夹, 卡包, wallet]
+    threshold: 0.25
+    min_area: 0.001
+  - zh: 眼镜
+    en: glasses
+    aliases: [眼镜, 近视镜, 墨镜, 眼镜框, sunglasses]
+    threshold: 0.25
+    min_area: 0.0008
+  - zh: 耳机
+    en: headphones
+    aliases: [耳机, 头戴耳机, 蓝牙耳机, 耳麦, earphones, earbuds]
+    threshold: 0.35
+    min_area: 0.001
+  - zh: 充电器
+    en: phone charger
+    aliases: [充电器, 充电头, 电源适配器, 插头, charger]
+    threshold: 0.40
+    min_area: 0.0008
+  - zh: U盘
+    en: USB flash drive
+    aliases: [u盘, U盘, 优盘, 闪存盘, usb drive, flash drive]
+    threshold: 0.40
+    min_area: 0.0003
+  - zh: 笔
+    en: pen
+    aliases: [笔, 钢笔, 圆珠笔, 签字笔, pencil, pen]
+    threshold: 0.25
+    min_area: 0.0002
+  - zh: 剪刀
+    en: scissors
+    aliases: [剪刀, 剪子, scissors]
+    threshold: 0.25
+    min_area: 0.0008
+  - zh: 杯子
+    en: cup
+    aliases: [杯子, 马克杯, 水杯, 茶杯, 咖啡杯, mug, cup]
+    threshold: 0.25
+    min_area: 0.0015
+  - zh: 瓶子
+    en: water bottle
+    aliases: [瓶子, 水瓶, 水壶, 保温杯, bottle]
+    threshold: 0.25
+    min_area: 0.0015
+  - zh: 手机
+    en: cell phone
+    aliases: [手机, 电话, 智能手机, 移动电话, phone, smartphone]
+    threshold: 0.25
+    min_area: 0.0015
+  - zh: 笔记本电脑
+    en: laptop
+    aliases: [笔记本电脑, 电脑, 笔记本, laptop, notebook computer]
+    threshold: 0.25
+    min_area: 0.01
+  - zh: 鼠标
+    en: computer mouse
+    aliases: [鼠标, 无线鼠标, mouse]
+    threshold: 0.30
+    min_area: 0.0015
+  - zh: 键盘
+    en: keyboard
+    aliases: [键盘, 机械键盘, keyboard]
+    threshold: 0.35
+    min_area: 0.005
+  - zh: 书
+    en: book
+    aliases: [书, 书本, 书籍, 笔记本子, book]
+    threshold: 0.25
+    min_area: 0.002
+  - zh: 遥控器
+    en: remote control
+    aliases: [遥控器, 遥控, remote]
+    threshold: 0.45
+    min_area: 0.0008
+  - zh: 手表
+    en: wristwatch
+    aliases: [手表, 腕表, 智能手表, watch]
+    threshold: 0.25
+    min_area: 0.0006
+  - zh: 雨伞
+    en: umbrella
+    aliases: [雨伞, 伞, umbrella]
+    threshold: 0.25
+    min_area: 0.003
+  - zh: 背包
+    en: backpack
+    aliases: [背包, 书包, 双肩包, backpack, bag]
+    threshold: 0.25
+    min_area: 0.004
+  - zh: 苹果
+    en: apple
+    aliases: [苹果, apple]
+    threshold: 0.50
+    min_area: 0.001
+  - zh: 香蕉
+    en: banana
+    aliases: [香蕉, banana]
+    threshold: 0.45
+    min_area: 0.001
+  - zh: 勺子
+    en: spoon
+    aliases: [勺子, 调羹, 汤匙, spoon]
+    threshold: 0.25
+    min_area: 0.0004
+  - zh: 书桌
+    en: desk
+    aliases: [书桌, 桌子, 桌面, desk, table]
+    threshold: 0.20
+    min_area: 0.05      # 仅用于区域上下文，不作为物品
+    context_only: true
+
+# 颜色词 -> 标准色名
+colors:
+  红色: [红, 红色, 大红, 酒红]
+  橙色: [橙, 橙色]
+  黄色: [黄, 黄色]
+  绿色: [绿, 绿色, 草绿]
+  蓝色: [蓝, 蓝色, 深蓝, 天蓝]
+  紫色: [紫, 紫色]
+  粉色: [粉, 粉色, 粉色系]
+  白色: [白, 白色, 米白]
+  黑色: [黑, 黑色]
+  灰色: [灰, 灰色, 银灰]
+  棕色: [棕, 棕色, 咖啡色, 褐色]
+  银色: [银, 银色]
+  金色: [金, 金色]
+
+# 交互式演示常用查询（UI 占位提示，不影响解析逻辑）
+example_queries:
+  - 我的钥匙最后出现在哪里？
+  - 红色杯子在哪？
+  - 手机是什么时候最后一次看到的？
+  - 桌上都有哪些东西？
+  - 鼠标移动过吗？

@@ -1,7 +1,25 @@
-﻿# Build artifacts and local caches
+# Build artifacts and local caches
 .tmp/
 node_modules/
 .pnpm-store/
 *.log
 __pycache__/
 .pylibs/
+
+# Python virtualenv / dependencies
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Findy runtime data (images, database, models) - never commit
+/data/
+/models/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+
+# Local secrets / config overrides
+config/findy.local.yaml
+.env

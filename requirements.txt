@@ -1,0 +1,18 @@
+# Findy MVP 运行依赖（Python 3.11 或 3.12/3.14 均可，需能安装 torch）
+# 说明：本项目刻意不依赖 Ultralytics(YOLOv8/YOLO11, AGPL-3.0)，检测使用 Apache-2.0 系 OWLv2。
+torch>=2.4,<2.12
+transformers>=4.46
+safetensors>=0.4
+pillow>=10.4
+numpy>=1.26,<3
+fastapi>=0.110,<0.120
+uvicorn>=0.27
+python-multipart>=0.0.9
+pydantic>=2.5
+pyyaml>=6.0
+jinja2>=3.1
+tzdata>=2024.1
+httpx>=0.27
+pytest>=7.4
+# 可选：从 HuggingFace 下载模型
+huggingface_hub>=0.23

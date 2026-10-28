@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2337d3c0'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Segoe UI' font-weight='bold' text-anchor='middle' fill='%23042018'%3EF%3C/text%3E%3C/svg%3E" />
+  <title>Findy · 物品记忆助手</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">F</div>
+      <div>
+        <h1>Findy <span>物品记忆助手</span></h1>
+        <p class="tagline">摄像头替你记住东西放在哪里 · 全部本地运行</p>
+      </div>
+    </div>
+    <div class="status-row" id="status-row">
+      <span class="pill" id="pill-db">数据库 · 检查中</span>
+      <span class="pill" id="pill-model">检测模型 · 加载中</span>
+      <span class="pill" id="pill-source">采集源 · —</span>
+      <span class="pill" id="pill-auto">自动采集 · 停止</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card camera-card">
+      <div class="card-head">
+        <h2>最近一次观察</h2>
+        <span class="muted" id="capture-time">—</span>
+      </div>
+      <div class="viewport" id="viewport">
+        <div class="placeholder" id="viewport-placeholder">
+          <p>还没有抓拍记录</p>
+          <p class="muted small">点击“立即抓拍”，或运行演示数据脚本</p>
+        </div>
+        <img id="capture-img" alt="最近一次抓拍" hidden />
+        <div class="overlay" id="overlay"></div>
+      </div>
+      <div class="controls">
+        <button class="primary" id="capture-btn">立即抓拍</button>
+        <button class="ghost" id="auto-btn">开始自动采集</button>
+        <span class="muted small" id="capture-status"></span>
+      </div>
+      <div class="chips" id="detections-list"></div>
+      <p class="muted small" id="capture-meta"></p>
+    </section>
+
+    <section class="card query-card">
+      <div class="card-head">
+        <h2>问问 Findy</h2>
+        <span class="muted" id="query-intent"></span>
+      </div>
+      <form id="query-form" class="query-form">
+        <input id="query-input" type="text" placeholder="例如：我的钥匙最后出现在哪里？" autocomplete="off" />
+        <button class="primary" type="submit">查找</button>
+      </form>
+      <div class="chips" id="example-chips"></div>
+      <div id="answer" class="answer help">你好，我是 Findy。我会记住摄像头里出现过的物品和它们最后出现的位置。
+你可以直接问：
+· 笔记本电脑最后出现在哪里？
+· 鼠标移动过吗？
+· 桌上都有哪些东西？
+所有回答都会附带观测时间、区域、置信度和证据图片；时间未同步时会明确标注。</div>
+      <div id="results" class="results"></div>
+    </section>
+  </main>
+
+  <section class="layout lower">
+    <div class="card">
+      <div class="card-head"><h2>我的物品</h2><span class="muted" id="objects-count"></span></div>
+      <div class="object-grid" id="objects"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>观察时间线</h2><span class="muted" id="timeline-count"></span></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Findy MVP · 检测：OWLv2 开放词表（Apache-2.0 系）· 实例关联：DINOv2 + 区域/时间先验 · 存储：SQLite + 本地文件</p>
+    <p class="muted small">所有图像与查询都在本机处理；时间来自设备 SNTP，未同步时会明确标注。识别能力受词表与画面分辨率限制，结果仅供参考。</p>
+  </footer>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
