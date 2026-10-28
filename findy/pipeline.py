@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -109,10 +110,12 @@ class FindyPipeline:
 
     # ---------------- 主流程 ----------------
     def observe(self, jpeg: bytes, meta: CaptureMeta) -> ObserveResult:
+        started_at = time.perf_counter()
         image = load_image(jpeg)
         width, height = image.size
         received = utc_now_iso()
         sha = sha256_bytes(jpeg)
+        source_kind = meta.source if meta.source in {"esp32", "replay", "upload", "webcam"} else "unknown"
 
         day = (meta.captured_at_utc or received)[:10].replace("-", "/")
         stamp = (meta.captured_at_utc or received).replace(":", "").replace("-", "")
@@ -136,6 +139,7 @@ class FindyPipeline:
                 "image_bytes": len(jpeg),
                 "sha256": sha,
                 "source_ref": meta.source_ref,
+                "source_kind": source_kind,
                 "status": "ok",
             }
         )
@@ -151,22 +155,34 @@ class FindyPipeline:
                 warnings=["同一设备 seq 的抓拍已存在，未重复入库（幂等）"],
             )
 
-        # 检测
+        # 检测（真实计时，用于界面展示“处理耗时”，慢不等于失败）
+        detect_started = time.perf_counter()
         try:
             detections = sorted(
                 self.detector.detect(image),
                 key=lambda d: (d.class_zh, -d.confidence, d.bbox_px[0]),
             )
         except Exception as exc:
+            detect_ms = int((time.perf_counter() - detect_started) * 1000)
+            process_ms = int((time.perf_counter() - started_at) * 1000)
+            error_text = f"检测失败: {type(exc).__name__}: {exc}"
             log.exception("检测失败")
             self.db.set_capture_status(capture_id, "detect_failed")
+            self.db.set_capture_metrics(
+                capture_id,
+                detect_ms=detect_ms,
+                embed_ms=None,
+                process_ms=process_ms,
+                detect_error=error_text,
+            )
             return ObserveResult(
                 ok=False,
                 capture_id=capture_id,
                 duplicate=False,
                 capture=self._capture_view(self.db.get_capture(capture_id) or {}, []),
-                error=f"检测失败: {type(exc).__name__}: {exc}",
+                error=error_text,
             )
+        detect_ms = int((time.perf_counter() - detect_started) * 1000)
 
         crops = []
         crop_boxes: list[tuple] = []
@@ -175,7 +191,9 @@ class FindyPipeline:
             crops.append(crop if crop is not None else image.resize((64, 64)))
             crop_boxes.append(det.bbox_px)
 
+        embed_started = time.perf_counter()
         embeddings = self.embedder.embed(crops) if crops else np.zeros((0, 1), dtype=np.float32)
+        embed_ms = int((time.perf_counter() - embed_started) * 1000)
 
         used_track_ids: set[int] = set()
         track_cache: dict[str, list[dict]] = {}
@@ -340,7 +358,15 @@ class FindyPipeline:
                 }
             )
 
+        process_ms = int((time.perf_counter() - started_at) * 1000)
         self.db.set_capture_detections_count(capture_id, len(results))
+        self.db.set_capture_metrics(
+            capture_id,
+            detect_ms=detect_ms,
+            embed_ms=embed_ms,
+            process_ms=process_ms,
+            detect_error=None,
+        )
         capture = self.db.get_capture(capture_id) or {}
         return ObserveResult(
             ok=True,
@@ -383,6 +409,12 @@ class FindyPipeline:
             "height": capture.get("image_height"),
             "detections_count": capture.get("detections_count", len(detections)),
             "source": capture.get("source_ref"),
+            "source_kind": capture.get("source_kind") or "unknown",
+            "status": capture.get("status"),
+            "detect_ms": capture.get("detect_ms"),
+            "embed_ms": capture.get("embed_ms"),
+            "process_ms": capture.get("process_ms"),
+            "detect_error": capture.get("detect_error"),
             "image_url": f"/api/captures/{cid}/image",
             "thumbnail_url": f"/api/captures/{cid}/image?thumb=1",
         }
@@ -397,6 +429,7 @@ class FindyPipeline:
             "bbox_px": row.get("bbox_px"),
             "region": row.get("region_name"),
             "color_hex": row.get("color_hex"),
+            "source_kind": row.get("source_kind") or "unknown",
             "link_status": row.get("link_status"),
             "link_method": row.get("link_method"),
             "link_score": row.get("link_score"),

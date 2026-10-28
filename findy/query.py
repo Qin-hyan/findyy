@@ -207,6 +207,7 @@ def _result_from_track(db: Database, cfg: Config, track: dict, last: dict) -> di
         "time_utc": last.get("captured_at_utc"),
         "time_synced": synced,
         "time_ago": ago,
+        "source_kind": last.get("source_kind") or "unknown",
         "confidence": round(float(last.get("conf") or 0), 4),
         "link_score": round(float(last.get("link_score") or 0), 4),
         "link_status": last.get("link_status"),
@@ -321,6 +322,7 @@ def _answer_history(db: Database, cfg: Config, catalog: ObjectCatalog, plan: Que
                 "time_ago": humanize_delta(d.get("captured_at_utc"), cfg.app.tz) if synced else None,
                 "zone": d.get("region_name") or "未分区",
                 "confidence": round(float(d.get("conf") or 0), 4),
+                "source_kind": d.get("source_kind") or "unknown",
                 "evidence_image_url": f"/api/captures/{d.get('capture_id')}/image",
                 "evidence_crop_url": f"/api/detections/{d.get('id')}/crop",
                 "bbox_norm": [float(v) for v in str(d.get("bbox_norm") or "0,0,1,1").split(",")],
@@ -506,6 +508,7 @@ def _answer_list(db: Database, cfg: Config, catalog: ObjectCatalog, plan: QueryP
                 "class_zh": d.get("name_zh"),
                 "confidence": round(float(d.get("conf") or 0), 4),
                 "zone": d.get("region_name") or "未分区",
+                "source_kind": d.get("source_kind") or "unknown",
                 "crop_url": f"/api/detections/{d.get('id')}/crop",
                 "bbox_norm": [float(v) for v in str(d.get("bbox_norm") or "0,0,1,1").split(",")],
             }
@@ -620,7 +623,7 @@ def answer(
     payload.setdefault("notes", [])
     payload.setdefault("suggestions", [])
     try:
-        db.log_query(
+        payload["query_log_id"] = db.log_query(
             raw_text=text,
             plan=plan.to_dict(),
             parser="rule",
@@ -629,5 +632,5 @@ def answer(
             latency_ms=elapsed,
         )
     except Exception:
-        pass
+        payload["query_log_id"] = None
     return payload

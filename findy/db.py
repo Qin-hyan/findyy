@@ -46,12 +46,31 @@ class Database:
         with self.connect() as conn:
             conn.executescript(sql)
             # 轻量迁移：老库补列，避免用户必须删库重来
-            cols = {row[1] for row in conn.execute("PRAGMA table_info(tracks)").fetchall()}
-            if "last_bbox_norm" not in cols:
-                conn.execute("ALTER TABLE tracks ADD COLUMN last_bbox_norm TEXT")
-            cols = {row[1] for row in conn.execute("PRAGMA table_info(tracks)").fetchall()}
-            if "color" not in cols:
-                conn.execute("ALTER TABLE tracks ADD COLUMN color TEXT")
+            self._ensure_column(conn, "tracks", "last_bbox_norm", "TEXT")
+            self._ensure_column(conn, "tracks", "color", "TEXT")
+            self._ensure_column(conn, "captures", "source_kind", "TEXT")
+            self._ensure_column(conn, "captures", "detect_ms", "INTEGER")
+            self._ensure_column(conn, "captures", "embed_ms", "INTEGER")
+            self._ensure_column(conn, "captures", "process_ms", "INTEGER")
+            self._ensure_column(conn, "captures", "detect_error", "TEXT")
+            # 老数据的来源回填：只依据既有 time_source 语义，绝不猜测为真机。
+            # 明确已有 source_kind 的记录不覆盖。
+            conn.execute(
+                "UPDATE captures SET source_kind = CASE"
+                " WHEN time_source LIKE 'sntp%' THEN 'esp32'"
+                " WHEN time_source IN ('client', 'client_unsynced') THEN 'upload'"
+                " WHEN time_source IN ('file_mtime', 'manual') THEN 'replay'"
+                " ELSE 'unknown' END"
+                " WHERE source_kind IS NULL OR source_kind = ''"
+            )
+
+    @staticmethod
+    def _ensure_column(conn: sqlite3.Connection, table: str, column: str, ddl: str) -> None:
+        if table not in {"tracks", "captures"}:
+            raise ValueError(f"不允许迁移未知表: {table}")
+        cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        if column not in cols:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
 
     def ping(self) -> bool:
         try:
@@ -159,7 +178,8 @@ class Database:
         cols = [
             "camera_id", "device_seq", "captured_at_utc", "captured_at_local", "epoch_s",
             "time_synced", "time_source", "uptime_ms", "received_at_utc", "file_path",
-            "image_width", "image_height", "image_bytes", "sha256", "source_ref", "status",
+            "image_width", "image_height", "image_bytes", "sha256", "source_ref", "source_kind",
+            "status", "detect_ms", "embed_ms", "process_ms", "detect_error",
         ]
         values = [record.get(c) for c in cols]
         with self.connect() as conn:
@@ -183,6 +203,22 @@ class Database:
     def set_capture_detections_count(self, capture_id: int, count: int) -> None:
         with self.connect() as conn:
             conn.execute("UPDATE captures SET detections_count=? WHERE id=?", (count, capture_id))
+
+    def set_capture_metrics(
+        self,
+        capture_id: int,
+        *,
+        detect_ms: int | None = None,
+        embed_ms: int | None = None,
+        process_ms: int | None = None,
+        detect_error: str | None = None,
+    ) -> None:
+        """记录检测/embedding 耗时与检测失败原因（真实测量值，不伪造）。"""
+        with self.connect() as conn:
+            conn.execute(
+                "UPDATE captures SET detect_ms=?, embed_ms=?, process_ms=?, detect_error=? WHERE id=?",
+                (detect_ms, embed_ms, process_ms, detect_error, capture_id),
+            )
 
     def get_capture(self, capture_id: int) -> dict | None:
         with self.connect() as conn:
@@ -247,8 +283,10 @@ class Database:
     def detections_for_capture(self, capture_id: int) -> list[dict]:
         with self.connect() as conn:
             rows = conn.execute(
-                "SELECT d.*, oc.name_zh, oc.name_en FROM detections d"
+                "SELECT d.*, oc.name_zh, oc.name_en, c.source_kind AS source_kind"
+                " FROM detections d"
                 " JOIN object_classes oc ON oc.id=d.class_id"
+                " JOIN captures c ON c.id=d.capture_id"
                 " WHERE d.capture_id=? ORDER BY d.conf DESC",
                 (capture_id,),
             ).fetchall()
@@ -257,7 +295,7 @@ class Database:
     def detections_for_track(self, track_id: int, limit: int = 20) -> list[dict]:
         with self.connect() as conn:
             rows = conn.execute(
-                "SELECT d.*, c.file_path, c.captured_at_local, c.time_synced"
+                "SELECT d.*, c.file_path, c.captured_at_local, c.time_synced, c.source_kind AS source_kind"
                 " FROM detections d JOIN captures c ON c.id=d.capture_id"
                 " WHERE d.track_id=? ORDER BY COALESCE(c.captured_at_utc, c.received_at_utc) DESC, d.id DESC"
                 " LIMIT ?",
@@ -408,13 +446,16 @@ class Database:
             return target_track_id
 
     # ---------------- 查询日志 / 反馈 / 统计 ----------------
-    def log_query(self, raw_text: str, plan: dict, parser: str, result_count: int, answer: str, latency_ms: int) -> None:
+    def log_query(
+        self, raw_text: str, plan: dict, parser: str, result_count: int, answer: str, latency_ms: int
+    ) -> int:
         with self.connect() as conn:
-            conn.execute(
+            cur = conn.execute(
                 "INSERT INTO query_log(raw_text, plan_json, parser, result_count, answer, latency_ms, created_at_utc)"
                 " VALUES (?,?,?,?,?,?,?)",
                 (raw_text, json.dumps(plan, ensure_ascii=False), parser, result_count, answer, latency_ms, utc_now_iso()),
             )
+            return int(cur.lastrowid)
 
     def add_feedback(self, detection_id: int | None, track_id: int | None, action: str, payload: dict | None = None) -> int:
         with self.connect() as conn:
@@ -432,6 +473,92 @@ class Database:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    # ---------------- 端到端验收运行 ----------------
+    def create_acceptance_run(self, mode: str, source_kind: str, source_ref: str | None) -> int:
+        with self.connect() as conn:
+            cur = conn.execute(
+                "INSERT INTO acceptance_runs(mode, source_kind, source_ref, started_at_utc, status)"
+                " VALUES (?,?,?,?, 'running')",
+                (mode, source_kind, source_ref, utc_now_iso()),
+            )
+            return int(cur.lastrowid)
+
+    def get_acceptance_run(self, run_id: int) -> dict | None:
+        with self.connect() as conn:
+            row = conn.execute("SELECT * FROM acceptance_runs WHERE id=?", (run_id,)).fetchone()
+        return dict(row) if row else None
+
+    def latest_acceptance_run(self) -> dict | None:
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM acceptance_runs ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+        return dict(row) if row else None
+
+    def active_acceptance_run(self) -> dict | None:
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM acceptance_runs WHERE status='running' ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+        return dict(row) if row else None
+
+    def finish_acceptance_run(self, run_id: int, summary: dict) -> None:
+        with self.connect() as conn:
+            conn.execute(
+                "UPDATE acceptance_runs SET status='finished', finished_at_utc=?, summary_json=? WHERE id=?",
+                (utc_now_iso(), json.dumps(summary, ensure_ascii=False), run_id),
+            )
+
+    def add_acceptance_event(
+        self,
+        run_id: int,
+        kind: str,
+        ok: bool,
+        *,
+        source_kind: str | None = None,
+        detail: dict | None = None,
+        capture_id: int | None = None,
+        query_log_id: int | None = None,
+        latency_ms: int | None = None,
+    ) -> int:
+        with self.connect() as conn:
+            cur = conn.execute(
+                "INSERT INTO acceptance_events(run_id, kind, ok, source_kind, detail_json,"
+                " capture_id, query_log_id, latency_ms, created_at_utc)"
+                " VALUES (?,?,?,?,?,?,?,?,?)",
+                (
+                    run_id,
+                    kind,
+                    int(ok),
+                    source_kind,
+                    json.dumps(detail or {}, ensure_ascii=False),
+                    capture_id,
+                    query_log_id,
+                    latency_ms,
+                    utc_now_iso(),
+                ),
+            )
+            return int(cur.lastrowid)
+
+    def acceptance_events(self, run_id: int) -> list[dict]:
+        with self.connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM acceptance_events WHERE run_id=? ORDER BY id ASC", (run_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def captures_for_run(self, run_id: int) -> list[dict]:
+        """本轮验收实际成功关联的抓拍（按事件顺序去重）。"""
+        with self.connect() as conn:
+            rows = conn.execute(
+                "SELECT c.* FROM captures c WHERE c.id IN ("
+                " SELECT capture_id FROM acceptance_events"
+                " WHERE run_id=? AND kind='capture' AND capture_id IS NOT NULL"
+                ") ORDER BY c.id ASC",
+                (run_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def stats(self) -> dict:
         with self.connect() as conn:
             captures = conn.execute("SELECT COUNT(*) AS n FROM captures").fetchone()["n"]
@@ -446,6 +573,10 @@ class Database:
             unsynced = conn.execute(
                 "SELECT COUNT(*) AS n FROM captures WHERE time_synced=0"
             ).fetchone()["n"]
+            source_rows = conn.execute(
+                "SELECT COALESCE(NULLIF(source_kind, ''), 'unknown') AS k, COUNT(*) AS n"
+                " FROM captures GROUP BY k"
+            ).fetchall()
         return {
             "captures": int(captures),
             "detections": int(detections),
@@ -453,6 +584,7 @@ class Database:
             "ambiguous_links": int(ambiguous),
             "unsynced_captures": int(unsynced),
             "last_capture_at": last["t"] if last else None,
+            "captures_by_source": {str(r["k"]): int(r["n"]) for r in source_rows},
         }
 
     def class_counts(self) -> list[dict]:

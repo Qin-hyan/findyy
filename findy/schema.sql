@@ -57,8 +57,13 @@ CREATE TABLE IF NOT EXISTS captures (
   image_bytes     INTEGER NOT NULL,
   sha256          TEXT,
   source_ref      TEXT,
+  source_kind     TEXT,                          -- esp32 | replay | upload | webcam | unknown（数据来源凭据）
   detections_count INTEGER NOT NULL DEFAULT 0,
   status          TEXT NOT NULL DEFAULT 'ok',
+  detect_ms       INTEGER,                       -- OWLv2 检测耗时（毫秒）
+  embed_ms        INTEGER,                       -- DINOv2 embedding 耗时（毫秒）
+  process_ms      INTEGER,                       -- 本帧检测+关联+入库总耗时（毫秒）
+  detect_error    TEXT,                          -- 检测失败原因（成功时为 NULL）
   UNIQUE (camera_id, device_seq)
 );
 CREATE INDEX IF NOT EXISTS idx_captures_time ON captures(captured_at_utc DESC, id DESC);
@@ -144,4 +149,31 @@ CREATE TABLE IF NOT EXISTS meta (
   value           TEXT
 );
 
-PRAGMA user_version = 1;
+-- 端到端验收运行：只记录本机真实操作与证据，供 /workbench 计算 PASS/FAIL/NOT VERIFIED。
+CREATE TABLE IF NOT EXISTS acceptance_runs (
+  id              INTEGER PRIMARY KEY,
+  mode            TEXT NOT NULL,                 -- real_device | replay_demo
+  source_kind     TEXT NOT NULL,                 -- 启动时的采集源
+  source_ref      TEXT,
+  started_at_utc  TEXT NOT NULL,
+  finished_at_utc TEXT,
+  status          TEXT NOT NULL DEFAULT 'running', -- running | finished
+  summary_json    TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_acceptance_runs_status ON acceptance_runs(status, id DESC);
+
+CREATE TABLE IF NOT EXISTS acceptance_events (
+  id              INTEGER PRIMARY KEY,
+  run_id          INTEGER NOT NULL REFERENCES acceptance_runs(id) ON DELETE CASCADE,
+  kind            TEXT NOT NULL,                 -- probe | capture | query | connect | service_start | service_stop
+  ok              INTEGER NOT NULL,
+  source_kind     TEXT,
+  detail_json     TEXT,
+  capture_id      INTEGER REFERENCES captures(id),
+  query_log_id    INTEGER REFERENCES query_log(id),
+  latency_ms      INTEGER,
+  created_at_utc  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_acceptance_events_run ON acceptance_events(run_id, id);
+
+PRAGMA user_version = 2;

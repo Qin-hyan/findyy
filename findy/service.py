@@ -21,9 +21,11 @@ class ServiceState:
     cycles: int = 0
     failures: int = 0
     last_error: str | None = None
+    last_error_at: float | None = None
     last_result: dict | None = None
     last_cycle_at: float | None = None
     consecutive_failures: int = 0
+    capture_in_progress: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -32,8 +34,10 @@ class ServiceState:
             "cycles": self.cycles,
             "failures": self.failures,
             "last_error": self.last_error,
+            "last_error_at": self.last_error_at,
             "last_cycle_at": self.last_cycle_at,
             "consecutive_failures": self.consecutive_failures,
+            "capture_in_progress": self.capture_in_progress,
             "last_result": self.last_result,
         }
 
@@ -46,8 +50,11 @@ class AutoCaptureService:
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._lock = threading.Lock()
+        self._capture_lock = threading.Lock()
         self._source = None
         self._source_error: str | None = None
+        # 自动采集循环的结果回调（用于把真实事件写入当前验收运行；可为 None）
+        self.on_result = None
 
     # ---------------- 采集源 ----------------
     def source(self):
@@ -64,8 +71,24 @@ class AutoCaptureService:
             raise
         return self._source
 
+    def reset_source(self) -> None:
+        """丢弃缓存的采集源，下次抓拍按当前配置重建（用于会话级切换/恢复）。"""
+        self._source = None
+        self._source_error = None
+
     def capture_once(self) -> ObserveResult:
-        """执行一次抓拍 + 入库；异常转成 ObserveResult，不抛出未处理错误。"""
+        """执行一次抓拍 + 入库；异常转成 ObserveResult，不抛出未处理错误。
+
+        使用锁串行化手动抓拍与自动采集，避免同一设备/回放源被并发消费。
+        """
+        with self._capture_lock:
+            self.state.capture_in_progress = True
+            try:
+                return self._capture_once_locked()
+            finally:
+                self.state.capture_in_progress = False
+
+    def _capture_once_locked(self) -> ObserveResult:
         try:
             frame = self.source().capture()
         except SourceError as exc:
@@ -104,7 +127,9 @@ class AutoCaptureService:
     def _loop(self) -> None:
         log.info("自动采集启动，间隔 %.0fs", self.interval)
         while not self._stop.is_set():
+            started = time.perf_counter()
             result = self.capture_once()
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
             self.state.cycles += 1
             self.state.last_cycle_at = time.time()
             if result.ok:
@@ -115,7 +140,13 @@ class AutoCaptureService:
                 self.state.failures += 1
                 self.state.consecutive_failures += 1
                 self.state.last_error = result.error
+                self.state.last_error_at = time.time()
                 log.warning("自动采集失败: %s", result.error)
+            if self.on_result is not None:
+                try:
+                    self.on_result(result, elapsed_ms)
+                except Exception:
+                    log.exception("自动采集结果回调失败")
             self._stop.wait(self.interval)
         self.state.running = False
         log.info("自动采集停止")

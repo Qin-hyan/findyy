@@ -7,13 +7,23 @@ import json
 import logging
 import os
 import threading
+import time
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from .acceptance import (
+    AcceptanceRecorder,
+    build_export,
+    evaluate_run,
+    normalize_base_url,
+    public_run,
+    summarize_device_status,
+)
 from .classes import load_catalog
 from .config import REPO_ROOT, Config, load_config
 from .db import Database
@@ -23,7 +33,7 @@ from .pipeline import FindyPipeline
 from .query import answer as answer_query
 from .query import parse_query
 from .service import AutoCaptureService
-from .sources import CaptureMeta
+from .sources import CaptureMeta, Esp32Source, SourceError
 from .util import to_iso, utc_now
 from .zones import load_regions
 
@@ -52,6 +62,18 @@ class FeedbackRequest(BaseModel):
     payload: dict | None = None
 
 
+class ProbeRequest(BaseModel):
+    base_url: str | None = Field(default=None, max_length=250)
+
+
+class ConnectRequest(BaseModel):
+    base_url: str = Field(..., min_length=1, max_length=250)
+
+
+class AcceptanceStartRequest(BaseModel):
+    mode: Literal["real_device", "replay_demo"]
+
+
 def create_app(config_path: str | None = None) -> FastAPI:
     cfg = load_config(config_path)
     cfg.ensure_dirs()
@@ -77,6 +99,13 @@ def create_app(config_path: str | None = None) -> FastAPI:
     pipeline = FindyPipeline(cfg, db, catalog, detector, embedder, regions)
     pipeline.initialize()
     service = AutoCaptureService(pipeline, cfg.capture.interval_seconds)
+    recorder = AcceptanceRecorder(db, cfg)
+    service.on_result = recorder.record_capture
+    # 启动时配置文件里的采集源（用于“恢复配置采集源”，会话级切换不改文件）
+    original_capture = {
+        "source": cfg.capture.source,
+        "esp32_url": cfg.capture.esp32.base_url,
+    }
 
     app = FastAPI(title="Findy 物品记忆助手", version="0.1.0")
     app.state.cfg = cfg
@@ -85,6 +114,9 @@ def create_app(config_path: str | None = None) -> FastAPI:
     app.state.db = db
     app.state.pipeline = pipeline
     app.state.service = service
+    app.state.recorder = recorder
+    app.state.original_capture = original_capture
+    app.state.last_probe = None
     app.state.warmup_done = threading.Event()
     app.state.warmup_error = None
 
@@ -110,6 +142,16 @@ def create_app(config_path: str | None = None) -> FastAPI:
             return JSONResponse({"ok": False, "error": "web/index.html 不存在"}, status_code=500)
         return FileResponse(page, media_type="text/html; charset=utf-8")
 
+    @app.get("/workbench")
+    def workbench():
+        page = WEB_DIR / "workbench.html"
+        if not page.exists():
+            return JSONResponse(
+                {"ok": False, "error": "web/workbench.html 不存在（工作台尚未部署）"},
+                status_code=500,
+            )
+        return FileResponse(page, media_type="text/html; charset=utf-8")
+
     # ---------------- 状态 ----------------
     @app.get("/api/health")
     def health():
@@ -117,16 +159,34 @@ def create_app(config_path: str | None = None) -> FastAPI:
 
     @app.get("/api/status")
     def status():
+        pipe = pipeline.status()
+        runtime_override = (
+            cfg.capture.source != original_capture["source"]
+            or cfg.capture.esp32.base_url != original_capture["esp32_url"]
+        )
         return {
             "ok": True,
             "app": {"name": "Findy", "version": "0.1.0", "time": to_iso(utc_now())},
             "config": cfg.public_dict(),
-            "pipeline": pipeline.status(),
+            "pipeline": pipe,
             "service": service.state.to_dict(),
             "source": {
                 "type": cfg.capture.source,
+                "configured_type": original_capture["source"],
+                "runtime_override": runtime_override,
                 "esp32_url": cfg.capture.esp32.base_url if cfg.capture.source == "esp32" else None,
+                "configured_esp32_url": original_capture["esp32_url"],
                 "replay_remaining": _replay_remaining(service),
+                "provenance": (pipe.get("stats") or {}).get("captures_by_source") or {},
+            },
+            "device": {
+                "configured_url": cfg.capture.esp32.base_url,
+                "last_probe": app.state.last_probe,
+            },
+            "limits": {
+                "capture_timeout_seconds": 240,
+                "model_latency_note": "OWLv2 CPU 单帧检测约 6.2–10.6 秒，属正常速度",
+                "auto_interval_seconds": cfg.capture.interval_seconds,
             },
             "classes": [
                 {"zh": c.zh, "en": c.en, "threshold": c.threshold, "context_only": c.context_only}
@@ -140,12 +200,26 @@ def create_app(config_path: str | None = None) -> FastAPI:
     # ---------------- 抓拍 ----------------
     @app.post("/api/capture")
     def capture():
+        started = time.perf_counter()
         result = service.capture_once()
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        try:
+            recorder.record_capture(result, elapsed_ms)
+        except Exception:
+            log.exception("写入验收事件失败")
         if not result.ok:
             return JSONResponse(
-                {"ok": False, "error": result.error, "capture": result.capture}, status_code=503
+                {
+                    "ok": False,
+                    "error": result.error,
+                    "capture": result.capture,
+                    "elapsed_ms": elapsed_ms,
+                },
+                status_code=503,
             )
-        return result.to_dict()
+        payload = result.to_dict()
+        payload["elapsed_ms"] = elapsed_ms
+        return payload
 
     @app.post("/api/observe")
     async def observe(
@@ -181,7 +255,20 @@ def create_app(config_path: str | None = None) -> FastAPI:
         text = req.text.strip()
         if not text:
             raise HTTPException(status_code=400, detail="查询不能为空")
-        return answer_query(db, cfg, catalog, regions, text)
+        try:
+            payload = answer_query(db, cfg, catalog, regions, text)
+        except Exception as exc:
+            log.exception("查询失败")
+            try:
+                recorder.record_query_failure(text, f"{type(exc).__name__}: {exc}")
+            except Exception:
+                log.exception("写入查询失败验收事件失败")
+            raise HTTPException(status_code=500, detail=f"查询失败: {type(exc).__name__}: {exc}")
+        try:
+            recorder.record_query(payload)
+        except Exception:
+            log.exception("写入查询验收事件失败")
+        return payload
 
     @app.get("/api/query/parse")
     def parse(text: str = Query(..., min_length=1, max_length=200)):
@@ -210,6 +297,28 @@ def create_app(config_path: str | None = None) -> FastAPI:
         if track is None:
             raise HTTPException(status_code=404, detail="物品不存在")
         dets = db.detections_for_track(track_id, limit=50)
+        det_rows = []
+        for d in dets:
+            row = {
+                "detection_id": d["id"],
+                "capture_id": d["capture_id"],
+                "time_local": d.get("captured_at_local"),
+                "time_utc": d.get("captured_at_utc"),
+                "time_synced": bool(d.get("time_synced")),
+                "zone": d.get("region_name"),
+                "confidence": d.get("conf"),
+                "link_score": d.get("link_score"),
+                "link_status": d.get("link_status"),
+                "source_kind": d.get("source_kind") or "unknown",
+                "bbox_norm": [float(v) for v in str(d.get("bbox_norm") or "0,0,1,1").split(",")],
+                "image_url": f"/api/captures/{d['capture_id']}/image",
+                "crop_url": f"/api/detections/{d['id']}/crop",
+                "candidates": db.link_candidates(d["id"])
+                if d.get("link_status") == "ambiguous"
+                else [],
+            }
+            det_rows.append(row)
+        source_kinds = sorted({str(r["source_kind"]) for r in det_rows})
         return {
             "ok": True,
             "track": {
@@ -222,24 +331,10 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 "last_seen_utc": track.get("last_seen_utc"),
                 "sightings": db.track_sighting_count(track_id),
                 "region_history": db.track_region_history(track_id),
+                "source_kinds": source_kinds,
+                "mixed_sources": len(source_kinds) > 1,
             },
-            "detections": [
-                {
-                    "detection_id": d["id"],
-                    "capture_id": d["capture_id"],
-                    "time_local": d.get("captured_at_local"),
-                    "time_utc": d.get("captured_at_utc"),
-                    "time_synced": bool(d.get("time_synced")),
-                    "zone": d.get("region_name"),
-                    "confidence": d.get("conf"),
-                    "link_score": d.get("link_score"),
-                    "link_status": d.get("link_status"),
-                    "bbox_norm": [float(v) for v in str(d.get("bbox_norm") or "0,0,1,1").split(",")],
-                    "image_url": f"/api/captures/{d['capture_id']}/image",
-                    "crop_url": f"/api/detections/{d['id']}/crop",
-                }
-                for d in dets
-            ],
+            "detections": det_rows,
         }
 
     @app.post("/api/tracks/{track_id}/label")
@@ -287,6 +382,10 @@ def create_app(config_path: str | None = None) -> FastAPI:
                     "image_url": f"/api/captures/{r['id']}/image",
                     "thumbnail_url": f"/api/captures/{r['id']}/image?thumb=1",
                     "status": r.get("status"),
+                    "source_kind": r.get("source_kind") or "unknown",
+                    "detect_ms": r.get("detect_ms"),
+                    "process_ms": r.get("process_ms"),
+                    "detect_error": r.get("detect_error"),
                 }
                 for r in rows
             ],
@@ -309,7 +408,15 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 "width": row.get("image_width"),
                 "height": row.get("image_height"),
                 "status": row.get("status"),
+                "source_kind": row.get("source_kind") or "unknown",
+                "source_ref": row.get("source_ref"),
+                "device_seq": row.get("device_seq"),
+                "detect_ms": row.get("detect_ms"),
+                "embed_ms": row.get("embed_ms"),
+                "process_ms": row.get("process_ms"),
+                "detect_error": row.get("detect_error"),
                 "image_url": f"/api/captures/{capture_id}/image",
+                "thumbnail_url": f"/api/captures/{capture_id}/image?thumb=1",
             },
             "detections": [
                 {
@@ -321,6 +428,8 @@ def create_app(config_path: str | None = None) -> FastAPI:
                     "region": d.get("region_name"),
                     "link_status": d.get("link_status"),
                     "link_score": d.get("link_score"),
+                    "link_method": d.get("link_method"),
+                    "source_kind": d.get("source_kind") or "unknown",
                     "crop_url": f"/api/detections/{d['id']}/crop",
                 }
                 for d in dets
@@ -372,12 +481,274 @@ def create_app(config_path: str | None = None) -> FastAPI:
         if cfg.capture.source == "replay":
             service.source()
         started = service.start()
+        try:
+            recorder.record_service("service_start", service.state.to_dict())
+        except Exception:
+            log.exception("写入自动采集启动验收事件失败")
         return {"ok": True, "started": started, "service": service.state.to_dict()}
 
     @app.post("/api/service/stop")
     def service_stop():
         stopped = service.stop()
+        try:
+            recorder.record_service("service_stop", service.state.to_dict())
+        except Exception:
+            log.exception("写入自动采集停止验收事件失败")
         return {"ok": True, "stopped": stopped, "service": service.state.to_dict()}
+
+    # ---------------- 真实设备探测 / 会话级切换 ----------------
+    def _probe_device(url: str) -> dict:
+        return Esp32Source(url, cfg.capture.esp32.timeout_seconds).probe()
+
+    def _last_probe(ok: bool, url: str, summary: dict | None, error: str | None) -> dict:
+        current = {
+            "ok": bool(ok),
+            "at": to_iso(utc_now()),
+            "url": url,
+            "summary": summary,
+            "error": error,
+        }
+        app.state.last_probe = current
+        return current
+
+    @app.post("/api/device/probe")
+    def device_probe(req: ProbeRequest):
+        if req.base_url:
+            try:
+                url = normalize_base_url(req.base_url)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
+        elif cfg.capture.source != "esp32":
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "当前采集源为图片回放（replay），没有可检查的真实设备。"
+                    "请输入 ESP32 设备地址（例如 http://<设备IP>）后再检查连接，"
+                    "或按页面“操作引导”配置 config/findy.local.yaml。"
+                ),
+            )
+        else:
+            try:
+                url = normalize_base_url(cfg.capture.esp32.base_url)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=f"配置的设备地址无效: {exc}")
+
+        try:
+            raw = _probe_device(url)
+        except SourceError as exc:
+            probe = _last_probe(False, url, None, str(exc))
+            try:
+                recorder.record_probe(False, url, None, str(exc))
+            except Exception:
+                log.exception("写入设备探测失败验收事件失败")
+            return JSONResponse({"ok": False, "error": str(exc), "probe": probe}, status_code=503)
+        except Exception as exc:
+            error = f"{type(exc).__name__}: {exc}"
+            probe = _last_probe(False, url, None, error)
+            try:
+                recorder.record_probe(False, url, None, error)
+            except Exception:
+                log.exception("写入设备探测失败验收事件失败")
+            return JSONResponse({"ok": False, "error": error, "probe": probe}, status_code=503)
+
+        summary = summarize_device_status(raw)
+        probe = _last_probe(True, url, summary, None)
+        try:
+            recorder.record_probe(True, url, summary, None)
+        except Exception:
+            log.exception("写入设备探测验收事件失败")
+        return {"ok": True, "probe": probe, "device": summary}
+
+    @app.post("/api/device/connect")
+    def device_connect(req: ConnectRequest):
+        if service.state.running:
+            raise HTTPException(status_code=409, detail="自动采集运行中，请先停止自动采集再切换设备")
+        try:
+            url = normalize_base_url(req.base_url)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        try:
+            raw = _probe_device(url)
+        except SourceError as exc:
+            probe = _last_probe(False, url, None, str(exc))
+            try:
+                recorder.record_probe(False, url, None, str(exc))
+                recorder.record_connect(False, url, None, str(exc))
+            except Exception:
+                log.exception("写入设备连接失败验收事件失败")
+            return JSONResponse({"ok": False, "error": str(exc), "probe": probe}, status_code=503)
+        except Exception as exc:
+            error = f"{type(exc).__name__}: {exc}"
+            probe = _last_probe(False, url, None, error)
+            try:
+                recorder.record_probe(False, url, None, error)
+                recorder.record_connect(False, url, None, error)
+            except Exception:
+                log.exception("写入设备连接失败验收事件失败")
+            return JSONResponse({"ok": False, "error": error, "probe": probe}, status_code=503)
+
+        summary = summarize_device_status(raw)
+        camera = summary.get("camera") or {}
+        if camera.get("ready") is False:
+            error = "设备可达，但摄像头未就绪（camera.ready=false），未切换采集源。"
+            probe = _last_probe(False, url, summary, error)
+            try:
+                recorder.record_probe(False, url, summary, error)
+                recorder.record_connect(False, url, summary, error)
+            except Exception:
+                log.exception("写入设备连接失败验收事件失败")
+            return JSONResponse({"ok": False, "error": error, "probe": probe}, status_code=503)
+
+        probe = _last_probe(True, url, summary, None)
+        cfg.capture.source = "esp32"
+        cfg.capture.esp32.base_url = url
+        service.reset_source()
+        try:
+            recorder.record_probe(True, url, summary, None)
+            recorder.record_connect(True, url, summary, None)
+        except Exception:
+            log.exception("写入设备连接验收事件失败")
+        return {
+            "ok": True,
+            "probe": probe,
+            "device": summary,
+            "source": {
+                "type": cfg.capture.source,
+                "esp32_url": cfg.capture.esp32.base_url,
+                "configured_type": original_capture["source"],
+                "runtime_override": True,
+            },
+            "note": (
+                "已切换到真实设备采集，仅本次服务进程有效，不写入配置文件；"
+                "重启服务后恢复 config/findy.yaml 的设置。"
+            ),
+        }
+
+    @app.post("/api/source/reset")
+    def source_reset():
+        if service.state.running:
+            raise HTTPException(status_code=409, detail="自动采集运行中，请先停止自动采集再恢复采集源")
+        cfg.capture.source = original_capture["source"]
+        cfg.capture.esp32.base_url = original_capture["esp32_url"]
+        service.reset_source()
+        return {
+            "ok": True,
+            "source": {
+                "type": cfg.capture.source,
+                "esp32_url": cfg.capture.esp32.base_url if cfg.capture.source == "esp32" else None,
+                "configured_type": original_capture["source"],
+                "runtime_override": False,
+            },
+            "note": "已恢复为启动时配置文件中的采集源。",
+        }
+
+    # ---------------- 端到端验收运行 ----------------
+    def _system_snapshot() -> dict:
+        pipe = pipeline.status()
+        return {
+            "warmup_done": app.state.warmup_done.is_set(),
+            "detector": pipe.get("detector"),
+            "embedder": pipe.get("embedder"),
+            "model_errors": pipe.get("model_errors") or [],
+            "db_ok": db.ping(),
+            "service": service.state.to_dict(),
+            "source": {
+                "type": cfg.capture.source,
+                "configured_type": original_capture["source"],
+                "esp32_url": cfg.capture.esp32.base_url,
+                "runtime_override": (
+                    cfg.capture.source != original_capture["source"]
+                    or cfg.capture.esp32.base_url != original_capture["esp32_url"]
+                ),
+            },
+            "device": {"last_probe": app.state.last_probe},
+        }
+
+    def _compute_overview(run: dict | None) -> dict:
+        if not run:
+            return evaluate_run(db, cfg, None, [])
+        events = db.acceptance_events(int(run["id"]))
+        pipe = pipeline.status()
+        return evaluate_run(
+            db,
+            cfg,
+            run,
+            events,
+            detector_status=pipe.get("detector"),
+            embedder_status=pipe.get("embedder"),
+            model_errors=pipe.get("model_errors") or [],
+        )
+
+    def _overview_for(run: dict | None) -> dict:
+        if run and run.get("status") == "finished" and run.get("summary_json"):
+            try:
+                return json.loads(run["summary_json"])
+            except (TypeError, ValueError):
+                log.warning("验收运行 #%s 的 summary_json 无法解析，改为实时计算", run.get("id"))
+        return _compute_overview(run)
+
+    def _acceptance_payload(run: dict | None = None) -> dict:
+        current = run if run is not None else db.latest_acceptance_run()
+        return {
+            "ok": True,
+            "run": public_run(current),
+            "overview": _overview_for(current),
+            "system": _system_snapshot(),
+        }
+
+    @app.get("/api/acceptance")
+    def acceptance():
+        return _acceptance_payload()
+
+    @app.post("/api/acceptance/run/start")
+    def acceptance_start(req: AcceptanceStartRequest):
+        active = db.active_acceptance_run()
+        if active:
+            return JSONResponse(
+                {
+                    "ok": False,
+                    "error": f"已有进行中的验收运行 #{active['id']}，请先结束本轮验收。",
+                    "run": public_run(active),
+                },
+                status_code=409,
+            )
+        if req.mode not in {"real_device", "replay_demo"}:
+            raise HTTPException(status_code=400, detail=f"未知验收模式: {req.mode}")
+        source_ref = (
+            cfg.capture.esp32.base_url
+            if cfg.capture.source == "esp32"
+            else cfg.capture.replay.dir
+        )
+        run_id = db.create_acceptance_run(req.mode, cfg.capture.source, source_ref)
+        run = db.get_acceptance_run(run_id)
+        return _acceptance_payload(run)
+
+    @app.post("/api/acceptance/run/{run_id}/finish")
+    def acceptance_finish(run_id: int):
+        run = db.get_acceptance_run(run_id)
+        if run is None:
+            raise HTTPException(status_code=404, detail="验收运行不存在")
+        if run.get("status") == "running":
+            overview = _compute_overview(run)
+            db.finish_acceptance_run(run_id, overview)
+            run = db.get_acceptance_run(run_id)
+        return _acceptance_payload(run)
+
+    @app.get("/api/acceptance/run/{run_id}/export")
+    def acceptance_export(run_id: int):
+        run = db.get_acceptance_run(run_id)
+        if run is None:
+            raise HTTPException(status_code=404, detail="验收运行不存在")
+        events = db.acceptance_events(run_id)
+        overview = _overview_for(run)
+        payload = build_export(run, events, overview)
+        body = json.dumps(payload, ensure_ascii=False, indent=2)
+        filename = f"findy-acceptance-run-{run_id}.json"
+        return Response(
+            content=body,
+            media_type="application/json; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
 
     return app
 
