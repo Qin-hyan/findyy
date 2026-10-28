@@ -1,0 +1,464 @@
+/* Findy 端到端验收工作台 · 复用 styles.css 变量，仅追加工作台专用样式 */
+
+.workbench .topbar { padding-bottom: 6px; }
+
+.wb-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.topbar-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+  border: 1px solid rgba(55, 211, 192, 0.35);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: rgba(55, 211, 192, 0.07);
+}
+.topbar-link:hover { background: rgba(55, 211, 192, 0.16); }
+
+.wb-statusbar { padding: 4px 32px 0; }
+
+.wb-main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 32px;
+}
+
+/* ---------- 总体验收横幅 ---------- */
+.wb-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  border-left: 4px solid var(--line);
+}
+.wb-banner.pass { border-left-color: var(--accent); }
+.wb-banner.fail { border-left-color: var(--danger); }
+.wb-banner.nv { border-left-color: var(--warn); }
+
+.wb-banner-main { display: flex; align-items: center; gap: 18px; min-width: 0; }
+.wb-banner-text { min-width: 0; }
+.wb-banner-text h2 { margin: 0 0 6px; font-size: 18px; }
+.wb-banner-text p { margin: 0; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; }
+
+.wb-big-status {
+  flex: none;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(143, 160, 189, 0.08);
+  text-align: center;
+  min-width: 132px;
+}
+.wb-big-status.pass { color: #8ef0dd; border-color: rgba(55, 211, 192, 0.45); background: rgba(55, 211, 192, 0.1); }
+.wb-big-status.fail { color: var(--danger); border-color: rgba(255, 123, 138, 0.45); background: rgba(255, 123, 138, 0.1); }
+.wb-big-status.nv { color: var(--warn); border-color: rgba(255, 194, 102, 0.45); background: rgba(255, 194, 102, 0.1); }
+
+.wb-banner-side {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12.5px;
+}
+.wb-counts { color: var(--text); font-weight: 650; font-size: 13px; }
+.wb-simulated { color: var(--muted); }
+.wb-simulated.warn { color: var(--warn); }
+
+/* ---------- 运行状态 ---------- */
+.wb-kv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+  gap: 10px;
+}
+.wb-kv {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 12px;
+  background: rgba(10, 18, 32, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.wb-k { color: var(--muted); font-size: 11.5px; letter-spacing: 0.3px; }
+.wb-v { font-size: 13px; line-height: 1.5; word-break: break-word; white-space: pre-line; }
+
+.wb-error-block { margin-top: 12px; display: flex; flex-direction: column; gap: 5px; }
+.wb-error-text {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 123, 138, 0.28);
+  background: rgba(255, 123, 138, 0.06);
+  color: #ffb3bd;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 170px;
+  overflow-y: auto;
+}
+.wb-error-text:empty { display: none; }
+
+/* ---------- 设备采集 ---------- */
+.wb-device-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.wb-label { font-size: 13px; color: var(--muted); }
+.wb-input {
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text);
+  background: #0a1220;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 13px;
+}
+.wb-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(55, 211, 192, 0.15); }
+.wb-input-wide { flex: 1 1 320px; min-width: 0; }
+
+.wb-live-status {
+  margin: 4px 0 2px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(106, 168, 255, 0.06);
+  border: 1px solid rgba(106, 168, 255, 0.22);
+  color: #bcd2f6;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.wb-live-status.live { color: var(--warn); border-color: rgba(255, 194, 102, 0.3); background: rgba(255, 194, 102, 0.06); }
+.wb-live-status.bad { color: #ffb3bd; border-color: rgba(255, 123, 138, 0.35); background: rgba(255, 123, 138, 0.07); }
+.wb-live-status.ok { color: #a9f4e6; border-color: rgba(55, 211, 192, 0.35); background: rgba(55, 211, 192, 0.07); }
+
+#capture-reason { color: var(--warn); }
+
+.wb-log-wrap { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.wb-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-bottom: 7px;
+}
+.wb-log {
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #070d17;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.wb-log-row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(34, 48, 74, 0.45);
+  line-height: 1.45;
+}
+.wb-log-row:last-child { border-bottom: none; }
+.wb-log-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.wb-log-body { min-width: 0; word-break: break-word; }
+.wb-log-action { color: var(--text); }
+.wb-log-out { margin-left: 6px; }
+.wb-log-row.ok .wb-log-out { color: #8ef0dd; }
+.wb-log-row.bad .wb-log-out { color: var(--danger); }
+.wb-log-row.pending .wb-log-out { color: var(--muted); }
+.wb-log-empty { padding: 4px 0; }
+
+button.tiny { font-size: 11.5px; padding: 4px 9px; border-radius: 8px; }
+
+/* ---------- 检测结果 ---------- */
+.wb-subtitle {
+  margin: -4px 0 12px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--muted);
+}
+.wb-detect-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.wb-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #05080e;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+}
+.wb-viewport img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.wb-viewport .placeholder { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+
+.wb-detect-side { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.wb-capture-meta {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  white-space: pre-line;
+  word-break: break-word;
+}
+.wb-capture-meta.bad { color: #ffb3bd; }
+
+.wb-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+.wb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  min-width: 560px;
+}
+.wb-table th,
+.wb-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(34, 48, 74, 0.6);
+  vertical-align: middle;
+}
+.wb-table th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 11.5px;
+  background: rgba(10, 18, 32, 0.75);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+}
+.wb-table tbody tr:last-child td { border-bottom: none; }
+.wb-table tbody tr:hover { background: rgba(55, 211, 192, 0.04); }
+.wb-num { font-variant-numeric: tabular-nums; color: var(--text); }
+.wb-crop {
+  width: 68px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  display: block;
+  background: #05080e;
+  border: 1px solid var(--line);
+}
+.wb-crop-lg { width: 96px; height: 72px; }
+
+/* ---------- 来源徽标 ---------- */
+.src-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(143, 160, 189, 0.1);
+}
+.src-badge.esp32 { color: #8ef0dd; border-color: rgba(55, 211, 192, 0.4); background: rgba(55, 211, 192, 0.1); }
+.src-badge.replay { color: #b9d2ff; border-color: rgba(106, 168, 255, 0.4); background: rgba(106, 168, 255, 0.1); }
+.src-badge.upload { color: #ffd9a3; border-color: rgba(255, 194, 102, 0.4); background: rgba(255, 194, 102, 0.1); }
+.src-badge.unknown { color: var(--muted); }
+
+/* ---------- 轨迹关联 ---------- */
+.wb-two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 18px;
+}
+.wb-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.wb-track-item {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(22, 32, 51, 0.6);
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: border-color 0.15s ease, transform 0.08s ease;
+}
+.wb-track-item:hover { border-color: rgba(55, 211, 192, 0.5); transform: translateY(-1px); }
+.wb-track-item.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(55, 211, 192, 0.14); }
+.wb-track-item.ambiguous { border-left: 3px solid var(--warn); }
+.wb-track-row1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.wb-track-name { font-weight: 700; font-size: 13.5px; }
+.wb-track-sub { color: var(--muted); font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+.wb-track-detail { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; }
+.wb-track-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.wb-track-warn {
+  color: var(--warn);
+  background: rgba(255, 194, 102, 0.08);
+  border: 1px solid rgba(255, 194, 102, 0.3);
+  border-radius: 10px;
+  padding: 8px 11px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.wb-timeline { display: flex; flex-direction: column; gap: 8px; }
+.wb-timeline-item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(10, 18, 32, 0.5);
+  cursor: pointer;
+}
+.wb-timeline-item:hover { border-color: rgba(55, 211, 192, 0.4); }
+.wb-timeline-meta { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.wb-timeline-time { color: var(--text); }
+.wb-timeline-tags { display: flex; gap: 6px; flex-wrap: wrap; color: var(--muted); font-size: 11.5px; }
+.wb-candidates { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+
+/* ---------- 查询 ---------- */
+.wb-query-meta { margin-top: 8px; }
+#query-suggestions:empty { display: none; }
+#query-suggestions .chip { cursor: pointer; }
+.result .thumb { position: relative; }
+.result .thumb img { width: 100%; height: 100%; object-fit: contain; }
+.result .meta .row { flex-wrap: wrap; }
+.result .thumb-pair { display: flex; gap: 6px; }
+.result .thumb-pair .thumb { width: 92px; height: 70px; }
+.wb-evidence-crop { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+
+/* ---------- 验收总览 ---------- */
+.wb-run-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+#run-hint.bad { color: var(--danger); white-space: pre-wrap; }
+#run-hint { max-width: 100%; }
+
+.wb-acceptance { display: flex; flex-direction: column; gap: 9px; }
+.wb-accept-item {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(10, 18, 32, 0.45);
+}
+.wb-accept-item + .wb-accept-item { margin-top: 0; }
+.wb-accept-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.wb-accept-title { font-weight: 650; font-size: 13.5px; }
+.wb-accept-reason { font-size: 12.5px; color: var(--muted); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.wb-evidence {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.wb-evidence a {
+  color: #b9d2ff;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(106, 168, 255, 0.55);
+  word-break: break-all;
+}
+.wb-evidence a:hover { color: var(--accent); }
+.wb-evidence span { color: var(--muted); }
+
+.wb-status {
+  display: inline-block;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.wb-status.pass { color: #8ef0dd; border-color: rgba(55, 211, 192, 0.45); background: rgba(55, 211, 192, 0.11); }
+.wb-status.fail { color: var(--danger); border-color: rgba(255, 123, 138, 0.45); background: rgba(255, 123, 138, 0.1); }
+.wb-status.nv { color: var(--warn); border-color: rgba(255, 194, 102, 0.45); background: rgba(255, 194, 102, 0.1); }
+
+/* ---------- 操作引导 ---------- */
+.wb-guide-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 20px;
+}
+.wb-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 7px; font-size: 13px; line-height: 1.6; }
+.wb-steps code, .wb-code code { color: var(--accent); }
+.wb-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #070d17;
+  color: #cfe0ff;
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-x: auto;
+  white-space: pre;
+}
+.wb-privacy {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.wb-privacy strong { color: var(--text); }
+code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  background: rgba(106, 168, 255, 0.1);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1100px) {
+  .wb-banner { grid-template-columns: 1fr; }
+  .wb-detect-grid { grid-template-columns: 1fr; }
+  .wb-two-col { grid-template-columns: 1fr; }
+  .wb-guide-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 980px) {
+  .wb-main { padding: 14px 16px; }
+  .wb-statusbar { padding: 4px 16px 0; }
+  .wb-top-actions { width: 100%; justify-content: space-between; }
+  .wb-accept-item { grid-template-columns: 1fr; gap: 6px; }
+  .wb-banner-main { flex-direction: column; align-items: flex-start; }
+}

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2337d3c0'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Segoe UI' font-weight='bold' text-anchor='middle' fill='%23042018'%3EF%3C/text%3E%3C/svg%3E" />
+  <title>Findy 端到端验收工作台</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/workbench.css" />
+</head>
+<body class="workbench">
+  <header class="topbar wb-topbar">
+    <div class="brand">
+      <div class="logo">F</div>
+      <div>
+        <h1>Findy 端到端验收工作台 <span>真实设备 · 回放演示 · 证据导出</span></h1>
+        <p class="tagline">所有数据均来自同源 /api 接口 · 仅本机 127.0.0.1 运行 · 无云端请求</p>
+      </div>
+    </div>
+    <div class="wb-top-actions">
+      <a class="topbar-link" href="/">返回首页</a>
+      <span class="muted small" id="page-clock">—</span>
+    </div>
+  </header>
+
+  <section class="wb-statusbar" aria-label="服务状态">
+    <div class="status-row" id="status-row">
+      <span class="pill" id="pill-service">服务 · 检查中</span>
+      <span class="pill" id="pill-source">采集源 · —</span>
+      <span class="pill" id="pill-model">模型 · 检查中</span>
+      <span class="pill" id="pill-db">数据库 · 检查中</span>
+      <span class="pill" id="pill-auto">自动采集 · 停止</span>
+    </div>
+  </section>
+
+  <main class="wb-main">
+    <!-- 1. 总体验收横幅 -->
+    <section class="card wb-banner nv" id="overall-section">
+      <div class="wb-banner-main">
+        <span class="wb-big-status nv" id="overall-status">NOT VERIFIED</span>
+        <div class="wb-banner-text">
+          <h2 id="overall-title">尚无验收运行</h2>
+          <p id="overall-banner" class="muted">尚无验收运行，所有项为 NOT VERIFIED</p>
+        </div>
+      </div>
+      <div class="wb-banner-side">
+        <div class="wb-counts" id="overall-counts">PASS 0 · FAIL 0 · NOT VERIFIED 0</div>
+        <div class="wb-simulated" id="overall-simulated">simulated：未知</div>
+        <div class="notes" id="overall-warnings"></div>
+        <div class="muted small" id="run-info">尚无验收运行</div>
+      </div>
+    </section>
+
+    <!-- 2. 运行状态 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>运行状态</h2>
+        <span class="muted small" id="status-updated">—</span>
+      </div>
+      <div class="wb-kv-grid">
+        <div class="wb-kv"><span class="wb-k">采集源（配置值）</span><span class="wb-v" id="src-configured">—</span></div>
+        <div class="wb-kv"><span class="wb-k">采集源（本次会话值）</span><span class="wb-v" id="src-runtime">—</span></div>
+        <div class="wb-kv"><span class="wb-k">会话内覆盖</span><span class="wb-v" id="src-override">—</span></div>
+        <div class="wb-kv"><span class="wb-k">回放剩余</span><span class="wb-v" id="src-replay">—</span></div>
+        <div class="wb-kv"><span class="wb-k">来源标记</span><span class="wb-v" id="src-provenance">—</span></div>
+        <div class="wb-kv"><span class="wb-k">最近设备探测</span><span class="wb-v wb-probe-v" id="last-probe">—</span></div>
+        <div class="wb-kv"><span class="wb-k">OWLv2 检测器</span><span class="wb-v" id="model-detector">—</span></div>
+        <div class="wb-kv"><span class="wb-k">DINOv2 关联</span><span class="wb-v" id="model-embedder">—</span></div>
+        <div class="wb-kv"><span class="wb-k">数据库</span><span class="wb-v" id="db-status">—</span></div>
+        <div class="wb-kv"><span class="wb-k">来源统计（帧）</span><span class="wb-v" id="db-source-stats">—</span></div>
+        <div class="wb-kv"><span class="wb-k">最近抓拍时间</span><span class="wb-v" id="last-capture-at">—</span></div>
+        <div class="wb-kv"><span class="wb-k">自动采集</span><span class="wb-v" id="auto-status">—</span></div>
+      </div>
+      <div class="wb-error-block">
+        <div class="wb-k">服务异常 / 模型错误（后端原文）</div>
+        <pre class="wb-error-text" id="service-error">—</pre>
+      </div>
+    </section>
+
+    <!-- 3. 设备采集 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>设备采集</h2>
+        <span class="muted small">设备与电脑需在同一 Wi-Fi；连接仅对本次会话生效</span>
+      </div>
+      <div class="wb-device-row">
+        <label class="wb-label" for="device-ip">设备地址</label>
+        <input id="device-ip" class="wb-input wb-input-wide" type="text"
+               placeholder="例如 http://192.168.1.50（ESP32 串口日志 Web UI ready 地址）"
+               autocomplete="off" spellcheck="false" />
+        <button class="ghost" id="probe-btn">检查连接</button>
+        <button class="primary" id="connect-btn">使用此设备采集（仅本次会话）</button>
+        <button class="ghost" id="reset-source-btn">恢复配置采集源</button>
+      </div>
+      <div class="wb-device-row">
+        <button class="primary" id="capture-btn">立即抓拍</button>
+        <button class="ghost" id="auto-start-btn">开始采集</button>
+        <button class="ghost" id="auto-stop-btn">停止采集</button>
+        <span class="muted small" id="capture-reason"></span>
+      </div>
+      <p class="wb-live-status" id="capture-status" aria-live="polite">—</p>
+      <p class="muted small" id="capture-hint">抓拍由本机 CPU 运行 OWLv2，单帧通常 6–11 秒，请勿关闭页面。</p>
+
+      <div class="wb-log-wrap">
+        <div class="wb-log-head">
+          <span>操作日志</span>
+          <button class="ghost tiny" id="clear-log-btn" type="button">清空日志</button>
+        </div>
+        <div class="wb-log" id="action-log" aria-live="polite">
+          <div class="wb-log-empty muted small">暂无操作记录</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 检测结果 -->
+    <section class="card" id="detection-card">
+      <div class="card-head">
+        <h2>检测结果</h2>
+        <span id="capture-source-badge"></span>
+      </div>
+      <h3 class="wb-subtitle">最新抓拍快照（非实时视频）</h3>
+      <div class="wb-detect-grid">
+        <div class="wb-viewport" id="latest-capture">
+          <div class="placeholder" id="capture-placeholder">
+            <p>还没有抓拍记录</p>
+            <p class="muted small">点击“立即抓拍”获取第一帧</p>
+          </div>
+          <img id="capture-img" alt="最新抓拍快照" hidden />
+          <div class="overlay" id="overlay"></div>
+        </div>
+        <div class="wb-detect-side">
+          <p class="wb-capture-meta" id="capture-meta">尚无抓拍</p>
+          <div class="wb-table-wrap">
+            <table class="wb-table">
+              <thead>
+                <tr>
+                  <th>物品</th>
+                  <th>置信度</th>
+                  <th>画面区域</th>
+                  <th>关联分</th>
+                  <th>关联状态</th>
+                  <th>来源</th>
+                  <th>裁剪图</th>
+                </tr>
+              </thead>
+              <tbody id="detection-rows">
+                <tr><td colspan="7" class="muted small">尚无抓拍</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 轨迹关联 -->
+    <section class="wb-two-col">
+      <div class="card">
+        <div class="card-head">
+          <h2>轨迹关联</h2>
+          <span class="muted small" id="tracks-count">—</span>
+        </div>
+        <div class="wb-track-list" id="tracks">
+          <p class="muted small">加载中…</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>轨迹详情</h2>
+          <span class="muted small" id="track-detail-title">点击左侧轨迹查看跨帧时间线</span>
+        </div>
+        <div class="wb-track-detail" id="track-detail">
+          <p class="muted small">尚未选择轨迹</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 找物查询 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>找物查询</h2>
+        <span class="muted small" id="query-intent">—</span>
+      </div>
+      <form id="query-form" class="query-form">
+        <input id="query-input" type="text" placeholder="例如：我的钥匙最后出现在哪里？" autocomplete="off" />
+        <button class="primary" type="submit" id="query-submit">查找</button>
+      </form>
+      <div class="chips" id="query-examples"></div>
+      <div id="answer" class="answer help">你好，我是 Findy。这里可以查询本机记忆里的物品位置。
+你可以直接问：
+· 笔记本电脑最后出现在哪里？
+· 鼠标移动过吗？
+· 桌上都有哪些东西？
+所有回答都会附带观测时间、区域、置信度与证据图片。</div>
+      <div class="wb-query-meta muted small" id="query-meta">—</div>
+      <div id="results" class="results"></div>
+      <div class="chips" id="query-suggestions"></div>
+    </section>
+
+    <!-- 7. 验收总览 -->
+    <section class="card" id="acceptance-card">
+      <div class="card-head">
+        <h2>验收总览</h2>
+        <span class="muted small" id="acceptance-updated">—</span>
+      </div>
+      <div class="wb-run-controls">
+        <button class="primary" id="run-start-real">开始真实设备验收</button>
+        <button class="ghost" id="run-start-demo">开始回放演示</button>
+        <button class="ghost" id="run-finish" hidden>结束本轮验收</button>
+        <button class="ghost" id="export-evidence" hidden>导出证据 JSON</button>
+        <span class="muted small" id="run-hint">尚无验收运行，所有项为 NOT VERIFIED</span>
+      </div>
+      <div class="wb-acceptance" id="acceptance-items">
+        <p class="muted small">加载中…</p>
+      </div>
+    </section>
+
+    <!-- 8. 操作引导 -->
+    <section class="card wb-guide">
+      <div class="card-head">
+        <h2>操作引导</h2>
+        <span class="muted small">从设备通电到导出验收证据</span>
+      </div>
+      <div class="wb-guide-grid">
+        <div>
+          <ol class="wb-steps">
+            <li>设备通电（ESP32-S3-EYE），用 USB 连接电脑查看串口日志，确认出现 <code>Web UI ready: http://&lt;设备IP&gt;/</code>。</li>
+            <li>确认电脑与设备连接在同一 Wi-Fi 网络。</li>
+            <li>获取设备 IP：看串口日志，或登录路由器管理页查看设备列表。</li>
+            <li>在上方“设备地址”输入 <code>http://&lt;设备IP&gt;</code>，点击“检查连接”。</li>
+            <li>连接成功后点击“使用此设备采集（仅本次会话）”，再点击“立即抓拍”。</li>
+            <li>移动物品后再次抓拍，观察“轨迹关联”中的跨帧时间线与灰区候选。</li>
+            <li>用“找物查询”提问，核验中文回答、证据图片与关联分。</li>
+            <li>结束本轮验收并导出证据 JSON 存档。</li>
+          </ol>
+          <p class="muted small">长期配置请写入 <code>config/findy.local.yaml</code>（示例见右），重启服务后生效。</p>
+        </div>
+        <div>
+          <pre class="wb-code"># config/findy.local.yaml
+app:
+  tz: Asia/Shanghai
+
+capture:
+  source: esp32          # esp32 | replay
+  interval_seconds: 60
+  esp32:
+    base_url: http://&lt;设备IP&gt;
+    timeout_seconds: 20
+
+# 也可用环境变量 FINDY_ESP32_URL 覆盖</pre>
+          <p class="wb-privacy">
+            <strong>隐私说明：</strong>页面只监听本机 127.0.0.1；图像、检测结果与查询全部留在本机
+            SQLite 与本地文件目录，不上传云端；所有请求都是同源相对路径，不引用任何 CDN、外部字体或外部图片。
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Findy 端到端验收工作台 · 检测：OWLv2 开放词表 · 关联：DINOv2 + 区域/时间先验 · 存储：本机 SQLite + 本地文件</p>
+    <p class="muted small">页面每 4 秒轮询 /api/status 与 /api/acceptance；状态、错误与验收结论均如实展示后端返回值，不伪造成功。</p>
+  </footer>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="/static/workbench.js" defer></script>
+</body>
+</html>

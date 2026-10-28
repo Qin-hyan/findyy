@@ -55,6 +55,22 @@ body {
 .pill.warn { color: var(--warn); border-color: rgba(255, 194, 102, 0.4); }
 .pill.bad { color: var(--danger); border-color: rgba(255, 123, 138, 0.4); }
 
+/* 首页顶部“验收工作台”入口 */
+.topbar-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  background: rgba(55, 211, 192, 0.08);
+  border: 1px solid rgba(55, 211, 192, 0.35);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.topbar-link:hover { background: rgba(55, 211, 192, 0.18); border-color: rgba(55, 211, 192, 0.6); }
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
