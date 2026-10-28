@@ -1,0 +1,193 @@
+{
+  "source": "D:\\Findyy\\data\\demo_replay_default.json",
+  "frames": 6,
+  "total_detections": 29,
+  "detections_per_frame": [
+    5,
+    5,
+    5,
+    5,
+    4,
+    5
+  ],
+  "per_frame": [
+    {
+      "frame": 1,
+      "detections": 5,
+      "classes": {
+        "手机": 1,
+        "笔记本电脑": 1,
+        "键盘": 2,
+        "鼠标": 1
+      }
+    },
+    {
+      "frame": 2,
+      "detections": 5,
+      "classes": {
+        "手机": 1,
+        "笔记本电脑": 1,
+        "键盘": 2,
+        "鼠标": 1
+      }
+    },
+    {
+      "frame": 3,
+      "detections": 5,
+      "classes": {
+        "手机": 1,
+        "笔记本电脑": 1,
+        "键盘": 2,
+        "鼠标": 1
+      }
+    },
+    {
+      "frame": 4,
+      "detections": 5,
+      "classes": {
+        "手机": 1,
+        "笔记本电脑": 1,
+        "键盘": 2,
+        "鼠标": 1
+      }
+    },
+    {
+      "frame": 5,
+      "detections": 4,
+      "classes": {
+        "手机": 1,
+        "笔记本电脑": 1,
+        "键盘": 1,
+        "鼠标": 1
+      }
+    },
+    {
+      "frame": 6,
+      "detections": 5,
+      "classes": {
+        "手机": 1,
+        "笔记本电脑": 1,
+        "键盘": 2,
+        "鼠标": 1
+      }
+    }
+  ],
+  "link_status_counts": {
+    "new": 5,
+    "matched": 23,
+    "ambiguous": 1
+  },
+  "classes": {
+    "手机": {
+      "frames_present": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "tracks": [
+        1
+      ],
+      "track_frame_counts": {
+        "1": 6
+      },
+      "best_track": 1,
+      "best_track_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "matched_ratio_best_track": 1.0,
+      "avg_link_score": 0.765
+    },
+    "笔记本电脑": {
+      "frames_present": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "tracks": [
+        2
+      ],
+      "track_frame_counts": {
+        "2": 6
+      },
+      "best_track": 2,
+      "best_track_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "matched_ratio_best_track": 1.0,
+      "avg_link_score": 0.755
+    },
+    "键盘": {
+      "frames_present": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "tracks": [
+        3,
+        4,
+        6
+      ],
+      "track_frame_counts": {
+        "3": 5,
+        "4": 5,
+        "6": 1
+      },
+      "best_track": 3,
+      "best_track_frames": [
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "matched_ratio_best_track": 0.455,
+      "avg_link_score": 0.713
+    },
+    "鼠标": {
+      "frames_present": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "tracks": [
+        5
+      ],
+      "track_frame_counts": {
+        "5": 6
+      },
+      "best_track": 5,
+      "best_track_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "matched_ratio_best_track": 1.0,
+      "avg_link_score": 0.76
+    }
+  }
+}

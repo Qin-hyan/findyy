@@ -1,0 +1,996 @@
+[
+  {
+    "ok": true,
+    "capture_id": 1,
+    "detections": [
+      {
+        "detection_id": 1,
+        "track_id": 1,
+        "class": "手机",
+        "confidence": 0.39,
+        "bbox_norm": [
+          0.1998,
+          0.6333,
+          0.2668,
+          0.6807
+        ],
+        "bbox_px": [
+          127.9,
+          304.0,
+          170.7,
+          326.7
+        ],
+        "color": "灰色",
+        "color_hex": "#787d73",
+        "region": "桌面左侧",
+        "link_status": "new",
+        "link_method": "new",
+        "link_score": 0.0,
+        "link_reason": "没有同类历史物品",
+        "candidates": [],
+        "crop_url": "/api/detections/1/crop",
+        "area_ratio": 0.00318
+      },
+      {
+        "detection_id": 2,
+        "track_id": 2,
+        "class": "笔记本电脑",
+        "confidence": 0.7398,
+        "bbox_norm": [
+          0.0,
+          0.4119,
+          0.3988,
+          0.9956
+        ],
+        "bbox_px": [
+          -0.3,
+          197.7,
+          255.3,
+          477.9
+        ],
+        "color": "灰色",
+        "color_hex": "#777b79",
+        "region": "桌面左侧",
+        "link_status": "new",
+        "link_method": "new",
+        "link_score": 0.0,
+        "link_reason": "没有同类历史物品",
+        "candidates": [],
+        "crop_url": "/api/detections/2/crop",
+        "area_ratio": 0.2331
+      },
+      {
+        "detection_id": 3,
+        "track_id": 3,
+        "class": "键盘",
+        "confidence": 0.876,
+        "bbox_norm": [
+          0.5077,
+          0.6358,
+          0.9839,
+          0.8266
+        ],
+        "bbox_px": [
+          324.9,
+          305.2,
+          629.7,
+          396.8
+        ],
+        "color": "灰色",
+        "color_hex": "#989894",
+        "region": "桌面右侧",
+        "link_status": "new",
+        "link_method": "new",
+        "link_score": 0.0,
+        "link_reason": "没有同类历史物品",
+        "candidates": [],
+        "crop_url": "/api/detections/3/crop",
+        "area_ratio": 0.09085
+      },
+      {
+        "detection_id": 4,
+        "track_id": 4,
+        "class": "键盘",
+        "confidence": 0.4831,
+        "bbox_norm": [
+          0.0018,
+          0.7099,
+          0.3157,
+          0.9015
+        ],
+        "bbox_px": [
+          1.2,
+          340.7,
+          202.1,
+          432.7
+        ],
+        "color": "灰色",
+        "color_hex": "#878d8d",
+        "region": "桌面左侧",
+        "link_status": "new",
+        "link_method": "new",
+        "link_score": 0.0,
+        "link_reason": "没有同类历史物品",
+        "candidates": [],
+        "crop_url": "/api/detections/4/crop",
+        "area_ratio": 0.06014
+      },
+      {
+        "detection_id": 5,
+        "track_id": 5,
+        "class": "鼠标",
+        "confidence": 0.6549,
+        "bbox_norm": [
+          0.3861,
+          0.7478,
+          0.4939,
+          0.8311
+        ],
+        "bbox_px": [
+          247.1,
+          358.9,
+          316.1,
+          398.9
+        ],
+        "color": "灰色",
+        "color_hex": "#9b9d99",
+        "region": "桌面中央",
+        "link_status": "new",
+        "link_method": "new",
+        "link_score": 0.0,
+        "link_reason": "没有同类历史物品",
+        "candidates": [],
+        "crop_url": "/api/detections/5/crop",
+        "area_ratio": 0.00897
+      }
+    ],
+    "warnings": [],
+    "error": null
+  },
+  {
+    "ok": true,
+    "capture_id": 2,
+    "detections": [
+      {
+        "detection_id": 6,
+        "track_id": 1,
+        "class": "手机",
+        "confidence": 0.3849,
+        "bbox_norm": [
+          0.382,
+          0.6333,
+          0.4477,
+          0.6824
+        ],
+        "bbox_px": [
+          244.5,
+          304.0,
+          286.5,
+          327.5
+        ],
+        "color": "灰色",
+        "color_hex": "#7a7f74",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8921,
+        "link_reason": "外观 0.95 / 颜色 0.98 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 1,
+            "score": 0.8921
+          }
+        ],
+        "crop_url": "/api/detections/6/crop",
+        "area_ratio": 0.00322
+      },
+      {
+        "detection_id": 7,
+        "track_id": 2,
+        "class": "笔记本电脑",
+        "confidence": 0.768,
+        "bbox_norm": [
+          0.1794,
+          0.4139,
+          0.5804,
+          0.9969
+        ],
+        "bbox_px": [
+          114.8,
+          198.7,
+          371.4,
+          478.5
+        ],
+        "color": "灰色",
+        "color_hex": "#757977",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8865,
+        "link_reason": "外观 0.95 / 颜色 0.91 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 2,
+            "score": 0.8865
+          }
+        ],
+        "crop_url": "/api/detections/7/crop",
+        "area_ratio": 0.23375
+      },
+      {
+        "detection_id": 8,
+        "track_id": 3,
+        "class": "键盘",
+        "confidence": 0.8557,
+        "bbox_norm": [
+          0.6916,
+          0.6431,
+          0.999,
+          0.8213
+        ],
+        "bbox_px": [
+          442.6,
+          308.7,
+          639.3,
+          394.2
+        ],
+        "color": "灰色",
+        "color_hex": "#a9aaa5",
+        "region": "桌面右侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9217,
+        "link_reason": "外观 0.91 / 颜色 0.91 / 区域 同区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 3,
+            "score": 0.9217
+          }
+        ],
+        "crop_url": "/api/detections/8/crop",
+        "area_ratio": 0.05476
+      },
+      {
+        "detection_id": 9,
+        "track_id": 4,
+        "class": "键盘",
+        "confidence": 0.5488,
+        "bbox_norm": [
+          0.1873,
+          0.7093,
+          0.4944,
+          0.8978
+        ],
+        "bbox_px": [
+          119.9,
+          340.5,
+          316.4,
+          430.9
+        ],
+        "color": "灰色",
+        "color_hex": "#878d8d",
+        "region": "桌面左侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9533,
+        "link_reason": "外观 0.96 / 颜色 0.91 / 区域 同区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 4,
+            "score": 0.9533
+          }
+        ],
+        "crop_url": "/api/detections/9/crop",
+        "area_ratio": 0.05789
+      },
+      {
+        "detection_id": 10,
+        "track_id": 5,
+        "class": "鼠标",
+        "confidence": 0.7203,
+        "bbox_norm": [
+          0.5673,
+          0.7471,
+          0.6761,
+          0.8293
+        ],
+        "bbox_px": [
+          363.1,
+          358.6,
+          432.7,
+          398.1
+        ],
+        "color": "灰色",
+        "color_hex": "#a4a6a1",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9577,
+        "link_reason": "外观 0.96 / 颜色 0.90 / 区域 同区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 5,
+            "score": 0.9577
+          }
+        ],
+        "crop_url": "/api/detections/10/crop",
+        "area_ratio": 0.00894
+      }
+    ],
+    "warnings": [],
+    "error": null
+  },
+  {
+    "ok": true,
+    "capture_id": 3,
+    "detections": [
+      {
+        "detection_id": 11,
+        "track_id": 1,
+        "class": "手机",
+        "confidence": 0.4233,
+        "bbox_norm": [
+          0.5409,
+          0.6424,
+          0.6045,
+          0.6898
+        ],
+        "bbox_px": [
+          346.2,
+          308.4,
+          386.9,
+          331.1
+        ],
+        "color": "灰色",
+        "color_hex": "#686c63",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9527,
+        "link_reason": "外观 0.95 / 颜色 0.93 / 区域 同区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 1,
+            "score": 0.9527
+          }
+        ],
+        "crop_url": "/api/detections/11/crop",
+        "area_ratio": 0.00301
+      },
+      {
+        "detection_id": 12,
+        "track_id": 2,
+        "class": "笔记本电脑",
+        "confidence": 0.7872,
+        "bbox_norm": [
+          0.3372,
+          0.4172,
+          0.7347,
+          0.9938
+        ],
+        "bbox_px": [
+          215.8,
+          200.3,
+          470.2,
+          477.0
+        ],
+        "color": "灰色",
+        "color_hex": "#676b69",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9525,
+        "link_reason": "外观 0.95 / 颜色 0.94 / 区域 同区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 2,
+            "score": 0.9525
+          }
+        ],
+        "crop_url": "/api/detections/12/crop",
+        "area_ratio": 0.22918
+      },
+      {
+        "detection_id": 13,
+        "track_id": 4,
+        "class": "键盘",
+        "confidence": 0.7012,
+        "bbox_norm": [
+          0.3432,
+          0.7227,
+          0.6516,
+          0.9012
+        ],
+        "bbox_px": [
+          219.7,
+          346.9,
+          417.0,
+          432.6
+        ],
+        "color": "灰色",
+        "color_hex": "#777c7d",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8623,
+        "link_reason": "外观 0.91 / 颜色 0.97 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 4,
+            "score": 0.8623
+          }
+        ],
+        "crop_url": "/api/detections/13/crop",
+        "area_ratio": 0.05504
+      },
+      {
+        "detection_id": 14,
+        "track_id": 3,
+        "class": "键盘",
+        "confidence": 0.5415,
+        "bbox_norm": [
+          0.8433,
+          0.6974,
+          0.9956,
+          0.8416
+        ],
+        "bbox_px": [
+          539.7,
+          334.7,
+          637.2,
+          404.0
+        ],
+        "color": "灰色",
+        "color_hex": "#90928b",
+        "region": "桌面右侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8653,
+        "link_reason": "外观 0.83 / 颜色 0.94 / 区域 同区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 3,
+            "score": 0.8653
+          }
+        ],
+        "crop_url": "/api/detections/14/crop",
+        "area_ratio": 0.02196
+      },
+      {
+        "detection_id": 15,
+        "track_id": 5,
+        "class": "鼠标",
+        "confidence": 0.7627,
+        "bbox_norm": [
+          0.7208,
+          0.7594,
+          0.831,
+          0.8451
+        ],
+        "bbox_px": [
+          461.3,
+          364.5,
+          531.9,
+          405.7
+        ],
+        "color": "灰色",
+        "color_hex": "#90928d",
+        "region": "桌面右侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8966,
+        "link_reason": "外观 0.97 / 颜色 0.92 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 5,
+            "score": 0.8966
+          }
+        ],
+        "crop_url": "/api/detections/15/crop",
+        "area_ratio": 0.00945
+      }
+    ],
+    "warnings": [],
+    "error": null
+  },
+  {
+    "ok": true,
+    "capture_id": 4,
+    "detections": [
+      {
+        "detection_id": 16,
+        "track_id": 1,
+        "class": "手机",
+        "confidence": 0.3782,
+        "bbox_norm": [
+          0.1006,
+          0.6333,
+          0.1664,
+          0.6806
+        ],
+        "bbox_px": [
+          64.4,
+          304.0,
+          106.5,
+          326.7
+        ],
+        "color": "灰色",
+        "color_hex": "#777c72",
+        "region": "桌面左侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9244,
+        "link_reason": "外观 0.99 / 颜色 1.00 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 1,
+            "score": 0.9244
+          }
+        ],
+        "crop_url": "/api/detections/16/crop",
+        "area_ratio": 0.00312
+      },
+      {
+        "detection_id": 17,
+        "track_id": 2,
+        "class": "笔记本电脑",
+        "confidence": 0.4844,
+        "bbox_norm": [
+          0.0013,
+          0.412,
+          0.2975,
+          0.9936
+        ],
+        "bbox_px": [
+          0.8,
+          197.8,
+          190.4,
+          476.9
+        ],
+        "color": "灰色",
+        "color_hex": "#777a75",
+        "region": "桌面左侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8998,
+        "link_reason": "外观 0.96 / 颜色 0.98 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 2,
+            "score": 0.8998
+          }
+        ],
+        "crop_url": "/api/detections/17/crop",
+        "area_ratio": 0.17227
+      },
+      {
+        "detection_id": 18,
+        "track_id": 3,
+        "class": "键盘",
+        "confidence": 0.9001,
+        "bbox_norm": [
+          0.4075,
+          0.6369,
+          0.8868,
+          0.8269
+        ],
+        "bbox_px": [
+          260.8,
+          305.7,
+          567.5,
+          396.9
+        ],
+        "color": "灰色",
+        "color_hex": "#93938f",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8949,
+        "link_reason": "外观 0.96 / 颜色 0.95 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 3,
+            "score": 0.8949
+          },
+          {
+            "track_id": 4,
+            "score": 0.7266
+          }
+        ],
+        "crop_url": "/api/detections/18/crop",
+        "area_ratio": 0.09106
+      },
+      {
+        "detection_id": 19,
+        "track_id": 6,
+        "class": "键盘",
+        "confidence": 0.3794,
+        "bbox_norm": [
+          0.0,
+          0.707,
+          0.2218,
+          0.8616
+        ],
+        "bbox_px": [
+          -0.5,
+          339.4,
+          142.0,
+          413.6
+        ],
+        "color": "灰色",
+        "color_hex": "#878e8c",
+        "region": "桌面左侧",
+        "link_status": "ambiguous",
+        "link_method": "ambiguous",
+        "link_score": 0.7866,
+        "link_reason": "外观 0.80 / 颜色 0.98 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 4,
+            "score": 0.7866
+          }
+        ],
+        "crop_url": "/api/detections/19/crop",
+        "area_ratio": 0.03439
+      },
+      {
+        "detection_id": 20,
+        "track_id": 5,
+        "class": "鼠标",
+        "confidence": 0.6596,
+        "bbox_norm": [
+          0.2854,
+          0.7486,
+          0.3944,
+          0.8313
+        ],
+        "bbox_px": [
+          182.7,
+          359.3,
+          252.4,
+          399.0
+        ],
+        "color": "灰色",
+        "color_hex": "#9c9e9a",
+        "region": "桌面左侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9198,
+        "link_reason": "外观 0.98 / 颜色 1.00 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 5,
+            "score": 0.9198
+          }
+        ],
+        "crop_url": "/api/detections/20/crop",
+        "area_ratio": 0.00902
+      }
+    ],
+    "warnings": [
+      "键盘 可能与已有物品重复（最高相似度 0.79），已标为待确认"
+    ],
+    "error": null
+  },
+  {
+    "ok": true,
+    "capture_id": 5,
+    "detections": [
+      {
+        "detection_id": 21,
+        "track_id": 1,
+        "class": "手机",
+        "confidence": 0.4279,
+        "bbox_norm": [
+          0.6032,
+          0.62,
+          0.669,
+          0.6696
+        ],
+        "bbox_px": [
+          386.0,
+          297.6,
+          428.2,
+          321.4
+        ],
+        "color": "灰色",
+        "color_hex": "#7e8478",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9057,
+        "link_reason": "外观 0.96 / 颜色 0.99 / 区域 异区 / 时间 0.96",
+        "candidates": [
+          {
+            "track_id": 1,
+            "score": 0.9057
+          }
+        ],
+        "crop_url": "/api/detections/21/crop",
+        "area_ratio": 0.00327
+      },
+      {
+        "detection_id": 22,
+        "track_id": 2,
+        "class": "笔记本电脑",
+        "confidence": 0.7886,
+        "bbox_norm": [
+          0.4005,
+          0.3991,
+          0.8003,
+          0.9849
+        ],
+        "bbox_px": [
+          256.3,
+          191.6,
+          512.2,
+          472.7
+        ],
+        "color": "灰色",
+        "color_hex": "#797d7b",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.894,
+        "link_reason": "外观 0.97 / 颜色 0.90 / 区域 异区 / 时间 0.96",
+        "candidates": [
+          {
+            "track_id": 2,
+            "score": 0.894
+          }
+        ],
+        "crop_url": "/api/detections/22/crop",
+        "area_ratio": 0.23417
+      },
+      {
+        "detection_id": 23,
+        "track_id": 4,
+        "class": "键盘",
+        "confidence": 0.727,
+        "bbox_norm": [
+          0.4108,
+          0.6994,
+          0.7232,
+          0.892
+        ],
+        "bbox_px": [
+          262.9,
+          335.7,
+          462.8,
+          428.2
+        ],
+        "color": "灰色",
+        "color_hex": "#8e9595",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9186,
+        "link_reason": "外观 0.91 / 颜色 0.90 / 区域 同区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 4,
+            "score": 0.9186
+          },
+          {
+            "track_id": 6,
+            "score": 0.7627
+          }
+        ],
+        "crop_url": "/api/detections/23/crop",
+        "area_ratio": 0.06015
+      },
+      {
+        "detection_id": 24,
+        "track_id": 5,
+        "class": "鼠标",
+        "confidence": 0.7327,
+        "bbox_norm": [
+          0.7872,
+          0.7319,
+          0.898,
+          0.8143
+        ],
+        "bbox_px": [
+          503.8,
+          351.3,
+          574.7,
+          390.8
+        ],
+        "color": "灰色",
+        "color_hex": "#abaea9",
+        "region": "桌面右侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8821,
+        "link_reason": "外观 0.96 / 颜色 0.83 / 区域 异区 / 时间 0.96",
+        "candidates": [
+          {
+            "track_id": 5,
+            "score": 0.8821
+          }
+        ],
+        "crop_url": "/api/detections/24/crop",
+        "area_ratio": 0.00913
+      }
+    ],
+    "warnings": [],
+    "error": null
+  },
+  {
+    "ok": true,
+    "capture_id": 6,
+    "detections": [
+      {
+        "detection_id": 25,
+        "track_id": 1,
+        "class": "手机",
+        "confidence": 0.4347,
+        "bbox_norm": [
+          0.2511,
+          0.6396,
+          0.3161,
+          0.6874
+        ],
+        "bbox_px": [
+          160.7,
+          307.0,
+          202.3,
+          329.9
+        ],
+        "color": "灰色",
+        "color_hex": "#6f746a",
+        "region": "桌面左侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9143,
+        "link_reason": "外观 0.98 / 颜色 0.98 / 区域 异区 / 时间 0.96",
+        "candidates": [
+          {
+            "track_id": 1,
+            "score": 0.9143
+          }
+        ],
+        "crop_url": "/api/detections/25/crop",
+        "area_ratio": 0.00311
+      },
+      {
+        "detection_id": 26,
+        "track_id": 2,
+        "class": "笔记本电脑",
+        "confidence": 0.7625,
+        "bbox_norm": [
+          0.0452,
+          0.4163,
+          0.4455,
+          0.9926
+        ],
+        "bbox_px": [
+          28.9,
+          199.8,
+          285.1,
+          476.5
+        ],
+        "color": "灰色",
+        "color_hex": "#6a6e6c",
+        "region": "桌面左侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8981,
+        "link_reason": "外观 0.96 / 颜色 0.96 / 区域 异区 / 时间 0.96",
+        "candidates": [
+          {
+            "track_id": 2,
+            "score": 0.8981
+          }
+        ],
+        "crop_url": "/api/detections/26/crop",
+        "area_ratio": 0.23068
+      },
+      {
+        "detection_id": 27,
+        "track_id": 3,
+        "class": "键盘",
+        "confidence": 0.8803,
+        "bbox_norm": [
+          0.5579,
+          0.6483,
+          0.995,
+          0.8356
+        ],
+        "bbox_px": [
+          357.1,
+          311.2,
+          636.8,
+          401.1
+        ],
+        "color": "灰色",
+        "color_hex": "#969692",
+        "region": "桌面右侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.8813,
+        "link_reason": "外观 0.94 / 颜色 0.95 / 区域 异区 / 时间 0.95",
+        "candidates": [
+          {
+            "track_id": 3,
+            "score": 0.8813
+          }
+        ],
+        "crop_url": "/api/detections/27/crop",
+        "area_ratio": 0.08184
+      },
+      {
+        "detection_id": 28,
+        "track_id": 4,
+        "class": "键盘",
+        "confidence": 0.547,
+        "bbox_norm": [
+          0.0494,
+          0.7187,
+          0.3669,
+          0.9051
+        ],
+        "bbox_px": [
+          31.6,
+          345.0,
+          234.8,
+          434.5
+        ],
+        "color": "灰色",
+        "color_hex": "#797f7f",
+        "region": "桌面左侧",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9014,
+        "link_reason": "外观 0.96 / 颜色 0.96 / 区域 异区 / 时间 0.96",
+        "candidates": [
+          {
+            "track_id": 4,
+            "score": 0.9014
+          },
+          {
+            "track_id": 6,
+            "score": 0.8359
+          }
+        ],
+        "crop_url": "/api/detections/28/crop",
+        "area_ratio": 0.05919
+      },
+      {
+        "detection_id": 29,
+        "track_id": 5,
+        "class": "鼠标",
+        "confidence": 0.6809,
+        "bbox_norm": [
+          0.4334,
+          0.7543,
+          0.5433,
+          0.8393
+        ],
+        "bbox_px": [
+          277.4,
+          362.1,
+          347.7,
+          402.9
+        ],
+        "color": "灰色",
+        "color_hex": "#939691",
+        "region": "桌面中央",
+        "link_status": "matched",
+        "link_method": "prototype",
+        "link_score": 0.9065,
+        "link_reason": "外观 0.98 / 颜色 0.91 / 区域 异区 / 时间 0.96",
+        "candidates": [
+          {
+            "track_id": 5,
+            "score": 0.9065
+          }
+        ],
+        "crop_url": "/api/detections/29/crop",
+        "area_ratio": 0.00934
+      }
+    ],
+    "warnings": [],
+    "error": null
+  }
+]

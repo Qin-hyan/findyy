@@ -1,0 +1,74 @@
+### 笔记本电脑最后出现在哪里？
+intent=last_seen(最后位置) status=found latency=79ms
+parsed={'raw_text': '笔记本电脑最后出现在哪里？', 'intent': 'last_seen', 'intent_zh': '最后位置', 'class_zh': '笔记本电脑', 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=「笔记本电脑」最后出现在「桌面左侧」。时间：2026-10-28 10:25:00（57 分钟前）。依据：最近一次抓拍中检测到该物品（置信度 0.76），与历史外观关联相似度 0.90，共记录到 6 次。
+  track=2 label=笔记本电脑 zone=桌面左侧 time=2026-10-28 10:25:00 synced=True conf=0.7625 link=0.8988 status=matched sightings=6 image=/api/captures/6/image
+
+### 鼠标移动过吗？
+intent=moved(是否移动) status=found latency=11ms
+parsed={'raw_text': '鼠标移动过吗？', 'intent': 'moved', 'intent_zh': '是否移动', 'class_zh': '鼠标', 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=「鼠标」移动过 4 次：「桌面中央」→「桌面右侧」（2026-10-28 10:10:00）、「桌面右侧」→「桌面左侧」（2026-10-28 10:15:00）、「桌面左侧」→「桌面右侧」（2026-10-28 10:20:00）、「桌面右侧」→「桌面中央」（2026-10-28 10:25:00）
+  track=5 label=鼠标 zone=None time=None synced=None conf=None link=None status=None sightings=None image=None
+
+### 桌上都有哪些东西？
+intent=list(区域清单) status=found latency=8ms
+parsed={'raw_text': '桌上都有哪些东西？', 'intent': 'list', 'intent_zh': '区域清单', 'class_zh': None, 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 20, 'notes': []}
+answer=最近一次抓拍（2026-10-28 10:25:00）识别到：键盘（桌面右侧、桌面左侧，共 2 处）、笔记本电脑（桌面左侧）、鼠标（桌面中央）、手机（桌面左侧）。
+  items=['键盘', '笔记本电脑', '鼠标', '键盘', '手机']
+
+### 手机是什么时候最后一次看到的？
+intent=history(历史记录) status=found latency=16ms
+parsed={'raw_text': '手机是什么时候最后一次看到的？', 'intent': 'history', 'intent_zh': '历史记录', 'class_zh': '手机', 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=「手机」共记录到 6 次，最近 5 次如下：
+- 2026-10-28 10:25:00 在「桌面左侧」（置信度 0.43）
+- 2026-10-28 10:20:00 在「桌面中央」（置信度 0.43）
+- 2026-10-28 10:15:00 在「桌面左侧」（置信度 0.38）
+- 2026-10-28 10:10:00 在「桌面中央」（置信度 0.42）
+- 2026-10-28 10:05:00 在「桌面中央」（置信度 0.38）
+  track=1 label=手机 events=5
+
+### 钥匙在哪？
+intent=last_seen(最后位置) status=not_found latency=10ms
+parsed={'raw_text': '钥匙在哪？', 'intent': 'last_seen', 'intent_zh': '最后位置', 'class_zh': '钥匙', 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=没有找到「钥匙」的记录。当前已记录：手机、笔记本电脑、键盘、鼠标。可能原因：物品不在摄像头视野内、词表未覆盖该物品，或还没有采集到。
+
+### 红色杯子在哪？
+intent=last_seen(最后位置) status=not_found latency=9ms
+parsed={'raw_text': '红色杯子在哪？', 'intent': 'last_seen', 'intent_zh': '最后位置', 'class_zh': '杯子', 'color': '红色', 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=没有找到「红色杯子」的记录。当前已记录：手机、笔记本电脑、键盘、鼠标。可能原因：物品不在摄像头视野内、词表未覆盖该物品，或还没有采集到。
+
+### 今天鼠标动过吗？
+intent=moved(是否移动) status=found latency=10ms
+parsed={'raw_text': '今天鼠标动过吗？', 'intent': 'moved', 'intent_zh': '是否移动', 'class_zh': '鼠标', 'color': None, 'region': None, 'time_window': 'today', 'time_start_utc': '2026-10-27T16:00:00Z', 'time_end_utc': '2026-10-28T16:00:00Z', 'limit': 5, 'notes': []}
+answer=「鼠标」移动过 4 次：「桌面中央」→「桌面右侧」（2026-10-28 10:10:00）、「桌面右侧」→「桌面左侧」（2026-10-28 10:15:00）、「桌面左侧」→「桌面右侧」（2026-10-28 10:20:00）、「桌面右侧」→「桌面中央」（2026-10-28 10:25:00）
+  track=5 label=鼠标 zone=None time=None synced=None conf=None link=None status=None sightings=None image=None
+
+### 键盘有几个？
+intent=count(数量) status=found latency=22ms
+parsed={'raw_text': '键盘有几个？', 'intent': 'count', 'intent_zh': '数量', 'class_zh': '键盘', 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=已记录 3 个「键盘」实体，合计出现 11 次。其中 1 个的关联还不确定（可能是同一件物品的重复记录），可在界面上确认。
+notes=['1 个实体为待确认关联']
+
+### 我的电脑还在吗？
+intent=presence(是否存在) status=found latency=11ms
+parsed={'raw_text': '我的电脑还在吗？', 'intent': 'presence', 'intent_zh': '是否存在', 'class_zh': '笔记本电脑', 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=记录显示「笔记本电脑」上次出现在「桌面左侧」（2026-10-28 10:25:00）。我无法判断此刻是否还在，只能确认最后一次看见的位置。
+notes=['这是历史记录判断，不是实时状态']
+
+### 你好
+intent=help(帮助) status=help latency=0ms
+parsed={'raw_text': '你好', 'intent': 'help', 'intent_zh': '帮助', 'class_zh': None, 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': ['没有识别出要查询的物品名称，已改为展示使用说明']}
+answer=我可以根据摄像头的历史记录回答：物品最后出现在哪个区域、什么时候出现过、是否移动过、某个区域有哪些东西。
+例如：
+- 我的钥匙最后出现在哪里？
+- 红色杯子在哪？
+- 手机是什么时候最后一次看到的？
+- 桌上都有哪些东西？
+- 鼠标移动过吗？
+注意：我只能查询词表里已配置的物品；时间来自设备 SNTP，未同步时会明确标注。
+
+### 手机最后在哪
+intent=last_seen(最后位置) status=found latency=13ms
+parsed={'raw_text': '手机最后在哪', 'intent': 'last_seen', 'intent_zh': '最后位置', 'class_zh': '手机', 'color': None, 'region': None, 'time_window': None, 'time_start_utc': None, 'time_end_utc': None, 'limit': 5, 'notes': []}
+answer=「手机」最后出现在「桌面左侧」。时间：2026-10-28 10:25:00（57 分钟前）。依据：最近一次抓拍中检测到该物品（置信度 0.43），与历史外观关联相似度 0.92，共记录到 6 次。
+  track=1 label=手机 zone=桌面左侧 time=2026-10-28 10:25:00 synced=True conf=0.4347 link=0.9151 status=matched sightings=6 image=/api/captures/6/image
