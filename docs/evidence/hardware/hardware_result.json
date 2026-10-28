@@ -1,0 +1,834 @@
+﻿{
+  "device": {
+    "ip": "http://<device-ip>",
+    "firmware": null,
+    "camera": {
+      "ready": true,
+      "sensor": "OV2640",
+      "pid": 38,
+      "ver": 66,
+      "framesize": "SVGA",
+      "width": 800,
+      "height": 600,
+      "jpeg_quality": 10,
+      "fb_count": 3
+    },
+    "wifi": {
+      "connected": true,
+      "ip": "<device-ip>",
+      "rssi": -27
+    },
+    "time": {
+      "started": true,
+      "synced": true,
+      "wait_timed_out": false,
+      "sync_count": 1,
+      "last_sync_uptime_ms": 4307,
+      "epoch_s": 1793206811,
+      "local": "2026-10-29 01:00:11",
+      "utc": "2026-10-28 17:00:11",
+      "timezone": "CST-8",
+      "ntp_servers": [
+        "ntp.aliyun.com",
+        "pool.ntp.org"
+      ]
+    }
+  },
+  "captures": [
+    {
+      "ok": true,
+      "capture_id": 1,
+      "duplicate": false,
+      "error": null,
+      "capture": {
+        "id": 1,
+        "captured_at_utc": "2026-10-28T17:00:12Z",
+        "captured_at_local": "2026-10-29 01:00:12",
+        "received_at_utc": "2026-10-28T17:00:13Z",
+        "time_synced": true,
+        "time_source": "sntp",
+        "time_ago": "刚刚",
+        "width": 800,
+        "height": 600,
+        "detections_count": 6,
+        "source": "http://<device-ip>",
+        "image_url": "/api/captures/1/image",
+        "thumbnail_url": "/api/captures/1/image?thumb=1"
+      },
+      "detections": [
+        {
+          "class": "充电器",
+          "confidence": 0.4879,
+          "region": "桌面右侧",
+          "track_id": 1,
+          "link_status": "new",
+          "link_score": 0.0,
+          "bbox_norm": [
+            0.6684,
+            0.0049,
+            0.8624,
+            0.5289
+          ]
+        },
+        {
+          "class": "笔记本电脑",
+          "confidence": 0.3591,
+          "region": "桌面中央",
+          "track_id": 2,
+          "link_status": "new",
+          "link_score": 0.0,
+          "bbox_norm": [
+            0.3332,
+            0.0,
+            0.7921,
+            0.4863
+          ]
+        },
+        {
+          "class": "耳机",
+          "confidence": 0.4314,
+          "region": "桌面右侧",
+          "track_id": 3,
+          "link_status": "new",
+          "link_score": 0.0,
+          "bbox_norm": [
+            0.6912,
+            0.7944,
+            0.9977,
+            0.9999
+          ]
+        },
+        {
+          "class": "键盘",
+          "confidence": 0.639,
+          "region": "桌面左侧",
+          "track_id": 4,
+          "link_status": "new",
+          "link_score": 0.0,
+          "bbox_norm": [
+            0.0,
+            0.0824,
+            0.2432,
+            0.4802
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.6071,
+          "region": "桌面左侧",
+          "track_id": 5,
+          "link_status": "new",
+          "link_score": 0.0,
+          "bbox_norm": [
+            0.2657,
+            0.5589,
+            0.3878,
+            0.8339
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.478,
+          "region": "桌面中央",
+          "track_id": 6,
+          "link_status": "new",
+          "link_score": 0.0,
+          "bbox_norm": [
+            0.4909,
+            0.3347,
+            0.6023,
+            0.4821
+          ]
+        }
+      ],
+      "warnings": [],
+      "elapsed_s": 9.26
+    },
+    {
+      "ok": true,
+      "capture_id": 2,
+      "duplicate": false,
+      "error": null,
+      "capture": {
+        "id": 2,
+        "captured_at_utc": "2026-10-28T17:00:24Z",
+        "captured_at_local": "2026-10-29 01:00:24",
+        "received_at_utc": "2026-10-28T17:00:25Z",
+        "time_synced": true,
+        "time_source": "sntp",
+        "time_ago": "刚刚",
+        "width": 800,
+        "height": 600,
+        "detections_count": 6,
+        "source": "http://<device-ip>",
+        "image_url": "/api/captures/2/image",
+        "thumbnail_url": "/api/captures/2/image?thumb=1"
+      },
+      "detections": [
+        {
+          "class": "充电器",
+          "confidence": 0.5082,
+          "region": "桌面右侧",
+          "track_id": 1,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6664,
+            0.004,
+            0.8606,
+            0.5272
+          ]
+        },
+        {
+          "class": "笔记本电脑",
+          "confidence": 0.3723,
+          "region": "桌面中央",
+          "track_id": 2,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.3316,
+            0.0005,
+            0.7859,
+            0.4856
+          ]
+        },
+        {
+          "class": "耳机",
+          "confidence": 0.3755,
+          "region": "桌面右侧",
+          "track_id": 3,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6868,
+            0.7934,
+            0.9993,
+            0.9998
+          ]
+        },
+        {
+          "class": "键盘",
+          "confidence": 0.6561,
+          "region": "桌面左侧",
+          "track_id": 4,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.0,
+            0.0876,
+            0.2424,
+            0.4787
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.6018,
+          "region": "桌面左侧",
+          "track_id": 5,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.2658,
+            0.5572,
+            0.3869,
+            0.8305
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.4932,
+          "region": "桌面中央",
+          "track_id": 6,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.4901,
+            0.3321,
+            0.6028,
+            0.4802
+          ]
+        }
+      ],
+      "warnings": [],
+      "elapsed_s": 18.8
+    },
+    {
+      "ok": true,
+      "capture_id": 3,
+      "duplicate": false,
+      "error": null,
+      "capture": {
+        "id": 3,
+        "captured_at_utc": "2026-10-28T17:00:34Z",
+        "captured_at_local": "2026-10-29 01:00:34",
+        "received_at_utc": "2026-10-28T17:00:34Z",
+        "time_synced": true,
+        "time_source": "sntp",
+        "time_ago": "刚刚",
+        "width": 800,
+        "height": 600,
+        "detections_count": 7,
+        "source": "http://<device-ip>",
+        "image_url": "/api/captures/3/image",
+        "thumbnail_url": "/api/captures/3/image?thumb=1"
+      },
+      "detections": [
+        {
+          "class": "充电器",
+          "confidence": 0.5043,
+          "region": "桌面右侧",
+          "track_id": 1,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6672,
+            0.0039,
+            0.8602,
+            0.5281
+          ]
+        },
+        {
+          "class": "笔记本电脑",
+          "confidence": 0.3898,
+          "region": "桌面中央",
+          "track_id": 2,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.3305,
+            0.0008,
+            0.7845,
+            0.4828
+          ]
+        },
+        {
+          "class": "耳机",
+          "confidence": 0.4339,
+          "region": "桌面右侧",
+          "track_id": 3,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6905,
+            0.7925,
+            0.9989,
+            0.9998
+          ]
+        },
+        {
+          "class": "钥匙",
+          "confidence": 0.216,
+          "region": "桌面右侧",
+          "track_id": 7,
+          "link_status": "new",
+          "link_score": 0.0,
+          "bbox_norm": [
+            0.8541,
+            0.8542,
+            0.9493,
+            0.9371
+          ]
+        },
+        {
+          "class": "键盘",
+          "confidence": 0.6727,
+          "region": "桌面左侧",
+          "track_id": 4,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.0,
+            0.0866,
+            0.2424,
+            0.4773
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.5916,
+          "region": "桌面左侧",
+          "track_id": 5,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.2654,
+            0.5555,
+            0.3877,
+            0.8299
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.4876,
+          "region": "桌面中央",
+          "track_id": 6,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.4901,
+            0.3302,
+            0.6031,
+            0.4791
+          ]
+        }
+      ],
+      "warnings": [],
+      "elapsed_s": 28.53
+    },
+    {
+      "ok": true,
+      "capture_id": 4,
+      "duplicate": false,
+      "error": null,
+      "capture": {
+        "id": 4,
+        "captured_at_utc": "2026-10-28T17:00:43Z",
+        "captured_at_local": "2026-10-29 01:00:43",
+        "received_at_utc": "2026-10-28T17:00:44Z",
+        "time_synced": true,
+        "time_source": "sntp",
+        "time_ago": "刚刚",
+        "width": 800,
+        "height": 600,
+        "detections_count": 6,
+        "source": "http://<device-ip>",
+        "image_url": "/api/captures/4/image",
+        "thumbnail_url": "/api/captures/4/image?thumb=1"
+      },
+      "detections": [
+        {
+          "class": "充电器",
+          "confidence": 0.509,
+          "region": "桌面右侧",
+          "track_id": 1,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6673,
+            0.0036,
+            0.8646,
+            0.5277
+          ]
+        },
+        {
+          "class": "笔记本电脑",
+          "confidence": 0.4001,
+          "region": "桌面中央",
+          "track_id": 2,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.3316,
+            0.001,
+            0.7837,
+            0.483
+          ]
+        },
+        {
+          "class": "耳机",
+          "confidence": 0.3852,
+          "region": "桌面右侧",
+          "track_id": 3,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6928,
+            0.7904,
+            0.9986,
+            0.9989
+          ]
+        },
+        {
+          "class": "键盘",
+          "confidence": 0.6568,
+          "region": "桌面左侧",
+          "track_id": 4,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.0,
+            0.0881,
+            0.2424,
+            0.477
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.5359,
+          "region": "桌面左侧",
+          "track_id": 8,
+          "link_status": "ambiguous",
+          "link_score": 0.7654,
+          "bbox_norm": [
+            0.2683,
+            0.5619,
+            0.3924,
+            0.7701
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.4929,
+          "region": "桌面中央",
+          "track_id": 6,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.4899,
+            0.3286,
+            0.6025,
+            0.4781
+          ]
+        }
+      ],
+      "warnings": [
+        "鼠标 可能与已有物品重复（最高相似度 0.77），已标为待确认"
+      ],
+      "elapsed_s": 38.28
+    },
+    {
+      "ok": true,
+      "capture_id": 5,
+      "duplicate": false,
+      "error": null,
+      "capture": {
+        "id": 5,
+        "captured_at_utc": "2026-10-28T17:00:53Z",
+        "captured_at_local": "2026-10-29 01:00:53",
+        "received_at_utc": "2026-10-28T17:00:54Z",
+        "time_synced": true,
+        "time_source": "sntp",
+        "time_ago": "刚刚",
+        "width": 800,
+        "height": 600,
+        "detections_count": 7,
+        "source": "http://<device-ip>",
+        "image_url": "/api/captures/5/image",
+        "thumbnail_url": "/api/captures/5/image?thumb=1"
+      },
+      "detections": [
+        {
+          "class": "充电器",
+          "confidence": 0.499,
+          "region": "桌面右侧",
+          "track_id": 1,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6664,
+            0.0077,
+            0.8632,
+            0.5259
+          ]
+        },
+        {
+          "class": "笔记本电脑",
+          "confidence": 0.3707,
+          "region": "桌面中央",
+          "track_id": 2,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.3307,
+            0.0,
+            0.7786,
+            0.4811
+          ]
+        },
+        {
+          "class": "耳机",
+          "confidence": 0.4361,
+          "region": "桌面右侧",
+          "track_id": 3,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6843,
+            0.7911,
+            0.9976,
+            0.9987
+          ]
+        },
+        {
+          "class": "钥匙",
+          "confidence": 0.2162,
+          "region": "桌面右侧",
+          "track_id": 7,
+          "link_status": "matched",
+          "link_score": 0.9931,
+          "bbox_norm": [
+            0.8522,
+            0.8591,
+            0.945,
+            0.9378
+          ]
+        },
+        {
+          "class": "键盘",
+          "confidence": 0.6763,
+          "region": "桌面左侧",
+          "track_id": 4,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.0,
+            0.0869,
+            0.2409,
+            0.4766
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.5949,
+          "region": "桌面左侧",
+          "track_id": 5,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.2714,
+            0.5571,
+            0.3981,
+            0.8309
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.4886,
+          "region": "桌面中央",
+          "track_id": 6,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.4907,
+            0.3295,
+            0.603,
+            0.4798
+          ]
+        }
+      ],
+      "warnings": [],
+      "elapsed_s": 47.88
+    },
+    {
+      "ok": true,
+      "capture_id": 6,
+      "duplicate": false,
+      "error": null,
+      "capture": {
+        "id": 6,
+        "captured_at_utc": "2026-10-28T17:01:03Z",
+        "captured_at_local": "2026-10-29 01:01:03",
+        "received_at_utc": "2026-10-28T17:01:04Z",
+        "time_synced": true,
+        "time_source": "sntp",
+        "time_ago": "刚刚",
+        "width": 800,
+        "height": 600,
+        "detections_count": 6,
+        "source": "http://<device-ip>",
+        "image_url": "/api/captures/6/image",
+        "thumbnail_url": "/api/captures/6/image?thumb=1"
+      },
+      "detections": [
+        {
+          "class": "充电器",
+          "confidence": 0.4752,
+          "region": "桌面右侧",
+          "track_id": 1,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6662,
+            0.0059,
+            0.858,
+            0.5261
+          ]
+        },
+        {
+          "class": "笔记本电脑",
+          "confidence": 0.3714,
+          "region": "桌面中央",
+          "track_id": 2,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.3312,
+            0.001,
+            0.779,
+            0.481
+          ]
+        },
+        {
+          "class": "耳机",
+          "confidence": 0.451,
+          "region": "桌面右侧",
+          "track_id": 3,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.6929,
+            0.7918,
+            0.9994,
+            0.9982
+          ]
+        },
+        {
+          "class": "键盘",
+          "confidence": 0.6863,
+          "region": "桌面左侧",
+          "track_id": 4,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.0,
+            0.0883,
+            0.2409,
+            0.475
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.6051,
+          "region": "桌面左侧",
+          "track_id": 5,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.2712,
+            0.5557,
+            0.3986,
+            0.8313
+          ]
+        },
+        {
+          "class": "鼠标",
+          "confidence": 0.4936,
+          "region": "桌面中央",
+          "track_id": 6,
+          "link_status": "matched",
+          "link_score": 1.0,
+          "bbox_norm": [
+            0.4902,
+            0.3304,
+            0.6027,
+            0.4789
+          ]
+        }
+      ],
+      "warnings": [],
+      "elapsed_s": 57.72
+    }
+  ],
+  "queries": [
+    {
+      "query": "充电器最后出现在哪里？",
+      "status": "found",
+      "answer": "「橙色充电器」最后出现在「桌面右侧」。时间：2026-10-29 01:01:03（刚刚）。依据：最近一次抓拍中检测到该物品（置信度 0.48），与历史外观关联相似度 1.00，共记录到 6 次。"
+    },
+    {
+      "query": "笔记本电脑最后出现在哪里？",
+      "status": "found",
+      "answer": "「棕色笔记本电脑」最后出现在「桌面中央」。时间：2026-10-29 01:01:03（刚刚）。依据：最近一次抓拍中检测到该物品（置信度 0.37），与历史外观关联相似度 1.00，共记录到 6 次。"
+    },
+    {
+      "query": "耳机最后出现在哪里？",
+      "status": "found",
+      "answer": "「棕色耳机」最后出现在「桌面右侧」。时间：2026-10-29 01:01:03（刚刚）。依据：最近一次抓拍中检测到该物品（置信度 0.45），与历史外观关联相似度 1.00，共记录到 6 次。"
+    },
+    {
+      "query": "键盘最后出现在哪里？",
+      "status": "found",
+      "answer": "「天蓝键盘」最后出现在「桌面左侧」。时间：2026-10-29 01:01:03（刚刚）。依据：最近一次抓拍中检测到该物品（置信度 0.69），与历史外观关联相似度 1.00，共记录到 6 次。"
+    },
+    {
+      "query": "鼠标最后出现在哪里？",
+      "status": "ambiguous",
+      "answer": "找到 3 个可能的「鼠标」，最可能是「白色鼠标」：时间：2026-10-29 01:01:03（刚刚）。依据：最近一次抓拍中检测到该物品（置信度 0.49），与历史外观关联相似度 1.00，共记录到 6 次。"
+    },
+    {
+      "query": "钥匙最后出现在哪里？",
+      "status": "found",
+      "answer": "「黑色钥匙」最后出现在「桌面右侧」。时间：2026-10-29 01:00:53（刚刚）。依据：最近一次抓拍中检测到该物品（置信度 0.22），与历史外观关联相似度 0.99，共记录到 2 次。"
+    },
+    {
+      "query": "桌上都有哪些东西？",
+      "status": "found",
+      "answer": "最近一次抓拍（2026-10-29 01:01:03）识别到：键盘（桌面左侧）、鼠标（桌面左侧、桌面中央，共 2 处）、充电器（桌面右侧）、耳机（桌面右侧）、笔记本电脑（桌面中央）。"
+    }
+  ],
+  "stats": {
+    "captures": 6,
+    "detections": 38,
+    "active_tracks": 8,
+    "ambiguous_links": 1,
+    "unsynced_captures": 0,
+    "last_capture_at": "2026-10-28T17:01:03Z"
+  },
+  "tracks": [
+    {
+      "id": 1,
+      "label": "橙色充电器",
+      "class": "充电器",
+      "sightings": 6,
+      "last_seen_utc": "2026-10-28T17:01:03Z",
+      "last_region": "桌面右侧"
+    },
+    {
+      "id": 2,
+      "label": "棕色笔记本电脑",
+      "class": "笔记本电脑",
+      "sightings": 6,
+      "last_seen_utc": "2026-10-28T17:01:03Z",
+      "last_region": "桌面中央"
+    },
+    {
+      "id": 3,
+      "label": "棕色耳机",
+      "class": "耳机",
+      "sightings": 6,
+      "last_seen_utc": "2026-10-28T17:01:03Z",
+      "last_region": "桌面右侧"
+    },
+    {
+      "id": 4,
+      "label": "天蓝键盘",
+      "class": "键盘",
+      "sightings": 6,
+      "last_seen_utc": "2026-10-28T17:01:03Z",
+      "last_region": "桌面左侧"
+    },
+    {
+      "id": 5,
+      "label": "天蓝鼠标",
+      "class": "鼠标",
+      "sightings": 5,
+      "last_seen_utc": "2026-10-28T17:01:03Z",
+      "last_region": "桌面左侧"
+    },
+    {
+      "id": 6,
+      "label": "白色鼠标",
+      "class": "鼠标",
+      "sightings": 6,
+      "last_seen_utc": "2026-10-28T17:01:03Z",
+      "last_region": "桌面中央"
+    },
+    {
+      "id": 7,
+      "label": "黑色钥匙",
+      "class": "钥匙",
+      "sightings": 2,
+      "last_seen_utc": "2026-10-28T17:00:53Z",
+      "last_region": "桌面右侧"
+    },
+    {
+      "id": 8,
+      "label": "红色鼠标",
+      "class": "鼠标",
+      "sightings": 1,
+      "last_seen_utc": "2026-10-28T17:00:43Z",
+      "last_region": "桌面左侧"
+    }
+  ]
+}

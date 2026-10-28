@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS tracks (
   prototype_n     INTEGER NOT NULL DEFAULT 0,
   first_seen_utc  TEXT,
   last_seen_utc   TEXT,
+  last_bbox_norm  TEXT,                          -- 最近一次检测框（归一化），用于固定机位 IoU 先验
   last_capture_id INTEGER REFERENCES captures(id),
   last_region_id  INTEGER REFERENCES regions(id),
   status          TEXT NOT NULL DEFAULT 'active',

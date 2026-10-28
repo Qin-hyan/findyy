@@ -57,13 +57,38 @@ def zone_prior(last_region_id: int | None, region_id: int | None) -> float:
     return 1.0 if int(last_region_id) == int(region_id) else 0.35
 
 
+def bbox_iou(a: tuple[float, float, float, float] | None, b: tuple[float, float, float, float] | None) -> float:
+    """归一化 bbox 的 IoU；用于固定机位下"物体还在原处"的空间先验。"""
+    if a is None or b is None:
+        return 0.0
+    ax1, ay1, ax2, ay2 = a
+    bx1, by1, bx2, by2 = b
+    ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
+    inter = iw * ih
+    area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
+    area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+    union = area_a + area_b - inter
+    if union <= 0:
+        return 0.0
+    return float(min(1.0, inter / union))
+
+
 def combined_score(
     embedding_sim: float,
     color_sim: float,
     zone: float,
     recency: float,
     weights: dict[str, float],
+    spatial_iou: float = 0.0,
+    spatial_bonus: float = 0.15,
 ) -> float:
+    """外观/颜色/区域/时间加权平均，再叠加固定机位下的空间 IoU 奖励。
+
+    IoU 只做"加分项"而不是替换外观：物体被挪走后 IoU 变 0，仍可靠外观与颜色匹配；
+    物体留在原处时 IoU 加分能显著抵抗光照/裁剪抖动导致的 embedding 波动。
+    """
     w = {
         "embedding": float(weights.get("embedding", 0.70)),
         "color": float(weights.get("color", 0.15)),
@@ -71,13 +96,14 @@ def combined_score(
         "recency": float(weights.get("recency", 0.05)),
     }
     total = sum(w.values()) or 1.0
-    score = (
+    base = (
         w["embedding"] * float(np.clip(embedding_sim, 0.0, 1.0))
         + w["color"] * float(np.clip(color_sim, 0.0, 1.0))
         + w["zone"] * float(np.clip(zone, 0.0, 1.0))
         + w["recency"] * float(np.clip(recency, 0.0, 1.0))
-    )
-    return float(score / total)
+    ) / total
+    bonus = float(np.clip(spatial_bonus, 0.0, 1.0)) * float(np.clip(spatial_iou, 0.0, 1.0))
+    return float(min(1.0, base + bonus))
 
 
 def decide(score: float, accept_threshold: float = 0.82, uncertain_threshold: float = 0.70) -> str:

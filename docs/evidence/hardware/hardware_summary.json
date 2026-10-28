@@ -1,0 +1,37 @@
+﻿{
+  "date": "2026-10-29",
+  "device": "ESP32-S3-EYE v2.2 + OV2640（Findy M1 固件）",
+  "ip": "<device-ip>",
+  "camera": {
+    "ready": true,
+    "sensor": "OV2640",
+    "pid": 38,
+    "ver": 66,
+    "framesize": "SVGA",
+    "width": 800,
+    "height": 600,
+    "jpeg_quality": 10,
+    "fb_count": 3
+  },
+  "wifi": {
+    "connected": true,
+    "ip": "<device-ip>",
+    "rssi": -27
+  },
+  "sntp_synced": true,
+  "captures": 6,
+  "captures_ok": 6,
+  "detections": 38,
+  "tracks": 8,
+  "stats": {
+    "captures": 6,
+    "detections": 38,
+    "active_tracks": 8,
+    "ambiguous_links": 1,
+    "unsynced_captures": 0,
+    "last_capture_at": "2026-10-28T17:01:03Z"
+  },
+  "browser_checks": 7,
+  "browser_checks_passed": 7,
+  "privacy": "真机原始图像/截图仅保存在本机 data/ 用于验证，未提交仓库；验证后已删除。"
+}

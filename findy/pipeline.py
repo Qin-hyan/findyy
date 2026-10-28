@@ -21,9 +21,9 @@ from .imaging import (
     load_image,
     save_bytes,
 )
-from .matcher import combined_score, decide, recency_score, zone_prior
+from .matcher import bbox_iou, combined_score, decide, recency_score, zone_prior
 from .sources import CaptureMeta
-from .util import fmt_bbox, sha256_bytes, to_iso, utc_now, utc_now_iso
+from .util import fmt_bbox, parse_bbox, sha256_bytes, to_iso, utc_now, utc_now_iso
 from .zones import Region, assign_region
 
 log = logging.getLogger(__name__)
@@ -187,6 +187,8 @@ class FindyPipeline:
         for idx, (det, crop, emb) in enumerate(zip(detections, crops, embeddings)):
             if crop is None:
                 continue
+            cur_bbox_norm = det.bbox_norm(width, height)
+            cur_bbox_text = fmt_bbox(cur_bbox_norm)
             color_hex, color_name, color_hist = color_features(crop)
             region = assign_region(det.bbox_px, width, height, self.regions)
             region_id = self.region_ids.get(region.name) if region else None
@@ -216,10 +218,23 @@ class FindyPipeline:
                 c_sim = color_similarity(hist, color_hist)
                 z_prior = zone_prior(track.get("last_region_id"), region_id)
                 r_prior = recency_score(track.get("last_seen_utc"), self.cfg.matching.recency_tau_hours)
-                score = combined_score(
-                    emb_sim, c_sim, z_prior, r_prior, self.cfg.matching.weights.__dict__
+                spatial = bbox_iou(
+                    parse_bbox(track["last_bbox_norm"]) if track.get("last_bbox_norm") else None,
+                    cur_bbox_norm,
                 )
-                reason = f"外观 {emb_sim:.2f} / 颜色 {c_sim:.2f} / 区域 {'同区' if z_prior == 1.0 else ('异区' if z_prior == 0.35 else '未知')} / 时间 {r_prior:.2f}"
+                score = combined_score(
+                    emb_sim,
+                    c_sim,
+                    z_prior,
+                    r_prior,
+                    self.cfg.matching.weights.__dict__,
+                    spatial_iou=spatial,
+                    spatial_bonus=self.cfg.matching.spatial_bonus,
+                )
+                reason = (
+                    f"外观 {emb_sim:.2f} / 颜色 {c_sim:.2f} / 空间 {spatial:.2f} / "
+                    f"区域 {'同区' if z_prior == 1.0 else ('异区' if z_prior == 0.35 else '未知')} / 时间 {r_prior:.2f}"
+                )
                 scored.append((int(track["id"]), score, reason))
 
             ranked = sorted(scored, key=lambda x: x[1], reverse=True)
@@ -253,6 +268,7 @@ class FindyPipeline:
                     meta.captured_at_utc,
                     capture_id,
                     region_id,
+                    bbox_norm=cur_bbox_text,
                     alpha=self.cfg.matching.prototype_alpha,
                 )
             else:
@@ -267,6 +283,7 @@ class FindyPipeline:
                     seen_iso=meta.captured_at_utc,
                     capture_id=capture_id,
                     region_id=region_id,
+                    bbox_norm=cur_bbox_text,
                 )
                 track_cache.setdefault(det.class_zh, []).append(self.db.get_track(new_track_id) or {})
                 used_track_ids.add(new_track_id)

@@ -1,4 +1,4 @@
-# Findy · 物品记忆助手（MVP）
+﻿# Findy · 物品记忆助手（MVP）
 
 Findy 用固定摄像头观察桌面环境，识别物品并记录**图像 / 时间 / 画面区域**，尽量把不同时刻出现的**同一件实物**关联起来，最后让你用一句中文问出「我的东西最后在哪」。
 
@@ -14,11 +14,11 @@ Findy 用固定摄像头观察桌面环境，识别物品并记录**图像 / 时
 |---|---|---|
 | 阶段一：调研 | ✅ 完成 | 市场/需求证据、检测与 re-ID、检索/存储/查询技术路线；见 [`docs/research/`](docs/research/) |
 | 阶段二：MVP 研发 | ✅ 完成（本机可运行） | 检测、实例关联、历史存储、中文查询、Web 界面、自动采集、测试 |
-| 阶段三：验收 | 🟡 进行中 | 自动化 73 项通过、浏览器 12 项通过；**真实 ESP32 硬件端到端未验证（设备未连接）**；详见 [`docs/acceptance/ACCEPTANCE_REPORT.md`](docs/acceptance/ACCEPTANCE_REPORT.md) |
+| 阶段三：验收 | ✅ 完成（小样本真机） | 真机 6/6 抓拍、38 次检测、75 项自动化与浏览器验收通过；长期稳定性/精度量化未验，详见 [`docs/acceptance/ACCEPTANCE_REPORT.md`](docs/acceptance/ACCEPTANCE_REPORT.md) |
 
-**已验证**：6 帧演示序列（公开 COCO 图片 + 变换模拟不同时刻）完成检测→关联→查询→界面闭环；73 个自动化测试通过；Chrome/Playwright 真实点击 12 项通过；时间未同步、重复设备 seq、无效上传、采集源不可用等异常路径有测试或实测记录。
+**已验证**：真实 ESP32 6/6 抓拍、38 次检测、8 条轨迹，5 类主物品 6/6 帧关联同一轨迹；演示 6 帧闭环；75 个自动化测试通过；Chrome/Playwright 演示 12/12、真机 7/7；异常路径有测试或实测记录。
 
-**未验证/限制**：真实桌面物品的检测召回率与关联准确率未测；真实 ESP32 设备端到端未跑（当前机器上没有连接设备）；同款多件区分、长期运行稳定性未测；位置是「画面区域」而非三维坐标。所有细节见验收报告与 [架构决策](docs/research/C_architecture_decision.md)。
+**未验证/限制**：真实场景量化精度（无 ground truth）、同款多件区分、长期运行稳定性未测；开放词表仍有误检/漏检；位置是「画面区域」而非三维坐标。所有细节见验收报告与 [架构决策](docs/research/C_architecture_decision.md)。
 
 ---
 
@@ -91,7 +91,7 @@ capture:
 | `python -m findy query "我的鼠标最后在哪？"` | 命令行执行一次自然语言查询 |
 | `python -m findy replay --dir data/demo_frames` | 回放一个图片目录（验收/演示） |
 | `python -m findy esp32 --url http://<IP>` | 探测设备状态 |
-| `python -m pytest tests -q` | 运行 73 个自动化测试 |
+| `python -m pytest tests -q` | 运行 75 个自动化测试 |
 | `python tools\browser_acceptance.py http://127.0.0.1:8765` | 用本机 Chrome 做 12 项真实浏览器验收并截图 |
 
 ---
@@ -127,7 +127,7 @@ Findyy/
 │   ├── objects.yaml        # 物品词表 + 中文别名 + 逐类阈值
 │   └── zones.yaml          # 画面区域（归一化多边形）
 ├── tools/                  # 模型下载、演示数据、验收脚本
-├── tests/                  # pytest（73 项）
+├── tests/                  # pytest（75 项）
 ├── docs/
 │   ├── research/           # 阶段一调研 A/B + 架构决策 C
 │   ├── acceptance/         # 验收报告
@@ -166,3 +166,4 @@ Findyy/
 - 调研：[A 检测与实例关联](docs/research/A_detection_reid.md) · [B 检索/存储/查询](docs/research/B_retrieval_storage_query.md) · [C 架构决策](docs/research/C_architecture_decision.md)
 - 验收：[验收报告](docs/acceptance/ACCEPTANCE_REPORT.md) · [证据目录](docs/evidence/)
 - 项目状态：[PROJECT_STATUS](docs/PROJECT_STATUS.md)
+

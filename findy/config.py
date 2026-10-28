@@ -90,6 +90,7 @@ class MatchingConfig:
     weights: MatchingWeights = field(default_factory=MatchingWeights)
     recency_tau_hours: float = 24.0
     prototype_alpha: float = 0.2
+    spatial_bonus: float = 0.15
 
 
 @dataclass
@@ -255,6 +256,10 @@ def load_config(path: str | os.PathLike | None = None) -> Config:
         cfg.capture.esp32.base_url = os.environ["FINDY_ESP32_URL"]
     if os.environ.get("FINDY_DB_PATH"):
         cfg.app.db_path = os.environ["FINDY_DB_PATH"]
+    if os.environ.get("FINDY_IMAGES_DIR"):
+        cfg.app.images_dir = os.environ["FINDY_IMAGES_DIR"]
+    if os.environ.get("FINDY_CROPS_DIR"):
+        cfg.app.crops_dir = os.environ["FINDY_CROPS_DIR"]
     if os.environ.get("FINDY_REPLAY_DIR"):
         cfg.capture.replay.dir = os.environ["FINDY_REPLAY_DIR"]
     return cfg

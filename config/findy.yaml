@@ -50,6 +50,8 @@ matching:
     recency: 0.05
   recency_tau_hours: 24
   prototype_alpha: 0.2
+  # 固定机位空间先验：检测框与轨迹最近 bbox 的 IoU 作为加分项（0 表示关闭）
+  spatial_bonus: 0.15
 
 files:
   objects: config/objects.yaml

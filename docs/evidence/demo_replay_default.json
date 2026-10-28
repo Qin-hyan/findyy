@@ -173,12 +173,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8921,
-        "link_reason": "外观 0.95 / 颜色 0.98 / 区域 异区 / 时间 0.95",
+        "link_score": 0.8715,
+        "link_reason": "外观 0.95 / 颜色 0.98 / 空间 0.00 / 区域 异区 / 时间 0.53",
         "candidates": [
           {
             "track_id": 1,
-            "score": 0.8921
+            "score": 0.8715
           }
         ],
         "crop_url": "/api/detections/6/crop",
@@ -206,12 +206,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8865,
-        "link_reason": "外观 0.95 / 颜色 0.91 / 区域 异区 / 时间 0.95",
+        "link_score": 0.9225,
+        "link_reason": "外观 0.95 / 颜色 0.91 / 空间 0.38 / 区域 异区 / 时间 0.53",
         "candidates": [
           {
             "track_id": 2,
-            "score": 0.8865
+            "score": 0.9225
           }
         ],
         "crop_url": "/api/detections/7/crop",
@@ -239,12 +239,12 @@
         "region": "桌面右侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9217,
-        "link_reason": "外观 0.91 / 颜色 0.91 / 区域 同区 / 时间 0.95",
+        "link_score": 0.9843,
+        "link_reason": "外观 0.91 / 颜色 0.91 / 空间 0.55 / 区域 同区 / 时间 0.53",
         "candidates": [
           {
             "track_id": 3,
-            "score": 0.9217
+            "score": 0.9843
           }
         ],
         "crop_url": "/api/detections/8/crop",
@@ -272,12 +272,12 @@
         "region": "桌面左侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9533,
-        "link_reason": "外观 0.96 / 颜色 0.91 / 区域 同区 / 时间 0.95",
+        "link_score": 0.9726,
+        "link_reason": "外观 0.96 / 颜色 0.91 / 空间 0.27 / 区域 同区 / 时间 0.53",
         "candidates": [
           {
             "track_id": 4,
-            "score": 0.9533
+            "score": 0.9726
           }
         ],
         "crop_url": "/api/detections/9/crop",
@@ -305,12 +305,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9577,
-        "link_reason": "外观 0.96 / 颜色 0.90 / 区域 同区 / 时间 0.95",
+        "link_score": 0.9371,
+        "link_reason": "外观 0.96 / 颜色 0.90 / 空间 0.00 / 区域 同区 / 时间 0.53",
         "candidates": [
           {
             "track_id": 5,
-            "score": 0.9577
+            "score": 0.9371
           }
         ],
         "crop_url": "/api/detections/10/crop",
@@ -346,12 +346,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9527,
-        "link_reason": "外观 0.95 / 颜色 0.93 / 区域 同区 / 时间 0.95",
+        "link_score": 0.9321,
+        "link_reason": "外观 0.95 / 颜色 0.93 / 空间 0.00 / 区域 同区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 1,
-            "score": 0.9527
+            "score": 0.9321
           }
         ],
         "crop_url": "/api/detections/11/crop",
@@ -379,12 +379,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9525,
-        "link_reason": "外观 0.95 / 颜色 0.94 / 区域 同区 / 时间 0.95",
+        "link_score": 0.9964,
+        "link_reason": "外观 0.95 / 颜色 0.94 / 空间 0.43 / 区域 同区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 2,
-            "score": 0.9525
+            "score": 0.9964
           }
         ],
         "crop_url": "/api/detections/12/crop",
@@ -412,12 +412,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8623,
-        "link_reason": "外观 0.91 / 颜色 0.97 / 区域 异区 / 时间 0.95",
+        "link_score": 0.887,
+        "link_reason": "外观 0.91 / 颜色 0.97 / 空间 0.30 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 4,
-            "score": 0.8623
+            "score": 0.887
           }
         ],
         "crop_url": "/api/detections/13/crop",
@@ -445,12 +445,12 @@
         "region": "桌面右侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8653,
-        "link_reason": "外观 0.83 / 颜色 0.94 / 区域 同区 / 时间 0.95",
+        "link_score": 0.8921,
+        "link_reason": "外观 0.83 / 颜色 0.94 / 空间 0.32 / 区域 同区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 3,
-            "score": 0.8653
+            "score": 0.8921
           }
         ],
         "crop_url": "/api/detections/14/crop",
@@ -478,12 +478,12 @@
         "region": "桌面右侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8966,
-        "link_reason": "外观 0.97 / 颜色 0.92 / 区域 异区 / 时间 0.95",
+        "link_score": 0.876,
+        "link_reason": "外观 0.97 / 颜色 0.92 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 5,
-            "score": 0.8966
+            "score": 0.876
           }
         ],
         "crop_url": "/api/detections/15/crop",
@@ -519,12 +519,12 @@
         "region": "桌面左侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9244,
-        "link_reason": "外观 0.99 / 颜色 1.00 / 区域 异区 / 时间 0.95",
+        "link_score": 0.9037,
+        "link_reason": "外观 0.99 / 颜色 1.00 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 1,
-            "score": 0.9244
+            "score": 0.9037
           }
         ],
         "crop_url": "/api/detections/16/crop",
@@ -552,12 +552,12 @@
         "region": "桌面左侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8998,
-        "link_reason": "外观 0.96 / 颜色 0.98 / 区域 异区 / 时间 0.95",
+        "link_score": 0.8791,
+        "link_reason": "外观 0.96 / 颜色 0.98 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 2,
-            "score": 0.8998
+            "score": 0.8791
           }
         ],
         "crop_url": "/api/detections/17/crop",
@@ -585,16 +585,16 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8949,
-        "link_reason": "外观 0.96 / 颜色 0.95 / 区域 异区 / 时间 0.95",
+        "link_score": 0.8824,
+        "link_reason": "外观 0.96 / 颜色 0.95 / 空间 0.06 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 3,
-            "score": 0.8949
+            "score": 0.8824
           },
           {
             "track_id": 4,
-            "score": 0.7266
+            "score": 0.738
           }
         ],
         "crop_url": "/api/detections/18/crop",
@@ -622,12 +622,12 @@
         "region": "桌面左侧",
         "link_status": "ambiguous",
         "link_method": "ambiguous",
-        "link_score": 0.7866,
-        "link_reason": "外观 0.80 / 颜色 0.98 / 区域 异区 / 时间 0.95",
+        "link_score": 0.7659,
+        "link_reason": "外观 0.80 / 颜色 0.98 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 4,
-            "score": 0.7866
+            "score": 0.7659
           }
         ],
         "crop_url": "/api/detections/19/crop",
@@ -655,12 +655,12 @@
         "region": "桌面左侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9198,
-        "link_reason": "外观 0.98 / 颜色 1.00 / 区域 异区 / 时间 0.95",
+        "link_score": 0.8991,
+        "link_reason": "外观 0.98 / 颜色 1.00 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 5,
-            "score": 0.9198
+            "score": 0.8991
           }
         ],
         "crop_url": "/api/detections/20/crop",
@@ -668,7 +668,7 @@
       }
     ],
     "warnings": [
-      "键盘 可能与已有物品重复（最高相似度 0.79），已标为待确认"
+      "键盘 可能与已有物品重复（最高相似度 0.77），已标为待确认"
     ],
     "error": null
   },
@@ -698,12 +698,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9057,
-        "link_reason": "外观 0.96 / 颜色 0.99 / 区域 异区 / 时间 0.96",
+        "link_score": 0.8849,
+        "link_reason": "外观 0.96 / 颜色 0.99 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 1,
-            "score": 0.9057
+            "score": 0.8849
           }
         ],
         "crop_url": "/api/detections/21/crop",
@@ -731,12 +731,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.894,
-        "link_reason": "外观 0.97 / 颜色 0.90 / 区域 异区 / 时间 0.96",
+        "link_score": 0.8732,
+        "link_reason": "外观 0.97 / 颜色 0.90 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 2,
-            "score": 0.894
+            "score": 0.8732
           }
         ],
         "crop_url": "/api/detections/22/crop",
@@ -764,16 +764,16 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9186,
-        "link_reason": "外观 0.91 / 颜色 0.90 / 区域 同区 / 时间 0.95",
+        "link_score": 0.9804,
+        "link_reason": "外观 0.91 / 颜色 0.90 / 空间 0.55 / 区域 同区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 4,
-            "score": 0.9186
+            "score": 0.9804
           },
           {
             "track_id": 6,
-            "score": 0.7627
+            "score": 0.7419
           }
         ],
         "crop_url": "/api/detections/23/crop",
@@ -801,12 +801,12 @@
         "region": "桌面右侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8821,
-        "link_reason": "外观 0.96 / 颜色 0.83 / 区域 异区 / 时间 0.96",
+        "link_score": 0.8613,
+        "link_reason": "外观 0.96 / 颜色 0.83 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 5,
-            "score": 0.8821
+            "score": 0.8613
           }
         ],
         "crop_url": "/api/detections/24/crop",
@@ -842,12 +842,12 @@
         "region": "桌面左侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9143,
-        "link_reason": "外观 0.98 / 颜色 0.98 / 区域 异区 / 时间 0.96",
+        "link_score": 0.8935,
+        "link_reason": "外观 0.98 / 颜色 0.98 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 1,
-            "score": 0.9143
+            "score": 0.8935
           }
         ],
         "crop_url": "/api/detections/25/crop",
@@ -875,12 +875,12 @@
         "region": "桌面左侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8981,
-        "link_reason": "外观 0.96 / 颜色 0.96 / 区域 异区 / 时间 0.96",
+        "link_score": 0.886,
+        "link_reason": "外观 0.96 / 颜色 0.96 / 空间 0.06 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 2,
-            "score": 0.8981
+            "score": 0.886
           }
         ],
         "crop_url": "/api/detections/26/crop",
@@ -908,12 +908,12 @@
         "region": "桌面右侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.8813,
-        "link_reason": "外观 0.94 / 颜色 0.95 / 区域 异区 / 时间 0.95",
+        "link_score": 0.9408,
+        "link_reason": "外观 0.94 / 颜色 0.95 / 空间 0.54 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 3,
-            "score": 0.8813
+            "score": 0.9408
           }
         ],
         "crop_url": "/api/detections/27/crop",
@@ -941,16 +941,16 @@
         "region": "桌面左侧",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9014,
-        "link_reason": "外观 0.96 / 颜色 0.96 / 区域 异区 / 时间 0.96",
+        "link_score": 0.8805,
+        "link_reason": "外观 0.96 / 颜色 0.96 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 4,
-            "score": 0.9014
+            "score": 0.8805
           },
           {
             "track_id": 6,
-            "score": 0.8359
+            "score": 0.8682
           }
         ],
         "crop_url": "/api/detections/28/crop",
@@ -978,12 +978,12 @@
         "region": "桌面中央",
         "link_status": "matched",
         "link_method": "prototype",
-        "link_score": 0.9065,
-        "link_reason": "外观 0.98 / 颜色 0.91 / 区域 异区 / 时间 0.96",
+        "link_score": 0.8856,
+        "link_reason": "外观 0.98 / 颜色 0.91 / 空间 0.00 / 区域 异区 / 时间 0.54",
         "candidates": [
           {
             "track_id": 5,
-            "score": 0.9065
+            "score": 0.8856
           }
         ],
         "crop_url": "/api/detections/29/crop",

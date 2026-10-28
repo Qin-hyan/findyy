@@ -45,6 +45,13 @@ class Database:
         sql = SCHEMA_PATH.read_text(encoding="utf-8")
         with self.connect() as conn:
             conn.executescript(sql)
+            # 轻量迁移：老库补列，避免用户必须删库重来
+            cols = {row[1] for row in conn.execute("PRAGMA table_info(tracks)").fetchall()}
+            if "last_bbox_norm" not in cols:
+                conn.execute("ALTER TABLE tracks ADD COLUMN last_bbox_norm TEXT")
+            cols = {row[1] for row in conn.execute("PRAGMA table_info(tracks)").fetchall()}
+            if "color" not in cols:
+                conn.execute("ALTER TABLE tracks ADD COLUMN color TEXT")
 
     def ping(self) -> bool:
         try:
@@ -270,20 +277,21 @@ class Database:
         seen_iso: str | None,
         capture_id: int,
         region_id: int | None,
+        bbox_norm: str | None = None,
         user_confirmed: bool = False,
     ) -> int:
         now = utc_now_iso()
         with self.connect() as conn:
             cur = conn.execute(
                 "INSERT INTO tracks(class_id, label, color, color_hex, prototype, color_hist, prototype_n,"
-                " first_seen_utc, last_seen_utc, last_capture_id, last_region_id, status,"
+                " first_seen_utc, last_seen_utc, last_bbox_norm, last_capture_id, last_region_id, status,"
                 " user_confirmed, created_at_utc)"
-                " VALUES (?,?,?,?,?,?,1,?,?,?,?,'active',?,?)",
+                " VALUES (?,?,?,?,?,?,1,?,?,?,?,?,'active',?,?)",
                 (
                     class_id, label, color, color_hex,
                     prototype.astype(np.float32).tobytes(),
                     color_hist.astype(np.float32).tobytes(),
-                    seen_iso, seen_iso, capture_id, region_id, int(user_confirmed), now,
+                    seen_iso, seen_iso, bbox_norm, capture_id, region_id, int(user_confirmed), now,
                 ),
             )
             return int(cur.lastrowid)
@@ -298,6 +306,7 @@ class Database:
         seen_iso: str | None,
         capture_id: int,
         region_id: int | None,
+        bbox_norm: str | None = None,
         alpha: float = 0.2,
     ) -> None:
         now = utc_now_iso()
@@ -322,8 +331,9 @@ class Database:
                 "UPDATE tracks SET prototype=?, color_hist=?, color=COALESCE(?, color),"
                 " color_hex=COALESCE(?, color_hex),"
                 " prototype_n=prototype_n+1, last_seen_utc=COALESCE(?, last_seen_utc),"
+                " last_bbox_norm=COALESCE(?, last_bbox_norm),"
                 " last_capture_id=?, last_region_id=COALESCE(?, last_region_id) WHERE id=?",
-                (merged.tobytes(), hist.tobytes(), color, color_hex, seen_iso, capture_id, region_id, track_id),
+                (merged.tobytes(), hist.tobytes(), color, color_hex, seen_iso, bbox_norm, capture_id, region_id, track_id),
             )
 
     def get_track(self, track_id: int) -> dict | None:
