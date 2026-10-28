@@ -1,4 +1,4 @@
-﻿# Findy · 物品记忆助手（MVP）
+# Findy · 物品记忆助手（MVP）
 
 Findy 用固定摄像头观察桌面环境，识别物品并记录**图像 / 时间 / 画面区域**，尽量把不同时刻出现的**同一件实物**关联起来，最后让你用一句中文问出「我的东西最后在哪」。
 
@@ -93,6 +93,7 @@ capture:
 | `python -m findy esp32 --url http://<IP>` | 探测设备状态 |
 | `python -m pytest tests -q` | 运行 75 个自动化测试 |
 | `python tools\browser_acceptance.py http://127.0.0.1:8765` | 用本机 Chrome 做 12 项真实浏览器验收并截图 |
+| `python tools\make_visual_report.py` | 生成单文件可视化报告 `docs/evidence/visual_report.html`（图片内嵌，双击离线可看） |
 
 ---
 
