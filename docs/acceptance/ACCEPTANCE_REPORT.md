@@ -250,3 +250,104 @@ python -m findy query "鼠标移动过吗？"
 - [`docs/research/B_retrieval_storage_query.md`](../research/B_retrieval_storage_query.md) — 检索/存储/查询调研
 - [`docs/research/C_architecture_decision.md`](../research/C_architecture_decision.md) — 架构决策与风险
 - [`docs/PROJECT_STATUS.md`](../PROJECT_STATUS.md) — 项目状态与下一步
+
+---
+
+## 14. 端到端验收工作台（2026-10-29 增补）
+
+> 本节是新增工作台的本轮验收记录，不改变 §1–§13 的历史真机/演示结论。
+
+### 14.1 交付范围
+
+- 新增页面 `/workbench`：运行状态、设备采集（检查连接/会话内切换真机/立即抓拍/开始与停止采集）、检测结果（原图/检测框/置信度/区域/检测与总耗时/失败原文/来源）、轨迹关联（跨帧时间线/关联分/灰区候选）、找物查询、六项验收总览、操作引导。
+- 新增后端：`findy/acceptance.py`、验收运行/事件表、采集来源 `source_kind` 与检测耗时字段、设备探测/会话级切换接口、验收导出接口。
+- 每项验收状态由本轮真实事件计算；没有操作即 `NOT VERIFIED`，replay 运行强制标记 `simulated=true`。
+
+### 14.2 验收环境（隔离实例，避免影响现有服务与回放数据）
+
+| 项目 | 值 |
+|---|---|
+| 现有服务 | `127.0.0.1:8765` 保持原进程、原数据库、原回放索引，未停止/未重启 |
+| 工作台实例 | `127.0.0.1:8766`，独立进程，使用同一仓库代码 |
+| 数据库 / 图像 | `data/acceptance_workbench/evidence_*/` 全新独立目录（gitignored） |
+| 回放数据 | 从 `data/demo_frames` **复制** 6 帧到独立 frames 目录；原目录未消耗 |
+| 模型 | 真实 OWLv2 `google/owlv2-base-patch16-ensemble` + DINOv2-small（CPU） |
+| 浏览器 | 本机 Chrome + Playwright（Anaconda Python） |
+| 设备 | 未连接；工作台真机项保持 `NOT VERIFIED` |
+
+### 14.3 浏览器验收结果
+
+命令：
+
+```powershell
+# 工作台服务（隔离实例，示例）
+$env:FINDY_CAPTURE_SOURCE='replay'
+$env:FINDY_DB_PATH='data/acceptance_workbench/evidence_xxx/findy.sqlite'
+$env:FINDY_IMAGES_DIR='data/acceptance_workbench/evidence_xxx/images'
+$env:FINDY_CROPS_DIR='data/acceptance_workbench/evidence_xxx/crops'
+$env:FINDY_REPLAY_DIR='data/acceptance_workbench/evidence_xxx/frames'
+python -m findy serve --host 127.0.0.1 --port 8766
+
+# 浏览器验收
+python tools\workbench_browser_check.py http://127.0.0.1:8766
+```
+
+证据：[`workbench_report.json`](../evidence/workbench/workbench_report.json)、
+[`acceptance_export.json`](../evidence/workbench/acceptance_export.json)、
+[`pytest_summary.txt`](../evidence/workbench/pytest_summary.txt)、
+[截图目录](../evidence/workbench/)。
+
+结果：**38/38 检查通过**；失败请求 0；console error 仅负向探测产生的预期 HTTP 400（已记录为 `expected_console_errors`，不属于功能错误）。
+
+覆盖内容：
+
+- 页面/状态/操作引导/隐私说明可见；六项验收行固定渲染。
+- replay 模式下“检查连接”如实失败并显示原因，不假报设备在线。
+- 开始回放演示运行 → 两次真实 OWLv2 抓拍 → 原图 640×480、检测框 5 个、检测表 5 行、检测耗时与总耗时、回放来源徽标均可见。
+- 轨迹列表与跨帧详情可见；查询“笔记本电脑最后出现在哪里？”返回“桌面中央”、时间、证据图片、置信度、关联分。
+- 六项状态与后端一致，设备连接为 `NOT VERIFIED`，回放运行 `simulated=true`，总体 `NOT VERIFIED`，不冒充真机通过。
+- 结束运行、导出 JSON 成功；导出不含图像数据，设备地址与本地绝对路径已脱敏。
+- 唯一 console error 是“检查连接”负向用例产生的预期 400；无其他 console error、无失败请求。
+
+截图：
+
+| 工作台首页 | 检测结果 |
+|---|---|
+| ![工作台首页](../evidence/workbench/01_workbench_home.png) | ![检测结果](../evidence/workbench/02_capture_detection.png) |
+
+| 轨迹关联 | 验收总览 |
+|---|---|
+| ![轨迹关联](../evidence/workbench/03_tracks.png) | ![验收总览](../evidence/workbench/05_acceptance_overview.png) |
+
+### 14.4 六项验收矩阵（本轮 replay 演示）
+
+| # | 验收项 | 结果 | 证据/说明 |
+|---|---|---|---|
+| 1 | 设备连接 | `NOT VERIFIED` | 回放演示模式不验证真实设备；未连接 ESP32，本轮未伪造在线 |
+| 2 | 真实抓拍 | `PASS`（回放演示，`simulated=true`） | 抓拍 #1/#2，640×480，真实 OWLv2 检测；不计入真机验收 |
+| 3 | 检测 | `PASS` | 每帧 5 个物品（手机/笔记本电脑/键盘/鼠标等），检测耗时 5.36–5.60s，总处理 5.66–5.86s，置信度与区域可核验 |
+| 4 | 存储 | `PASS` | SQLite 记录 + 本地原图/裁剪图存在，字节数与尺寸一致 |
+| 5 | 轨迹关联 | `PASS` | 同一 track 跨 2 帧关联，关联分 0.98–0.98（首次观测为新轨迹，不计入区间） |
+| 6 | 查询 | `PASS` | “笔记本电脑最后出现在哪里？”→「桌面中央」+ 时间 + 图片 + 置信度 0.77 + 关联分 0.92 |
+
+总体：`NOT VERIFIED`（因设备连接未验证且为回放演示）；`simulated=true`，横幅明确“回放演示（模拟数据，不计入真机验收）：通过 5/6，未验证 1/6”。
+
+### 14.5 真机验收状态（如实标记）
+
+- 本轮**未连接真实 ESP32**，因此工作台真机六项（设备连接、真实抓拍、真机检测、真机存储、真机轨迹、真机查询）**未在真机上复验**，统一 `NOT VERIFIED`。
+- 历史真机 6/6 抓拍与检测证据保持 §6.1/§8 原结论，不代表本轮工作台真机流程已通过。
+- 需用户亲自完成：设备通电 → 同一 Wi-Fi → 获取 IP → `/workbench` 输入并检查连接 → “使用此设备采集（仅本次会话）” → 抓拍两帧 → 查询 → 结束并导出证据；此前真机项不得标记 `PASS`。
+
+### 14.6 自动化测试
+
+命令：`python -m pytest tests -q`（日志：[`pytest_summary.txt`](../evidence/workbench/pytest_summary.txt)）
+
+结果：**89 passed, 0 failed**（原 75 项全部保留且未放宽断言；新增 14 项覆盖来源/耗时、验收运行、设备探测、replay/真机隔离、查询失败、检测失败、导出脱敏、迁移回填等）。
+
+### 14.7 隐私与数据检查
+
+- 工作台只监听 `127.0.0.1`；页面无 CDN/外部字体/统计脚本，所有请求同源。
+- 验收事件、查询、数据库与日志只写本机 `data/`（gitignored）。
+- 提交的证据只包含 replay/公开演示数据截图与脱敏 JSON；真机图像与真机 UI 截图未提交。
+- `acceptance_export.json` 不含图像数据，设备地址与本地绝对路径已脱敏。
+- 本轮未停止/重启 8765，未清空数据库，未消耗原 `data/demo_frames` 的 5 张剩余帧。

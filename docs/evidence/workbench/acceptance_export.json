@@ -1,0 +1,245 @@
+{
+  "exported_at_utc": "2026-10-28T18:25:09Z",
+  "privacy_note": "由 Findy 本机验收工作台生成；不包含图像数据。设备地址与本地绝对路径已脱敏；文件仅应保存在本机。",
+  "run": {
+    "id": 1,
+    "mode": "replay_demo",
+    "source_kind": "replay",
+    "source_ref": "frames",
+    "started_at_utc": "2026-10-28T18:24:33Z",
+    "finished_at_utc": "2026-10-28T18:24:51Z",
+    "status": "finished"
+  },
+  "events": [
+    {
+      "id": 1,
+      "kind": "capture",
+      "ok": true,
+      "source_kind": "replay",
+      "capture_id": 1,
+      "query_log_id": null,
+      "latency_ms": 8089,
+      "created_at_utc": "2026-10-28T18:24:41Z",
+      "detail": {
+        "duplicate": false,
+        "detections_count": 5,
+        "error": null,
+        "warnings": [],
+        "capture": {
+          "id": 1,
+          "captured_at_local": "2026-10-28 10:00:00",
+          "captured_at_utc": "2026-10-28T02:00:00Z",
+          "time_synced": true,
+          "time_source": "file_mtime",
+          "source_kind": "replay",
+          "width": 640,
+          "height": 480,
+          "detections_count": 5,
+          "status": "ok",
+          "detect_ms": 7394,
+          "embed_ms": 519,
+          "process_ms": 8059,
+          "detect_error": null
+        }
+      }
+    },
+    {
+      "id": 2,
+      "kind": "capture",
+      "ok": true,
+      "source_kind": "replay",
+      "capture_id": 2,
+      "query_log_id": null,
+      "latency_ms": 6001,
+      "created_at_utc": "2026-10-28T18:24:47Z",
+      "detail": {
+        "duplicate": false,
+        "detections_count": 5,
+        "error": null,
+        "warnings": [],
+        "capture": {
+          "id": 2,
+          "captured_at_local": "2026-10-28 10:05:00",
+          "captured_at_utc": "2026-10-28T02:05:00Z",
+          "time_synced": true,
+          "time_source": "file_mtime",
+          "source_kind": "replay",
+          "width": 640,
+          "height": 480,
+          "detections_count": 5,
+          "status": "ok",
+          "detect_ms": 5679,
+          "embed_ms": 204,
+          "process_ms": 5972,
+          "detect_error": null
+        }
+      }
+    },
+    {
+      "id": 3,
+      "kind": "query",
+      "ok": true,
+      "source_kind": "replay",
+      "capture_id": null,
+      "query_log_id": 1,
+      "latency_ms": 11,
+      "created_at_utc": "2026-10-28T18:24:49Z",
+      "detail": {
+        "query": "笔记本电脑最后出现在哪里？",
+        "status": "found",
+        "intent": "last_seen",
+        "intent_zh": "最后位置",
+        "answer": "「笔记本电脑」最后出现在「桌面中央」。时间：2026-10-28 10:05:00（16 小时前）。依据：最近一次抓拍中检测到该物品（置信度 0.77），与历史外观关联相似度 0.92，共记录到 2 次。",
+        "latency_ms": 11,
+        "query_log_id": 1,
+        "result_count": 1,
+        "notes": [],
+        "evidence": {
+          "capture_id": 2,
+          "detection_id": 7,
+          "track_id": 2,
+          "zone": "桌面中央",
+          "time_local": "2026-10-28 10:05:00",
+          "time_synced": true,
+          "source_kind": "replay",
+          "confidence": 0.768,
+          "evidence_image_url": "/api/captures/2/image",
+          "evidence_crop_url": "/api/detections/7/crop"
+        }
+      }
+    }
+  ],
+  "overview": {
+    "status": "NOT_VERIFIED",
+    "counts": {
+      "pass": 5,
+      "fail": 0,
+      "not_verified": 1
+    },
+    "simulated": true,
+    "banner": "回放演示（模拟数据，不计入真机验收）：通过 5/6，未验证 1/6。",
+    "warnings": [],
+    "items": [
+      {
+        "key": "device_connection",
+        "title": "设备连接",
+        "status": "NOT_VERIFIED",
+        "reason": "回放演示模式不验证真实设备连接；真实设备请在“开始真实设备验收”中检查。",
+        "evidence": []
+      },
+      {
+        "key": "capture",
+        "title": "抓拍（回放演示）",
+        "status": "PASS",
+        "reason": "回放演示抓拍 2 帧（模拟数据，不计入真机验收）。",
+        "evidence": [
+          {
+            "label": "回放抓拍 #2",
+            "value": "2026-10-28 10:05:00 · 回放演示 (replay) · 640×480",
+            "url": "/api/captures/2/image"
+          }
+        ]
+      },
+      {
+        "key": "detection",
+        "title": "检测",
+        "status": "PASS",
+        "reason": "检测成功：5 个物品，检测耗时 5679 ms，总处理 5972 ms。",
+        "evidence": [
+          {
+            "label": "抓拍 #2 检测",
+            "value": "5 个 · 手机、笔记本电脑、键盘、鼠标",
+            "url": "/api/captures/2/image"
+          },
+          {
+            "label": "检测/总耗时",
+            "value": "5679 ms / 5972 ms"
+          },
+          {
+            "label": "最高置信度 · 键盘",
+            "value": "0.856 · 桌面右侧 · replay",
+            "url": "/api/detections/8/crop"
+          }
+        ]
+      },
+      {
+        "key": "storage",
+        "title": "存储",
+        "status": "PASS",
+        "reason": "本轮 2 帧均已入库且原图文件可读。",
+        "evidence": [
+          {
+            "label": "抓拍 #1",
+            "value": "data/acceptance_workbench/evidence_20261029_022405/images/2026/10/28/20261028T020000Z_ceaa0527.jpg · 52347 bytes · 640×480 · detections=5",
+            "url": "/api/captures/1/image"
+          },
+          {
+            "label": "抓拍 #2",
+            "value": "data/acceptance_workbench/evidence_20261029_022405/images/2026/10/28/20261028T020500Z_3c082f44.jpg · 52469 bytes · 640×480 · detections=5",
+            "url": "/api/captures/2/image"
+          }
+        ]
+      },
+      {
+        "key": "track_link",
+        "title": "轨迹关联",
+        "status": "PASS",
+        "reason": "同一物品在本轮 2 帧中关联到同一轨迹，关联分 0.98–0.98。（首次观测为新轨迹，不计入关联分区间。）",
+        "evidence": [
+          {
+            "label": "轨迹 #3 · 键盘",
+            "value": "2 次观测 / 2 帧 · 关联分 0.98–0.98"
+          },
+          {
+            "label": "观测抓拍",
+            "value": "#1、#2"
+          }
+        ]
+      },
+      {
+        "key": "query",
+        "title": "查询",
+        "status": "PASS",
+        "reason": "查询返回了可核验的最后出现位置、时间与画面区域。",
+        "evidence": [
+          {
+            "label": "查询",
+            "value": "笔记本电脑最后出现在哪里？"
+          },
+          {
+            "label": "意图/延迟",
+            "value": "最后位置 · 11 ms"
+          },
+          {
+            "label": "回答",
+            "value": "「笔记本电脑」最后出现在「桌面中央」。时间：2026-10-28 10:05:00（16 小时前）。依据：最近一次抓拍中检测到该物品（置信度 0.77），与历史外观关联相似度 0.92，共记录到 2 次。"
+          },
+          {
+            "label": "画面区域/时间",
+            "value": "桌面中央 · 2026-10-28 10:05:00"
+          },
+          {
+            "label": "来源",
+            "value": "replay"
+          },
+          {
+            "label": "最后出现图片",
+            "value": "抓拍 #2",
+            "url": "/api/captures/2/image"
+          },
+          {
+            "label": "物品裁剪图",
+            "value": "证据裁剪",
+            "url": "/api/detections/7/crop"
+          }
+        ]
+      }
+    ],
+    "generated_at_utc": "2026-10-28T18:24:51Z",
+    "captures_considered": [
+      1,
+      2
+    ],
+    "real_capture_count": 0
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "base": "http://127.0.0.1:8766",
+  "started_at_utc": "2026-10-28T18:24:30Z",
+  "checks": [
+    {
+      "name": "页面标题为验收工作台",
+      "ok": true,
+      "detail": "Findy 端到端验收工作台"
+    },
+    {
+      "name": "状态栏显示采集源",
+      "ok": true,
+      "detail": "采集源 · 回放演示（剩 6 张）"
+    },
+    {
+      "name": "模型显示就绪",
+      "ok": true,
+      "detail": "模型 · OWLv2 + DINOv2 就绪"
+    },
+    {
+      "name": "数据库状态已加载",
+      "ok": true,
+      "detail": "已连接 · 帧 0 · 检测 0 · 轨迹 0 · 灰区关联 0 · 未同步帧 0"
+    },
+    {
+      "name": "验收总览固定六行",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "操作引导含设备 IP 步骤",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "隐私说明声明仅本机",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "回放模式检查连接不伪造成功",
+      "ok": true,
+      "detail": "设备检查失败：HTTP 400：当前采集源为图片回放（replay），没有可检查的真实设备。请输入 ESP32 设备地址（例如 http://<设备IP>）后再检查连接，或按页面“操作引导”配置 config/findy.local.yaml。"
+    },
+    {
+      "name": "检查连接失败后给出原因",
+      "ok": true,
+      "detail": "设备检查失败：HTTP 400：当前采集源为图片回放（replay），没有可检查的真实设备。请输入 ESP32 设备地址（例如 http://<设备IP>）后再检查连接，或按页面“操作引导”配置 config/findy.local.yaml。"
+    },
+    {
+      "name": "开始回放演示运行",
+      "ok": true,
+      "detail": "尚无验收运行 · 可点击“开始真实设备验收”或“开始回放演示”"
+    },
+    {
+      "name": "第 1 次抓拍完成",
+      "ok": true,
+      "detail": "抓拍完成 · 抓拍 #1 · 5 个物品"
+    },
+    {
+      "name": "第 2 次抓拍完成",
+      "ok": true,
+      "detail": "抓拍完成 · 抓拍 #2 · 5 个物品"
+    },
+    {
+      "name": "抓拍原图可见",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "图片上绘制检测框",
+      "ok": true,
+      "detail": "5 个框"
+    },
+    {
+      "name": "检测结果表有物品",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "显示检测/处理耗时",
+      "ok": true,
+      "detail": "抓拍时间：2026-10-28 10:05:00\n来源：回放演示\n分辨率：640×480\n检测耗时：5.68 秒 · 特征耗时：204 ms · 总处理耗时：5.97 秒\n状态：ok · 距今 16 小时前"
+    },
+    {
+      "name": "检测结果标注回放来源",
+      "ok": true,
+      "detail": "回放演示"
+    },
+    {
+      "name": "轨迹列表有记录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "轨迹详情显示关联分",
+      "ok": true,
+      "detail": "手机\n出现 2 次\n状态 active\n回放演示\n首次：2026-10-28T02:00:00Z · 最近：2026-10-28T02:05:00Z\n2026-10-28 10:05:00\n区域 桌面中央\n置信度 38%\n关联分 0.87\n关联状态 已关联\n回放演示\n2026-10-28 10:00:00\n区域 桌面左侧\n置信度 39%\n关联分 0.00\n关联状态 新轨迹\n回放演示"
+    },
+    {
+      "name": "轨迹详情有跨帧证据",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "查询返回最后位置",
+      "ok": true,
+      "detail": "「笔记本电脑」最后出现在「桌面中央」。时间：2026-10-28 10:05:00（16 小时前）。依据：最近一次抓拍中检测到该物品（置信度 0.77），与历史外观关联相似度 0.92，共记录到 2 次。"
+    },
+    {
+      "name": "查询结果含画面区域",
+      "ok": true,
+      "detail": "「笔记本电脑」最后出现在「桌面中央」。时间：2026-10-28 10:05:00（16 小时前）。依据：最近一次抓拍中检测到该物品（置信度 0.77），与历史外观关联相似度 0.92，共记录到 2 次。"
+    },
+    {
+      "name": "查询结果渲染证据卡片",
+      "ok": true,
+      "detail": "1 张"
+    },
+    {
+      "name": "查询显示延迟/意图",
+      "ok": true,
+      "detail": "延迟：11 ms · 状态：found · 查询记录 #1"
+    },
+    {
+      "name": "六项验收状态渲染",
+      "ok": true,
+      "detail": "[{'title': '设备连接', 'status': 'NOT VERIFIED'}, {'title': '抓拍（回放演示）', 'status': 'PASS'}, {'title': '检测', 'status': 'PASS'}, {'title': '存储', 'status': 'PASS'}, {'title': '轨迹关联', 'status': 'PASS'}, {'title': '查询', 'status': 'PASS'}]"
+    },
+    {
+      "name": "设备连接为 NOT VERIFIED",
+      "ok": true,
+      "detail": "{'设备连接': 'NOT VERIFIED', '抓拍（回放演示）': 'PASS', '检测': 'PASS', '存储': 'PASS', '轨迹关联': 'PASS', '查询': 'PASS'}"
+    },
+    {
+      "name": "UI 与后端验收状态一致",
+      "ok": true,
+      "detail": "UI=['NOT VERIFIED', 'PASS', 'PASS', 'PASS', 'PASS', 'PASS'] 后端=['NOT_VERIFIED', 'PASS', 'PASS', 'PASS', 'PASS', 'PASS']"
+    },
+    {
+      "name": "回放演示无 FAIL 项",
+      "ok": true,
+      "detail": "['NOT_VERIFIED', 'PASS', 'PASS', 'PASS', 'PASS', 'PASS']"
+    },
+    {
+      "name": "回放演示至少 4 项 PASS",
+      "ok": true,
+      "detail": "['NOT_VERIFIED', 'PASS', 'PASS', 'PASS', 'PASS', 'PASS']"
+    },
+    {
+      "name": "回放演示标记 simulated",
+      "ok": true,
+      "detail": "True"
+    },
+    {
+      "name": "总体状态不冒充真机通过",
+      "ok": true,
+      "detail": "NOT_VERIFIED"
+    },
+    {
+      "name": "整体横幅含回放演示说明",
+      "ok": true,
+      "detail": "回放演示（模拟数据，不计入真机验收）：通过 5/6，未验证 1/6。"
+    },
+    {
+      "name": "本轮验收已结束",
+      "ok": true,
+      "detail": "finished"
+    },
+    {
+      "name": "结束本轮验收",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "导出证据接口可用",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "导出包含验收结论",
+      "ok": true,
+      "detail": "['exported_at_utc', 'privacy_note', 'run', 'events', 'overview']"
+    },
+    {
+      "name": "导出含隐私说明",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "导出已脱敏绝对路径",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+  ],
+  "failed_requests": [],
+  "run": {
+    "id": 1,
+    "mode": "replay_demo",
+    "source_kind": "replay",
+    "source_ref": "frames",
+    "started_at_utc": "2026-10-28T18:24:33Z",
+    "finished_at_utc": "2026-10-28T18:24:51Z",
+    "status": "finished"
+  },
+  "acceptance_items": [
+    {
+      "title": "设备连接",
+      "status": "NOT VERIFIED"
+    },
+    {
+      "title": "抓拍（回放演示）",
+      "status": "PASS"
+    },
+    {
+      "title": "检测",
+      "status": "PASS"
+    },
+    {
+      "title": "存储",
+      "status": "PASS"
+    },
+    {
+      "title": "轨迹关联",
+      "status": "PASS"
+    },
+    {
+      "title": "查询",
+      "status": "PASS"
+    }
+  ],
+  "export_ok": true,
+  "expected_console_errors": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+  ],
+  "ok": true,
+  "finished_at_utc": "2026-10-28T18:24:52Z"
+}

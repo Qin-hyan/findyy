@@ -1,4 +1,4 @@
-﻿# C. Findy 技术架构决策（阶段一收口 · 2026-10-28）
+# C. Findy 技术架构决策（阶段一收口 · 2026-10-28）
 
 > 本文是阶段一调研（[A：检测与实例关联](A_detection_reid.md)、[B：检索/存储/查询](B_retrieval_storage_query.md)）与阶段二实现之间的决策记录。
 > 结论分为「已实现并验证」「已实现未验证」「未实现」三类，避免把推断写成事实。
@@ -117,13 +117,15 @@
 | `findy/zones.py` | 归一化多边形区域、点归属、未标定时的方位兜底 |
 | `findy/db.py` + `findy/schema.sql` | SQLite 访问层、幂等抓拍、物品轨迹、候选关联、反馈、查询日志 |
 | `findy/query.py` | 中文意图/槽位解析 + 8 类执行器 + 带证据的中文回答 |
-| `findy/api.py` | HTTP API、上传、图像服务、自动采集控制、静态页面 |
+| `findy/api.py` | HTTP API、上传、图像服务、自动采集控制、设备探测/会话级切换、验收接口、静态页面 |
 | `findy/service.py` | 自动采集循环（失败可见、不静默） |
+| `findy/acceptance.py` | 验收运行/事件证据、六项 PASS/FAIL/NOT VERIFIED 判定、脱敏导出 |
+| `web/workbench.*` | `/workbench` 端到端验收工作台（运行状态、设备、检测、轨迹、查询、验收总览、引导） |
 | `findy/__main__.py` | `serve/status/capture/query/replay/esp32` 命令 |
 
 ### 3.2 数据模型（SQLite，见 `schema.sql`）
 
-`cameras` / `regions` / `captures` / `object_classes` / `aliases` / `tracks` / `detections` / `link_candidates` / `feedback` / `query_log`。
+`cameras` / `regions` / `captures` / `object_classes` / `aliases` / `tracks` / `detections` / `link_candidates` / `feedback` / `query_log` / `acceptance_runs` / `acceptance_events`。
 
 关键设计：
 
@@ -132,6 +134,8 @@
 - `tracks` 保存原型向量（float32 BLOB）与颜色直方图；`detections` 保存每次观测的 bbox/区域/置信度/关联分。
 - `detections.captured_at_utc`、`region_id` 冗余存储，查询「某物 + 时间 + 区域」走复合索引。
 - `link_candidates` 保存灰区候选，供界面人工确认；`feedback` 记录确认/纠错，为后续阈值校准积累数据。
+- `captures.source_kind` 记录每帧真实来源（esp32/replay/upload）；`detect_ms/embed_ms/process_ms/detect_error` 记录真实耗时与失败原因。老库按既有 `time_source` 语义回填来源，不覆盖明确值。
+- `acceptance_runs`/`acceptance_events` 保存本轮验收模式、操作事件与证据；六项结论由事件+数据库真实记录计算，replay 演示强制 `simulated=true`，真机结论只接受 `source_kind=esp32` 的抓拍。
 
 ### 3.3 关联策略（已实现）
 
@@ -186,8 +190,8 @@ status = matched   (score ≥ 0.82)
 
 - 6 帧演示序列端到端：检测→入库→跨帧关联→中文查询→界面展示（见 `docs/evidence/`）。
 - **真实 ESP32 硬件**：6/6 抓拍、38 次检测、8 条轨迹，5 类主物品 6/6 帧关联同一轨迹；UI 真机点击抓拍 7/7 检查通过（见 `docs/evidence/hardware/`）。
-- 71 个自动化测试通过（关联、解析、存储、API、ESP32 适配器 mock、异常路径）。
-- 浏览器真实交互 12 项检查通过（Chrome + Playwright，截图存证）。
+- 71 个自动化测试通过（关联、解析、存储、API、ESP32 适配器 mock、异常路径）；2026-10-29 工作台增补后为 **89 项通过**。
+- 浏览器真实交互 12 项检查通过（Chrome + Playwright，截图存证）；2026-10-29 工作台 replay 演示 **38/38** 通过（含真实 OWLv2 检测、跨帧关联、查询、六项状态、脱敏导出）。
 - 时间未同步场景：接口/界面/回答均明确标注，不伪造时间。
 - 设备 seq 幂等与旧图拒绝：单测覆盖。
 - 无效 JPEG 上传返回 400；不存在的抓拍/裁剪图返回 404；采集源不可用返回 503 且带错误原因。
@@ -196,6 +200,7 @@ status = matched   (score ≥ 0.82)
 
 - 长时间/多天真机运行、断线重连、镜头移动后的重标定未验证；M1 固件自身的实机 100/100 拍摄证据在其独立仓库 `D:\Findy-Firmware\docs\M1_RESULTS.md`。
 - **真实桌面/真实物品**：演示数据来自公开 COCO 图片 + 变换模拟不同时刻；真实场景的检测召回率、关联准确率**未测**。
+- **工作台真机流程**：2026-10-29 工作台验收时设备未连接，设备连接/真实抓拍/真机检测/存储/轨迹/查询六项均 **NOT VERIFIED**；需设备在线后现场复验，不得用 replay 冒充。
 - 长期运行稳定性、Wi-Fi 断线重连、NTP 漂移、>1000 帧容量与清理策略。
 - 同款多件（两支一样的笔）区分能力：无 ground truth，未测。
 - 多用户/鉴权：当前仅监听 `127.0.0.1`，无鉴权；若改为局域网监听必须补访问控制。
