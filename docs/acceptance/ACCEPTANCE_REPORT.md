@@ -166,7 +166,7 @@
 |---|---|---|
 | 仓库密钥扫描 | ✅ 无命中 | 扫描 `password/api_key/secret/token` 模式，0 命中；设备 IP 在证据中已脱敏 |
 | 敏感数据入库 | ✅ 已忽略 | `.gitignore` 覆盖 `.venv*`、`data/`、`models/`、`*.sqlite*`、`config/*.local.yaml`、`.tmp/`、日志 |
-| 真机图像隐私 | ✅ 未入库 | 原始帧/裁剪图/UI 截图仅本机验证，验证后删除；仓库只保留脱敏元数据 |
+| 真机图像隐私 | ✅ 未入库 | 原始帧/裁剪图/真机 UI 截图仅保存在本机 `data/`（gitignored），未提交仓库；仓库只保留脱敏元数据/摘要 |
 | 网络暴露面 | ✅ 仅本机 | 验收服务均监听 `127.0.0.1`；运行期只与局域网设备通信，不调用云端 API |
 | 依赖许可 | ✅ 已核对 | torch BSD-3、transformers Apache-2.0、pillow HPND、numpy BSD-3、fastapi MIT、uvicorn BSD-3、pydantic MIT、httpx BSD-3、PyYAML MIT、jinja2 BSD-3、pytest MIT、python-multipart Apache-2.0、tzdata Apache-2.0；**刻意不使用 Ultralytics（AGPL-3.0）** |
 | 模型许可 | ✅ 已记录 | OWLv2：HF 实现 Apache-2.0 系；DINOv2：官方 model card 标注 Apache-2.0（商用前建议再核对拉取当次仓库说明） |
@@ -273,7 +273,7 @@ python -m findy query "鼠标移动过吗？"
 | 回放数据 | 从 `data/demo_frames` **复制** 6 帧到独立 frames 目录；原目录未消耗 |
 | 模型 | 真实 OWLv2 `google/owlv2-base-patch16-ensemble` + DINOv2-small（CPU） |
 | 浏览器 | 本机 Chrome + Playwright（Anaconda Python） |
-| 设备 | 未连接；工作台真机项保持 `NOT VERIFIED` |
+| 设备 | 本节 replay 演示运行时未连接；后续真机复验见 §14.5（run #3 6/6 PASS） |
 
 ### 14.3 浏览器验收结果
 
@@ -332,12 +332,14 @@ python tools\workbench_browser_check.py http://127.0.0.1:8766
 
 总体：`NOT VERIFIED`（因设备连接未验证且为回放演示）；`simulated=true`，横幅明确“回放演示（模拟数据，不计入真机验收）：通过 5/6，未验证 1/6”。
 
-### 14.5 真机验收状态（如实标记）
+### 14.5 真机验收复验（run #3，2026-10-29）
 
-- 2026-10-29 后续真机排障已找到并连接 ESP32（USB COM10，Wi-Fi `10.139.234.63`，摄像头 OV2640 ready，SNTP 已同步），真实抓拍/检测接口可用。
-- 首次真机验收运行 #1 的两次“抓拍”均返回运行前旧帧（`duplicate=true`）；根因是设备在 13:22 左右重启导致 seq 归零。旧判定曾误报 `PASS`，已修复为 **重复旧帧不计入本轮抓拍/检测/存储/轨迹证据**，运行 #1 现为 `NOT_VERIFIED`。该 PASS 导出（含真实 IP）**未提交仓库**。
-- 修正后重新运行 #2 产生了 3 帧新真实画面（抓拍/存储/设备连接 PASS），但相机当前视角为深色桌面/显示器背面，检测 0 个物品，因此检测/轨迹/查询为 `NOT_VERIFIED`。需物理调整镜头后重跑；此前真机项不得标记 `PASS`。
-- 历史真机 6/6 抓拍与检测证据保持 §6.1/§8 原结论，不代表本轮工作台真机流程已通过。
+- 2026-10-29 后续真机排障已找到并连接 ESP32（USB COM10，真实 IP/MAC 不写入仓库；摄像头 OV2640 ready、SNTP 已同步），真实抓拍/检测接口兼容，未修改固件。
+- **过程复盘（如实记录）**：运行 #1 的两次抓拍均为设备重启前的旧帧（`duplicate=true`），旧判定曾误报 `PASS`，已修复为重复旧帧不计入本轮证据，运行 #1 现为 `NOT_VERIFIED`，该导出未提交；运行 #2 的相机视角未对准桌面，检测 0，保持 `NOT_VERIFIED`。
+- **复验运行 #3（物理复位镜头后）**：`2026-10-29 13:59:38–14:01:47`，`real_device`，来源 `esp32`，2 帧新抓拍（#8/#9，`duplicate=false`），六项 `PASS`，`simulated=false`，`evaluator_version=2`，`duplicate_capture_count=0`。
+- 六项结果：设备连接 PASS（摄像头 ready / Wi-Fi 连接 / SNTP 同步）；真实抓拍 PASS（2 帧新画面，800×600）；检测 PASS（2 个物品，键盘，检测 7423 ms / 总处理 7590 ms）；存储 PASS（2 帧入库、原图可读）；轨迹关联 PASS（轨迹 #9，2 帧，关联分 0.88，另有 2 次灰区待确认）；查询 PASS（真实 esp32 证据：桌面左侧、时间、置信度约 0.43）。
+- 真机证据：[脱敏摘要](../evidence/workbench/real_device_acceptance_summary.json)。完整导出含查询文本与本地相对路径，仅保存在本机、未提交；摘要含原始导出 SHA256，不含图像/IP/MAC/查询文本/本地路径。
+- 限制：本轮是单桌面、单次会话、小样本；检测仅命中键盘等少量物品，查询出现 6 个可能键盘（关联灰区），不代表真实场景精度或同款多件能力已通过。
 
 ### 14.6 自动化测试
 
@@ -349,7 +351,7 @@ python tools\workbench_browser_check.py http://127.0.0.1:8766
 
 - 工作台只监听 `127.0.0.1`；页面无 CDN/外部字体/统计脚本，所有请求同源。
 - 验收事件、查询、数据库与日志只写本机 `data/`（gitignored）。
-- 提交的证据只包含 replay/公开演示数据截图与脱敏 JSON；真机图像与真机 UI 截图未提交。
+- 提交的证据只包含 replay/公开演示数据截图与脱敏 JSON；真机图像、真机 UI 截图、真实设备 IP/MAC、查询文本与本地路径未提交。
 - `acceptance_export.json` 不含图像数据，设备地址与本地绝对路径已脱敏。
 - 真机导出曾把嵌套的 Wi-Fi IP 写入 `probe.summary.wifi.ip`；已修复为统一脱敏 IPv4/MAC，用户下载的 `findy-acceptance-run-1.json` 未提交仓库。
 - 本轮未停止/重启 8765，未清空数据库，未消耗原 `data/demo_frames` 的 5 张剩余帧；8766 为独立数据库/图像目录。

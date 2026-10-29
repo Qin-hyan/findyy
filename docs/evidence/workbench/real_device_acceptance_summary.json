@@ -1,0 +1,96 @@
+{
+  "summary_note": "Findy 真机验收 run 3 的脱敏摘要。完整导出含查询文本与本地相对路径，仅保存在本机、未提交；本文件不含图像、设备 IP/MAC、查询文本或本地路径。",
+  "source_export": {
+    "filename": "findy-acceptance-run-3.json",
+    "sha256": "2598f8781cc8fb3b29443979e89a6a508193ccfa50b404c5a03d7b9c0b06a543",
+    "kept_local": true,
+    "note": "完整导出仅本机保留，已由 .gitignore 的 findy-acceptance-run-*.json 规则排除。"
+  },
+  "run": {
+    "id": 3,
+    "mode": "real_device",
+    "source_kind": "esp32",
+    "status": "finished",
+    "started_at_utc": "2026-10-29T05:59:38Z",
+    "finished_at_utc": "2026-10-29T06:01:47Z"
+  },
+  "device": {
+    "model": "findy-m1",
+    "firmware": "0.1.0-m1",
+    "build": "Oct 26 2026 10:51:38",
+    "camera_sensor": "OV2640",
+    "camera_ready": true,
+    "camera_resolution": "800x600",
+    "wifi_connected": true,
+    "time_synced": true
+  },
+  "result": {
+    "status": "PASS",
+    "simulated": false,
+    "counts": {
+      "pass": 6,
+      "fail": 0,
+      "not_verified": 0
+    },
+    "evaluator_version": 2,
+    "captures_considered": [
+      8,
+      9
+    ],
+    "real_capture_count": 2,
+    "duplicate_capture_count": 0
+  },
+  "items": [
+    {
+      "key": "device_connection",
+      "status": "PASS",
+      "reason": "设备探测成功，摄像头与 Wi-Fi 状态正常。",
+      "evidence_summary": "设备 findy-m1 / 固件 0.1.0-m1；摄像头 ready、OV2640、800x600；Wi-Fi 已连接；SNTP 已同步。"
+    },
+    {
+      "key": "capture",
+      "status": "PASS",
+      "reason": "本轮已从真实设备成功抓拍 2 帧。",
+      "evidence_summary": "抓拍 #8、#9 均为 esp32 来源、800x600、SNTP 时间、duplicate=false；运行开始后产生新帧。"
+    },
+    {
+      "key": "detection",
+      "status": "PASS",
+      "reason": "检测成功：2 个物品，检测耗时 7423 ms，总处理 7590 ms。",
+      "evidence_summary": "抓拍 #9 检出 2 个物品（键盘）；最高置信度约 0.51；检测 7423 ms / 总处理 7590 ms。"
+    },
+    {
+      "key": "storage",
+      "status": "PASS",
+      "reason": "本轮 2 帧均已入库且原图文件可读。",
+      "evidence_summary": "本轮 2 帧均入库，原图 JPEG 可读、800x600；本地文件路径未提交。"
+    },
+    {
+      "key": "track_link",
+      "status": "PASS",
+      "reason": "同一物品在本轮 2 帧中关联到同一轨迹，关联分 0.88–0.88。（首次观测为新轨迹，不计入关联分区间。）另有 2 次灰区待确认，已在轨迹详情中标注。",
+      "evidence_summary": "轨迹 #9 跨 2 帧关联，关联分 0.88；另有 2 次灰区待确认，已在轨迹详情标注。"
+    },
+    {
+      "key": "query",
+      "status": "PASS",
+      "reason": "查询返回了可核验的最后出现位置、时间与画面区域。",
+      "evidence_summary": "运行内查询返回 esp32 证据：桌面左侧、2026-10-29 14:00:34、置信度约 0.43；查询文本/回答未提交。"
+    }
+  ],
+  "privacy": {
+    "images_committed": false,
+    "device_ip_committed": false,
+    "device_mac_committed": false,
+    "query_text_committed": false,
+    "local_paths_committed": false
+  },
+  "local_evidence": {
+    "db": "<local-data-dir>/findy.sqlite",
+    "captures": [
+      8,
+      9
+    ],
+    "note": "DB、原图和裁剪图仅保存在本机 data/（gitignored）；提交版不包含这些文件。"
+  }
+}
