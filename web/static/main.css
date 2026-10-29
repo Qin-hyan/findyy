@@ -1,0 +1,879 @@
+/*
+ * Findy 主界面专属样式。
+ * 所有选择器均限定在 .app-main / body.app-main 下，避免影响 /workbench。
+ */
+
+body.app-main {
+  --app-max: 1440px;
+  --app-gutter: 28px;
+  --app-surface: rgba(16, 24, 39, 0.92);
+  --app-surface-2: rgba(22, 32, 51, 0.76);
+}
+
+.app-main .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(180deg, rgba(7, 11, 19, 0.97), rgba(7, 11, 19, 0.86));
+  border-bottom: 1px solid rgba(34, 48, 74, 0.82);
+  backdrop-filter: blur(18px);
+}
+
+.app-main .app-header-main {
+  width: min(100%, var(--app-max));
+  margin: 0 auto;
+  padding: 14px var(--app-gutter) 12px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.app-main .app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--text);
+  text-decoration: none;
+  flex: none;
+}
+
+.app-main .app-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 19px;
+  box-shadow: 0 8px 22px rgba(55, 211, 192, 0.22);
+}
+
+.app-main .app-brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.12;
+}
+
+.app-main .app-brand-copy strong {
+  font-size: 18px;
+  letter-spacing: 0.4px;
+}
+
+.app-main .app-brand-copy small {
+  color: var(--muted);
+  font-size: 11.5px;
+  letter-spacing: 0.2px;
+}
+
+.app-main .app-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(16, 24, 39, 0.86);
+  min-width: 0;
+  scrollbar-width: none;
+}
+
+.app-main .app-nav::-webkit-scrollbar { display: none; }
+
+.app-main .app-nav a {
+  display: inline-block;
+  padding: 8px 13px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.app-main .app-nav a:hover {
+  color: var(--text);
+  background: rgba(106, 168, 255, 0.08);
+}
+
+.app-main .app-nav a.is-active {
+  color: #04221f;
+  background: linear-gradient(135deg, var(--accent), #52b8ff);
+  box-shadow: 0 4px 14px rgba(55, 211, 192, 0.18);
+}
+
+.app-main .app-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+}
+
+.app-main .app-local-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(143, 160, 189, 0.25);
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.app-main .app-workbench-link {
+  padding: 7px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.app-main .app-statusbar {
+  width: min(100%, var(--app-max));
+  margin: 0 auto;
+  padding: 0 var(--app-gutter) 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.app-main .app-statusbar .status-row {
+  gap: 7px;
+}
+
+.app-main .app-statusbar .pill {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.app-main .app-status-note {
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.app-main .app-page {
+  width: min(100%, var(--app-max));
+  margin: 0 auto;
+  padding: 26px var(--app-gutter) 42px;
+}
+
+.app-main .page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+  min-width: 0;
+}
+
+.app-main .page-kicker {
+  margin: 0 0 7px;
+  color: var(--accent);
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 1.7px;
+}
+
+.app-main .page-heading h1 {
+  margin: 0;
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.15;
+  letter-spacing: 0.5px;
+}
+
+.app-main .page-subtitle {
+  margin: 7px 0 0;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.app-main .page-meta {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 8px 0 3px 18px;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.app-main .page-meta strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.app-main .card {
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(22, 32, 51, 0.9), rgba(16, 24, 39, 0.96));
+  padding: 18px 20px;
+}
+
+.app-main .card-head {
+  margin-bottom: 13px;
+}
+
+.app-main .card-head h2 {
+  font-size: 15px;
+}
+
+.app-main .observe-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.app-main .camera-card {
+  min-width: 0;
+}
+
+.app-main .camera-card .viewport {
+  aspect-ratio: 4 / 3;
+  max-height: 640px;
+  border-radius: 14px;
+}
+
+.app-main .viewport img {
+  image-rendering: auto;
+}
+
+.app-main .overlay {
+  border-radius: 14px;
+}
+
+.app-main .bbox {
+  border-color: rgba(55, 211, 192, 0.9);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.38), 0 0 16px rgba(55, 211, 192, 0.16) inset;
+}
+
+.app-main .bbox .tag {
+  font-size: 10.5px;
+  padding: 2px 6px;
+}
+
+.app-main .controls {
+  margin-top: 13px;
+}
+
+.app-main .observe-caption {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.app-main .observe-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-main .observe-summary {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(55, 211, 192, 0.22);
+  background: rgba(55, 211, 192, 0.055);
+  color: #cfe9e4;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.app-main .detection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.app-main .detection-row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(10, 18, 32, 0.6);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.app-main .detection-row:hover,
+.app-main .detection-row.is-selected {
+  border-color: rgba(55, 211, 192, 0.55);
+  background: rgba(55, 211, 192, 0.07);
+}
+
+.app-main .detection-row-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.app-main .detection-row-main strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.app-main .detection-row-main .confidence {
+  color: #8ef0dd;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-main .detection-row-sub {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.app-main .observe-note {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.app-main .observe-note strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.app-main .observe-note p {
+  margin: 3px 0 0;
+}
+
+.app-main .empty-note {
+  margin: 0;
+  padding: 18px 4px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.app-main .source-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(143, 160, 189, 0.1);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.app-main .source-badge.src-esp32 {
+  color: #8ef0dd;
+  border-color: rgba(55, 211, 192, 0.38);
+  background: rgba(55, 211, 192, 0.1);
+}
+
+.app-main .source-badge.src-replay {
+  color: #b9d2ff;
+  border-color: rgba(106, 168, 255, 0.36);
+  background: rgba(106, 168, 255, 0.1);
+}
+
+.app-main .source-badge.src-upload {
+  color: #ffd9a3;
+  border-color: rgba(255, 194, 102, 0.38);
+  background: rgba(255, 194, 102, 0.1);
+}
+
+.app-main .search-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.app-main .query-card {
+  min-width: 0;
+}
+
+.app-main .query-form {
+  gap: 9px;
+}
+
+.app-main .query-form input {
+  padding: 11px 13px;
+}
+
+.app-main .query-form button {
+  flex: none;
+}
+
+.app-main .answer {
+  margin-top: 14px;
+  font-size: 13.5px;
+  line-height: 1.72;
+}
+
+.app-main .results {
+  margin-top: 14px;
+}
+
+.app-main .result {
+  grid-template-columns: 104px minmax(0, 1fr);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.app-main a.result:hover {
+  border-color: rgba(55, 211, 192, 0.5);
+  transform: translateY(-1px);
+}
+
+.app-main .result .thumb {
+  width: 104px;
+  height: 80px;
+  display: grid;
+  place-items: center;
+}
+
+.app-main .thumb-empty {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.app-main .result .meta {
+  gap: 4px;
+}
+
+.app-main .result .meta .row {
+  gap: 6px;
+}
+
+.app-main .search-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-main .search-side .chips {
+  margin-top: 0;
+}
+
+.app-main .search-side .chip {
+  font-size: 11.5px;
+  line-height: 1.45;
+  padding: 6px 9px;
+  cursor: pointer;
+}
+
+.app-main .search-guide {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(10, 18, 32, 0.5);
+}
+
+.app-main .search-guide-title {
+  margin: 0 0 7px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.app-main .search-guide ul {
+  margin: 0;
+  padding-left: 17px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.app-main .search-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+.app-main .object-grid {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.app-main .object-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  background: #0b1322;
+  border-radius: 13px;
+}
+
+.app-main .object-card .pic {
+  height: 150px;
+}
+
+.app-main .object-card .pic img {
+  object-fit: cover;
+}
+
+.app-main .object-card .pic.no-image {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.app-main .object-card .info {
+  padding: 10px 11px 12px;
+}
+
+.app-main .object-card .name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.app-main .object-card .name {
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-main .object-card .sub {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.app-main .timeline {
+  max-height: none;
+  overflow: visible;
+  gap: 8px;
+}
+
+.app-main .timeline-card {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(10, 18, 32, 0.48);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.app-main .timeline-card:hover {
+  border-color: rgba(55, 211, 192, 0.45);
+  background: rgba(22, 32, 51, 0.72);
+}
+
+.app-main .timeline-thumb {
+  width: 112px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #05080e;
+  border: 1px solid rgba(34, 48, 74, 0.7);
+}
+
+.app-main .timeline-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-main .timeline-when {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.app-main .timeline-summary {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.app-main .timeline-badges {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.app-main .app-footer {
+  width: min(100%, var(--app-max));
+  margin: 0 auto;
+  padding: 0 var(--app-gutter) 34px;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.app-main .app-footer p {
+  margin: 4px 0;
+}
+
+.app-main .toast {
+  z-index: 60;
+}
+
+/* 窄屏：导航折行、主区域单列，避免横向溢出 */
+@media (max-width: 1080px) {
+  .app-main .observe-grid,
+  .app-main .search-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-main .observe-side {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .app-main .observe-side .card-head,
+  .app-main .observe-side .observe-summary,
+  .app-main .observe-side .observe-note {
+    grid-column: 1 / -1;
+  }
+
+  .app-main .detection-list {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 840px) {
+  .app-main {
+    --app-gutter: 16px;
+  }
+
+  .app-main .app-header-main {
+    padding-top: 12px;
+    padding-bottom: 10px;
+    gap: 10px 12px;
+    flex-wrap: wrap;
+  }
+
+  .app-main .app-brand {
+    order: 1;
+  }
+
+  .app-main .app-header-actions {
+    order: 2;
+  }
+
+  .app-main .app-nav {
+    order: 3;
+    flex: 1 0 100%;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .app-main .app-nav a {
+    flex: 1 0 auto;
+    text-align: center;
+    padding: 8px 10px;
+  }
+
+  .app-main .app-statusbar {
+    padding-bottom: 10px;
+  }
+
+  .app-main .app-status-note {
+    display: none;
+  }
+
+  .app-main .app-page {
+    padding-top: 20px;
+    padding-bottom: 32px;
+  }
+
+  .app-main .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .app-main .page-meta {
+    align-items: flex-start;
+    padding: 0;
+    border-left: 0;
+  }
+
+  .app-main .page-meta strong {
+    text-align: left;
+  }
+
+  .app-main .observe-side {
+    display: flex;
+  }
+
+  .app-main .detection-list {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .app-main .timeline-card {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .app-main .timeline-thumb {
+    width: 92px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 540px) {
+  .app-main .app-brand-copy small {
+    display: none;
+  }
+
+  .app-main .app-brand-copy strong {
+    font-size: 16px;
+  }
+
+  .app-main .app-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .app-main .app-local-badge {
+    display: none;
+  }
+
+  .app-main .app-workbench-link {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+
+  .app-main .app-nav a {
+    font-size: 11.5px;
+    padding: 8px 8px;
+  }
+
+  .app-main .app-statusbar .pill {
+    font-size: 10.5px;
+    padding: 4px 8px;
+  }
+
+  .app-main .app-page {
+    padding-top: 16px;
+  }
+
+  .app-main .page-heading h1 {
+    font-size: 27px;
+  }
+
+  .app-main .card {
+    padding: 14px 13px;
+    border-radius: 14px;
+  }
+
+  .app-main .camera-card {
+    padding: 13px;
+  }
+
+  .app-main .camera-card .card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .app-main .camera-card .card-head .muted {
+    text-align: left;
+  }
+
+  .app-main .object-grid {
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 9px;
+  }
+
+  .app-main .object-card .pic {
+    height: 118px;
+  }
+
+  .app-main .object-card .name {
+    font-size: 12.5px;
+  }
+
+  .app-main .object-card .sub {
+    font-size: 10.5px;
+  }
+
+  .app-main .timeline-card {
+    grid-template-columns: 78px minmax(0, 1fr);
+    padding: 6px;
+  }
+
+  .app-main .timeline-thumb {
+    width: 78px;
+    height: 62px;
+  }
+
+  .app-main .timeline-when {
+    font-size: 12px;
+  }
+
+  .app-main .timeline-summary {
+    font-size: 11px;
+  }
+
+  .app-main .result {
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 9px;
+    padding: 8px;
+  }
+
+  .app-main .result .thumb {
+    width: 82px;
+    height: 64px;
+  }
+
+  .app-main .answer {
+    font-size: 12.5px;
+    padding: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-main *,
+  .app-main *::before,
+  .app-main *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

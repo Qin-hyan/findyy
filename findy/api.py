@@ -143,6 +143,31 @@ def create_app(config_path: str | None = None) -> FastAPI:
             return JSONResponse({"ok": False, "error": "web/index.html 不存在"}, status_code=500)
         return FileResponse(page, media_type="text/html; charset=utf-8")
 
+    def _static_page(filename: str, label: str):
+        page = WEB_DIR / filename
+        if not page.exists():
+            return JSONResponse(
+                {"ok": False, "error": f"{label}页面文件不存在（{filename}）"},
+                status_code=500,
+            )
+        return FileResponse(page, media_type="text/html; charset=utf-8")
+
+    @app.get("/observe")
+    def observe_page():
+        return _static_page("index.html", "最近观察")
+
+    @app.get("/search")
+    def search_page():
+        return _static_page("search.html", "找找物品")
+
+    @app.get("/items")
+    def items_page():
+        return _static_page("items.html", "我的物品")
+
+    @app.get("/timeline")
+    def timeline_page():
+        return _static_page("timeline.html", "观察时间线")
+
     @app.get("/workbench")
     def workbench():
         page = WEB_DIR / "workbench.html"

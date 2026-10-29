@@ -107,3 +107,43 @@ def test_health_and_index(api_client):
     index = api_client.get("/")
     assert index.status_code == 200
     assert "Findy" in index.text
+
+
+def test_main_pages_are_distinct_navigation_targets(api_client):
+    pages = {
+        "/": ("observe", 'id="capture-img"'),
+        "/search": ("search", 'id="query-form"'),
+        "/items": ("items", 'id="objects"'),
+        "/timeline": ("timeline", 'id="timeline"'),
+    }
+    nav_hrefs = ['href="/"', 'href="/search"', 'href="/items"', 'href="/timeline"']
+
+    for path, (page, marker) in pages.items():
+        response = api_client.get(path)
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/html")
+        assert f'data-page="{page}"' in response.text
+        assert marker in response.text
+        assert 'href="/workbench"' in response.text
+        assert "/static/main.css" in response.text
+        for href in nav_hrefs:
+            assert href in response.text
+
+    # 四个 URL 返回不同页面，而不是同一页面的隐藏区块。
+    bodies = {path: api_client.get(path).text for path in pages}
+    assert len({body for body in bodies.values()}) == 4
+    assert 'id="capture-img"' not in bodies["/search"]
+    assert 'id="query-form"' not in bodies["/"]
+    assert 'id="objects"' not in bodies["/timeline"]
+
+    stylesheet = api_client.get("/static/main.css")
+    assert stylesheet.status_code == 200
+    assert ".app-main" in stylesheet.text
+
+    observe_alias = api_client.get("/observe?capture=1")
+    assert observe_alias.status_code == 200
+    assert 'data-page="observe"' in observe_alias.text
+
+    workbench = api_client.get("/workbench")
+    assert workbench.status_code == 200
+    assert "端到端验收工作台" in workbench.text

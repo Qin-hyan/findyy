@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2337d3c0'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Segoe UI' font-weight='bold' text-anchor='middle' fill='%23042018'%3EF%3C/text%3E%3C/svg%3E" />
+  <title>观察时间线 · Findy</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/main.css" />
+</head>
+<body class="app-main" data-page="timeline">
+  <header class="app-header">
+    <div class="app-header-main">
+      <a class="app-brand" href="/" aria-label="Findy 最近观察">
+        <span class="logo app-logo">F</span>
+        <span class="app-brand-copy"><strong>Findy</strong><small>物品记忆助手</small></span>
+      </a>
+      <nav class="app-nav" aria-label="主导航">
+        <a href="/" data-nav="observe">最近观察</a>
+        <a href="/search" data-nav="search">找找物品</a>
+        <a href="/items" data-nav="items">我的物品</a>
+        <a href="/timeline" data-nav="timeline" class="is-active" aria-current="page">观察时间线</a>
+      </nav>
+      <div class="app-header-actions">
+        <span class="app-local-badge" title="所有图像与查询仅在本机处理">仅本机</span>
+        <a class="topbar-link app-workbench-link" href="/workbench">验收工作台 →</a>
+      </div>
+    </div>
+    <div class="app-statusbar">
+      <div class="status-row" id="status-row">
+        <span class="pill" id="pill-db">数据库 · 检查中</span>
+        <span class="pill" id="pill-model">检测模型 · 加载中</span>
+        <span class="pill" id="pill-source">采集源 · —</span>
+        <span class="pill" id="pill-auto">自动采集 · 停止</span>
+      </div>
+      <span class="app-status-note">全部本地运行 · 图像与查询不上传</span>
+    </div>
+  </header>
+
+  <main class="app-page">
+    <header class="page-heading">
+      <div>
+        <p class="page-kicker">FINDY MEMORY / TIMELINE</p>
+        <h1>观察时间线</h1>
+        <p class="page-subtitle">按时间回看每一帧抓拍和当时识别到的物品，点击进入对应观察详情。</p>
+      </div>
+      <div class="page-meta"><span>最近抓拍</span><strong id="timeline-count">—</strong></div>
+    </header>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>历史抓拍</h2>
+        <span class="muted small">最近 12 帧 · 点击查看观察详情</span>
+      </div>
+      <div class="timeline" id="timeline">
+        <p class="empty-note">正在读取历史抓拍…</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Findy MVP · 检测：OWLv2 开放词表（Apache-2.0 系）· 实例关联：DINOv2 + 区域/时间先验 · 存储：SQLite + 本地文件</p>
+    <p class="muted small">所有图像与查询都在本机处理；时间来自设备 SNTP，未同步时会明确标注。识别能力受词表与画面分辨率限制，结果仅供参考。</p>
+  </footer>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
