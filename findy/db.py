@@ -53,6 +53,11 @@ class Database:
             self._ensure_column(conn, "captures", "embed_ms", "INTEGER")
             self._ensure_column(conn, "captures", "process_ms", "INTEGER")
             self._ensure_column(conn, "captures", "detect_error", "TEXT")
+            self._ensure_column(conn, "captures", "device_seq_raw", "INTEGER")
+            conn.execute(
+                "UPDATE captures SET device_seq_raw = device_seq"
+                " WHERE device_seq_raw IS NULL AND device_seq IS NOT NULL"
+            )
             # 老数据的来源回填：只依据既有 time_source 语义，绝不猜测为真机。
             # 明确已有 source_kind 的记录不覆盖。
             conn.execute(
@@ -176,20 +181,34 @@ class Database:
     def add_capture(self, record: dict[str, Any]) -> tuple[int, bool]:
         """插入一帧；同相机同 device_seq 幂等。返回 (id, 是否新建)。"""
         cols = [
-            "camera_id", "device_seq", "captured_at_utc", "captured_at_local", "epoch_s",
-            "time_synced", "time_source", "uptime_ms", "received_at_utc", "file_path",
+            "camera_id", "device_seq", "device_seq_raw", "captured_at_utc", "captured_at_local",
+            "epoch_s", "time_synced", "time_source", "uptime_ms", "received_at_utc", "file_path",
             "image_width", "image_height", "image_bytes", "sha256", "source_ref", "source_kind",
             "status", "detect_ms", "embed_ms", "process_ms", "detect_error",
         ]
-        values = [record.get(c) for c in cols]
         with self.connect() as conn:
             if record.get("device_seq") is not None:
                 row = conn.execute(
-                    "SELECT id FROM captures WHERE camera_id=? AND device_seq=?",
+                    "SELECT id, sha256 FROM captures WHERE camera_id=? AND device_seq=?",
                     (record["camera_id"], record["device_seq"]),
                 ).fetchone()
                 if row:
-                    return int(row["id"]), False
+                    incoming_sha = record.get("sha256")
+                    existing_sha = row["sha256"]
+                    # 同一 seq、同一图片 => 设备重试/重复请求，幂等返回。
+                    # 同一 seq、不同图片 => 设备重启后 seq 归零；不能把新画面丢弃，
+                    # 也不能覆盖旧证据：分配一个数据库内唯一 seq，保留原始 seq 供展示。
+                    if not incoming_sha or not existing_sha or incoming_sha == existing_sha:
+                        return int(row["id"]), False
+                    max_seq = conn.execute(
+                        "SELECT MAX(device_seq) FROM captures WHERE camera_id=?",
+                        (record["camera_id"],),
+                    ).fetchone()[0]
+                    record["device_seq_raw"] = int(record["device_seq"])
+                    record["device_seq"] = int(max_seq or 0) + 1
+            if record.get("device_seq") is not None and record.get("device_seq_raw") is None:
+                record["device_seq_raw"] = record["device_seq"]
+            values = [record.get(c) for c in cols]
             cur = conn.execute(
                 f"INSERT INTO captures({','.join(cols)}) VALUES ({','.join('?' * len(cols))})",
                 values,

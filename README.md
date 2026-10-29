@@ -17,7 +17,7 @@ Findy 用固定摄像头观察桌面环境，识别物品并记录**图像 / 时
 | 阶段三：验收 | ✅ 完成（小样本真机） | 真机 6/6 抓拍、38 次检测、自动化与浏览器验收通过；长期稳定性/精度量化未验，详见 [`docs/acceptance/ACCEPTANCE_REPORT.md`](docs/acceptance/ACCEPTANCE_REPORT.md) |
 | 端到端验收工作台 | ✅ 完成（自动化 + 回放演示浏览器验收） | `/workbench`：设备探测/会话内真机切换、抓拍、检测证据、轨迹关联、找物查询、六项验收总览；replay 演示 38/38 浏览器检查通过；**真机工作台项待设备在线复验，当前 NOT VERIFIED** |
 
-**已验证**：真实 ESP32 6/6 抓拍、38 次检测、8 条轨迹，5 类主物品 6/6 帧关联同一轨迹；演示 6 帧闭环；**89 个自动化测试通过**；Chrome/Playwright 演示 12/12、真机 7/7；**验收工作台 replay 演示 38/38**（含真实 OWLv2 检测、跨帧关联、中文查询、六项状态与脱敏导出）；异常路径有测试或实测记录。
+**已验证**：真实 ESP32 6/6 抓拍、38 次检测、8 条轨迹，5 类主物品 6/6 帧关联同一轨迹；演示 6 帧闭环；**92 个自动化测试通过**；Chrome/Playwright 演示 12/12、真机 7/7；**验收工作台 replay 演示 38/38**（含真实 OWLv2 检测、跨帧关联、中文查询、六项状态与脱敏导出）；异常路径有测试或实测记录。
 
 **未验证/限制**：真实设备在线时的**工作台真机验收**尚未执行（当前设备未连接，六项中设备连接等真机项为 `NOT VERIFIED`）；真实场景量化精度（无 ground truth）、同款多件区分、长期运行稳定性未测；开放词表仍有误检/漏检；位置是「画面区域」而非三维坐标。所有细节见验收报告与 [架构决策](docs/research/C_architecture_decision.md)。
 
@@ -98,7 +98,8 @@ capture:
 
 - 回放运行会明确标记 `simulated=true`，横幅写明“回放演示，不计入真机验收”；replay 数据不会让真机项变成 `PASS`。
 - 真实设备运行中，只有 `source_kind=esp32` 的抓拍进入真机结论；设备离线、模型未就绪、检测失败、查询无结果分别显示 `FAIL` / `NOT VERIFIED`，没有操作就是 `NOT VERIFIED`。
-- 导出 JSON 不含图像，设备地址与本地绝对路径已脱敏。
+- 导出 JSON 不含图像，设备地址、IPv4/MAC 与本地绝对路径已脱敏（包括嵌套的设备状态字段）。
+- `duplicate=true` 的旧帧不会计入本轮验收：设备重启后 seq 归零时，重复返回的旧图不会让“真实抓拍/检测/存储/轨迹”通过；新画面会分配内部唯一 seq，并保留设备原始 seq 供证据展示。
 - 当前运行中的 8765 若尚未重启，仍是旧代码；工作台代码已合并到仓库，重启服务后 `/workbench` 生效。升级前请确认没有正在执行的抓拍/自动采集。
 
 ---
@@ -113,7 +114,7 @@ capture:
 | `python -m findy query "我的鼠标最后在哪？"` | 命令行执行一次自然语言查询 |
 | `python -m findy replay --dir data/demo_frames` | 回放一个图片目录（验收/演示） |
 | `python -m findy esp32 --url http://<IP>` | 探测设备状态 |
-| `python -m pytest tests -q` | 运行 89 个自动化测试（原 75 项 + 14 项验收工作台测试） |
+| `python -m pytest tests -q` | 运行 92 个自动化测试（原 75 项 + 17 项验收工作台测试） |
 | `python tools\browser_acceptance.py http://127.0.0.1:8765` | 用本机 Chrome 做 12 项真实浏览器验收并截图 |
 | `python tools\workbench_browser_check.py http://127.0.0.1:8766` | 对验收工作台做 38 项真实浏览器检查（需 Playwright；建议使用隔离实例） |
 | `python tools\make_visual_report.py` | 生成单文件可视化报告 `docs/evidence/visual_report.html`（图片内嵌，双击离线可看） |
@@ -159,7 +160,7 @@ Findyy/
 │   ├── objects.yaml        # 物品词表 + 中文别名 + 逐类阈值
 │   └── zones.yaml          # 画面区域（归一化多边形）
 ├── tools/                  # 模型下载、演示数据、验收脚本
-├── tests/                  # pytest（89 项）
+├── tests/                  # pytest（92 项）
 ├── docs/
 │   ├── research/           # 阶段一调研 A/B + 架构决策 C
 │   ├── acceptance/         # 验收报告

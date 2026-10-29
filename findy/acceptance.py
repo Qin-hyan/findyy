@@ -22,6 +22,9 @@ PASS = "PASS"
 FAIL = "FAIL"
 NOT_VERIFIED = "NOT_VERIFIED"
 
+# 判定逻辑版本：重复帧/来源规则变化时递增，让旧的 summary 重新计算而不是沿用错误结论。
+EVALUATOR_VERSION = 2
+
 MODES = {"real_device", "replay_demo"}
 SOURCE_KINDS = {"esp32", "replay", "upload", "webcam", "unknown"}
 
@@ -435,6 +438,7 @@ def _empty_overview(reason: str) -> dict:
         "warnings": [],
         "items": items,
         "generated_at_utc": utc_now_iso(),
+        "evaluator_version": EVALUATOR_VERSION,
     }
 
 
@@ -463,13 +467,24 @@ def evaluate_run(
     emb_status = _as_dict(embedder_status)
 
     try:
-        captures = db.captures_for_run(int(run["id"]))
+        all_captures = db.captures_for_run(int(run["id"]))
     except Exception:
-        captures = []
+        all_captures = []
 
-    capture_by_id = {int(c["id"]): c for c in captures}
     capture_events = [e for e in events if e.get("kind") == "capture"]
     failed_capture_events = [e for e in capture_events if not e.get("ok")]
+    duplicate_capture_events = [
+        e for e in capture_events if e.get("capture_id") and _as_dict(e.get("detail")).get("duplicate") is True
+    ]
+    # duplicate=true 表示设备返回了已入库的旧帧（典型原因：设备重启后 seq 归零）。
+    # 旧帧不能作为“本轮真实抓拍/检测/存储/轨迹”的证据，否则会把运行前画面算成本轮结果。
+    new_capture_ids = {
+        int(e["capture_id"])
+        for e in capture_events
+        if e.get("capture_id") and not _as_dict(e.get("detail")).get("duplicate")
+    }
+    captures = [c for c in all_captures if int(c["id"]) in new_capture_ids]
+    duplicate_captures = [c for c in all_captures if int(c["id"]) not in new_capture_ids]
     query_events = [e for e in events if e.get("kind") == "query"]
     probe_events = [e for e in events if e.get("kind") == "probe"]
 
@@ -539,7 +554,7 @@ def evaluate_run(
                     "value": (
                         f"{_capture_time_text(latest)} · {_capture_provenance_text(latest)}"
                         f" · {latest.get('image_width')}×{latest.get('image_height')}"
-                        f" · seq={latest.get('device_seq')}"
+                        f" · seq={latest.get('device_seq_raw') or latest.get('device_seq')}"
                     ),
                     "url": f"/api/captures/{latest['id']}/image",
                 },
@@ -561,6 +576,25 @@ def evaluate_run(
             last = failed_capture_events[-1]
             error = last["detail"].get("error") or "抓拍失败"
             items.append(_item("capture", FAIL, f"真实设备抓拍失败：{error}", [], title=capture_title))
+        elif duplicate_captures:
+            items.append(
+                _item(
+                    "capture",
+                    NOT_VERIFIED,
+                    f"本轮 {len(duplicate_capture_events)} 次抓拍都返回了设备中已存在的旧帧"
+                    "（duplicate=true），没有产生新画面。常见原因是设备重启后 seq 归零；"
+                    "请确认设备未重启，再重新抓拍。",
+                    [
+                        {
+                            "label": f"重复帧 #{c['id']}",
+                            "value": f"{_capture_time_text(c)} · seq={c.get('device_seq_raw') or c.get('device_seq')}",
+                            "url": f"/api/captures/{c['id']}/image",
+                        }
+                        for c in duplicate_captures[-3:]
+                    ],
+                    title=capture_title,
+                )
+            )
         elif non_real_captures:
             items.append(
                 _item(
@@ -609,6 +643,24 @@ def evaluate_run(
                     FAIL,
                     f"回放抓拍失败：{last['detail'].get('error') or '未知错误'}",
                     [],
+                    title=capture_title,
+                )
+            )
+        elif duplicate_captures:
+            items.append(
+                _item(
+                    "capture",
+                    NOT_VERIFIED,
+                    f"本轮 {len(duplicate_capture_events)} 次抓拍均返回旧帧（duplicate=true），"
+                    "没有产生新画面；回放帧不能作为本轮抓拍证据。",
+                    [
+                        {
+                            "label": f"重复帧 #{c['id']}",
+                            "value": _capture_time_text(c),
+                            "url": f"/api/captures/{c['id']}/image",
+                        }
+                        for c in duplicate_captures[-3:]
+                    ],
                     title=capture_title,
                 )
             )
@@ -918,6 +970,11 @@ def evaluate_run(
         warnings.append("本轮包含非真实设备抓拍，相关真机项已保持 NOT VERIFIED，没有混入真机结论。")
     if real and not real_captures:
         warnings.append("本轮还没有真实设备抓拍，请连接 ESP32 后点击“立即抓拍”。")
+    if duplicate_capture_events:
+        warnings.append(
+            f"本轮有 {len(duplicate_capture_events)} 次抓拍返回了已存在的旧帧（duplicate=true），"
+            "可能设备重启后 seq 归零；旧帧不计入本轮抓拍/检测/存储/轨迹证据。"
+        )
     if not captures and not query_events and not probe_events:
         warnings.append("本轮尚未执行任何操作；请按操作引导依次检查连接、抓拍、查询。")
 
@@ -944,13 +1001,18 @@ def evaluate_run(
         "warnings": warnings,
         "items": items,
         "generated_at_utc": utc_now_iso(),
+        "evaluator_version": EVALUATOR_VERSION,
         "captures_considered": [int(c["id"]) for c in relevant_captures],
         "real_capture_count": len(real_captures),
+        "duplicate_capture_count": len(duplicate_captures),
+        "duplicate_capture_ids": [int(c["id"]) for c in duplicate_captures],
     }
 
 
 # ---------------- 导出脱敏 ----------------
 _ABS_PATH_RE = re.compile(r"[A-Za-z]:\\[^\s\"']+")
+_IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+_MAC_RE = re.compile(r"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b")
 
 
 def _sanitize_value(value, key: str = ""):
@@ -962,6 +1024,8 @@ def _sanitize_value(value, key: str = ""):
         repo = str(REPO_ROOT)
         text = value.replace(repo + "\\", "").replace(repo + "/", "").replace(repo, "")
         text = _ABS_PATH_RE.sub("<local-path>", text)
+        text = _IPV4_RE.sub("<device-ip>", text)
+        text = _MAC_RE.sub("<device-mac>", text)
         if key in {"url", "source_ref"} and text.lower().startswith(("http://", "https://")):
             text = mask_device_url(text) or text
         return text

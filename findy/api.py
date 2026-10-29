@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .acceptance import (
+    EVALUATOR_VERSION,
     AcceptanceRecorder,
     build_export,
     evaluate_run,
@@ -383,6 +384,8 @@ def create_app(config_path: str | None = None) -> FastAPI:
                     "thumbnail_url": f"/api/captures/{r['id']}/image?thumb=1",
                     "status": r.get("status"),
                     "source_kind": r.get("source_kind") or "unknown",
+                    "device_seq": r.get("device_seq"),
+                    "device_seq_raw": r.get("device_seq_raw"),
                     "detect_ms": r.get("detect_ms"),
                     "process_ms": r.get("process_ms"),
                     "detect_error": r.get("detect_error"),
@@ -411,6 +414,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 "source_kind": row.get("source_kind") or "unknown",
                 "source_ref": row.get("source_ref"),
                 "device_seq": row.get("device_seq"),
+                "device_seq_raw": row.get("device_seq_raw"),
                 "detect_ms": row.get("detect_ms"),
                 "embed_ms": row.get("embed_ms"),
                 "process_ms": row.get("process_ms"),
@@ -682,7 +686,17 @@ def create_app(config_path: str | None = None) -> FastAPI:
     def _overview_for(run: dict | None) -> dict:
         if run and run.get("status") == "finished" and run.get("summary_json"):
             try:
-                return json.loads(run["summary_json"])
+                summary = json.loads(run["summary_json"])
+                # 旧版本判定可能把 duplicate 旧帧误算为 PASS；版本不一致时重新计算，
+                # 避免继续展示错误结论（历史 summary 仍保留在数据库中，不删除）。
+                if summary.get("evaluator_version") == EVALUATOR_VERSION:
+                    return summary
+                log.info(
+                    "验收运行 #%s 的判定版本为 %s，与当前 %s 不一致，重新计算",
+                    run.get("id"),
+                    summary.get("evaluator_version"),
+                    EVALUATOR_VERSION,
+                )
             except (TypeError, ValueError):
                 log.warning("验收运行 #%s 的 summary_json 无法解析，改为实时计算", run.get("id"))
         return _compute_overview(run)

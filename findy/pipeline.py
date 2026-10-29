@@ -410,6 +410,8 @@ class FindyPipeline:
             "detections_count": capture.get("detections_count", len(detections)),
             "source": capture.get("source_ref"),
             "source_kind": capture.get("source_kind") or "unknown",
+            "device_seq": capture.get("device_seq"),
+            "device_seq_raw": capture.get("device_seq_raw"),
             "status": capture.get("status"),
             "detect_ms": capture.get("detect_ms"),
             "embed_ms": capture.get("embed_ms"),

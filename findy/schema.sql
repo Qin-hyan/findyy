@@ -43,7 +43,8 @@ CREATE INDEX IF NOT EXISTS idx_alias_class ON aliases(class_id);
 CREATE TABLE IF NOT EXISTS captures (
   id              INTEGER PRIMARY KEY,
   camera_id       INTEGER NOT NULL REFERENCES cameras(id),
-  device_seq      INTEGER,
+  device_seq      INTEGER,                       -- 数据库内唯一序号；设备重启 seq 归零时会分配新值
+  device_seq_raw  INTEGER,                       -- 设备本次启动报告的原始 seq（用于证据展示）
   captured_at_utc TEXT,                          -- NULL = 时间未同步/未知（绝不伪造）
   captured_at_local TEXT,
   epoch_s         REAL,

@@ -252,6 +252,101 @@ def test_track_detail_has_link_evidence_and_sources(api_client):
         assert "candidates" in det
 
 
+def test_duplicate_only_captures_are_not_accepted(api_client):
+    """设备重启后 seq 归零会返回旧帧；旧帧不能算作本轮抓拍/检测/存储/轨迹证据。"""
+    first = api_client.post("/api/capture").json()
+    capture_id = first["capture_id"]
+    run = start_run(api_client, "real_device")
+    # 模拟运行内两次抓拍都返回同一个已入库旧帧（与真实故障时的事件形状一致）
+    db = api_client.app.state.db
+    for _ in range(2):
+        db.add_acceptance_event(
+            run["id"],
+            "capture",
+            True,
+            source_kind="esp32",
+            capture_id=capture_id,
+            detail={
+                "duplicate": True,
+                "detections_count": len(first.get("detections") or []),
+                "capture": {"id": capture_id, "device_seq": 1, "captured_at_local": "2026-10-28 10:00:00"},
+            },
+        )
+    finished = finish_run(api_client, run["id"])
+    overview = finished["overview"]
+    items = item_map(overview)
+    assert items["capture"]["status"] == NOT_VERIFIED
+    assert "重复" in items["capture"]["reason"] or "旧帧" in items["capture"]["reason"]
+    assert items["detection"]["status"] == NOT_VERIFIED
+    assert items["storage"]["status"] == NOT_VERIFIED
+    assert items["track_link"]["status"] == NOT_VERIFIED
+    assert overview["status"] == NOT_VERIFIED
+    assert overview["duplicate_capture_count"] >= 1
+    assert overview["evaluator_version"] >= 2
+    assert any("duplicate" in w for w in overview["warnings"])
+
+
+def test_export_masks_ip_even_in_nested_status():
+    from findy.acceptance import build_export
+
+    run = {"id": 9, "mode": "real_device", "source_kind": "esp32", "source_ref": "http://<device-ip>"}
+    events = [
+        {
+            "id": 1,
+            "kind": "probe",
+            "ok": True,
+            "source_kind": "esp32",
+            "detail": {
+                "url": "http://10.139.234.63",
+                "summary": {
+                    "wifi": {"ip": "10.139.234.63", "connected": True},
+                    "device": "findy-m1",
+                },
+            },
+            "created_at_utc": "2026-10-29T05:24:20Z",
+        }
+    ]
+    overview = {"status": "PASS", "items": [], "evaluator_version": 2}
+    text = json.dumps(build_export(run, events, overview), ensure_ascii=False)
+    assert "10.139.234.63" not in text
+    assert "<device-ip>" in text
+
+
+def test_device_seq_collision_after_reboot_creates_new_capture(tmp_path):
+    db = Database(tmp_path / "reboot.sqlite")
+    db.init_schema()
+    db.ensure_camera("default", "esp32", "test", 800, 600, "Asia/Shanghai")
+    base = {
+        "camera_id": 1,
+        "captured_at_utc": "2026-10-29T04:25:41Z",
+        "captured_at_local": "2026-10-29 12:25:41",
+        "epoch_s": 1.0,
+        "time_synced": 1,
+        "time_source": "sntp",
+        "uptime_ms": 1,
+        "received_at_utc": "2026-10-29T04:25:41Z",
+        "file_path": "data/images/x.jpg",
+        "image_width": 800,
+        "image_height": 600,
+        "image_bytes": 10,
+        "source_ref": "device",
+        "source_kind": "esp32",
+        "status": "ok",
+    }
+    old_id, old_created = db.add_capture({**base, "device_seq": 1, "sha256": "old-sha"})
+    assert old_created is True
+    dup_id, dup_created = db.add_capture({**base, "device_seq": 1, "sha256": "old-sha"})
+    assert dup_created is False and dup_id == old_id
+    new_id, new_created = db.add_capture(
+        {**base, "device_seq": 1, "sha256": "new-sha", "captured_at_local": "2026-10-29 13:24:29"}
+    )
+    assert new_created is True and new_id != old_id
+    new_row = db.get_capture(new_id)
+    old_row = db.get_capture(old_id)
+    assert new_row["device_seq_raw"] == 1
+    assert new_row["device_seq"] != old_row["device_seq"]
+
+
 def test_source_kind_backfill_does_not_override(tmp_path):
     db = Database(tmp_path / "legacy.sqlite")
     db.init_schema()

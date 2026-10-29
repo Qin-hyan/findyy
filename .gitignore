@@ -1,5 +1,6 @@
 # Build artifacts and local caches
 .tmp/
+pytest-of-*/
 node_modules/
 .pnpm-store/
 *.log
@@ -23,3 +24,6 @@ __pycache__/
 # Local secrets / config overrides
 config/findy.local.yaml
 .env
+
+# 用户从工作台下载的验收导出（可能含真实设备/隐私信息，不提交）
+findy-acceptance-run-*.json
