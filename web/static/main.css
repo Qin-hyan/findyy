@@ -263,12 +263,7 @@ body.app-main {
   margin-top: 13px;
 }
 
-.app-main .observe-caption {
-  margin: 12px 0 0;
-  color: var(--muted);
-  font-size: 11.5px;
-  line-height: 1.6;
-}
+
 
 .app-main .observe-side {
   display: flex;
