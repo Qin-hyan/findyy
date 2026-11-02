@@ -37,50 +37,32 @@
     </div>
   </header>
 
-  <main class="app-page">
-    <header class="page-heading">
+  <main class="app-page search-page">
+    <header class="page-heading search-heading search-reveal" style="--enter-delay: 0ms">
       <div>
         <p class="page-kicker">FINDY MEMORY / SEARCH</p>
         <h1>找找物品</h1>
-        <p class="page-subtitle">用自然语言问 Findy：物品最后出现在哪里、移动过没有，或桌上有哪些东西。</p>
       </div>
       <div class="page-meta"><span>查询范围</span><strong>本机记忆 · 全部来源</strong></div>
     </header>
 
-    <div class="search-grid">
-      <section class="card query-card">
-        <div class="card-head">
-          <h2>问问 Findy</h2>
-          <span class="muted" id="query-intent"></span>
-        </div>
-        <form id="query-form" class="query-form">
-          <input id="query-input" type="text" placeholder="例如：我的钥匙最后出现在哪里？" autocomplete="off" />
-          <button class="primary" type="submit">查找</button>
-        </form>
-        <div id="answer" class="answer help">你好，我是 Findy。我会记住摄像头里出现过的物品和它们最后出现的位置。
+    <section class="card query-card search-reveal" style="--enter-delay: 60ms">
+      <div class="card-head search-reveal" style="--enter-delay: 110ms">
+        <h2>问问 Findy</h2>
+        <span class="muted" id="query-intent"></span>
+      </div>
+      <form id="query-form" class="query-form search-reveal" style="--enter-delay: 160ms">
+        <input id="query-input" type="text" placeholder="例如：我的钥匙最后出现在哪里？" autocomplete="off" />
+        <button class="primary" type="submit">查找</button>
+      </form>
+      <div id="answer" class="answer help search-reveal" style="--enter-delay: 210ms">你好，我是 Findy。我会记住摄像头里出现过的物品和它们最后出现的位置。
 你可以直接问：
 · 笔记本电脑最后出现在哪里？
 · 鼠标移动过吗？
 · 桌上都有哪些东西？
 所有回答都会附带观测时间、区域、置信度和证据图片；时间未同步时会明确标注。</div>
-        <div id="results" class="results"></div>
-      </section>
-
-      <aside class="card search-side">
-        <div class="card-head"><h2>可以这样问</h2><span class="muted small">建议问题</span></div>
-        <div class="chips" id="example-chips"></div>
-        <div class="search-guide">
-          <p class="search-guide-title">回答包含什么</p>
-          <ul>
-            <li>最后出现的时间与画面区域</li>
-            <li>置信度、观察次数与证据裁剪图</li>
-            <li>关联待确认、时间未同步等限制</li>
-            <li>点击结果进入对应观察详情</li>
-          </ul>
-        </div>
-        <p class="search-note">查询只读取本地 SQLite 和图像文件；不会上传到云端，也不会调用外部搜索服务。</p>
-      </aside>
-    </div>
+      <div id="results" class="results"></div>
+    </section>
   </main>
 
   <footer class="app-footer">

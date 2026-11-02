@@ -154,7 +154,6 @@ async function loadStatus() {
     }
 
     const examples = data.examples?.length ? data.examples : DEFAULT_EXAMPLES;
-    renderExampleChips(examples);
     const input = $("query-input");
     if (input && examples[0]) input.placeholder = `例如：${examples[0]}`;
   } catch (err) {
@@ -456,25 +455,6 @@ async function toggleAuto() {
 }
 
 // ---------------- 找找物品 ----------------
-function renderExampleChips(examples) {
-  const box = $("example-chips");
-  if (!box || box.dataset.ready === "1") return;
-  box.dataset.ready = "1";
-  box.innerHTML = "";
-  (examples || []).slice(0, 4).forEach((q) => {
-    const chip = document.createElement("span");
-    chip.className = "chip";
-    chip.textContent = q;
-    chip.onclick = () => {
-      const input = $("query-input");
-      const form = $("query-form");
-      if (input) input.value = q;
-      if (form) form.requestSubmit();
-    };
-    box.appendChild(chip);
-  });
-}
-
 async function runQuery(text) {
   const input = $("query-input");
   const q = ((text ?? input?.value) || "").trim();
@@ -735,6 +715,18 @@ function initSearch() {
   }
 }
 
+function restartSearchEntrance() {
+  document.querySelectorAll(".search-page .search-reveal").forEach((el) => {
+    el.style.animation = "none";
+    void el.offsetWidth;
+    el.style.animation = "";
+  });
+}
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted && PAGE === "search") restartSearchEntrance();
+});
+
 async function loadPageData() {
   if (PAGE === "observe") {
     const params = new URLSearchParams(location.search);
@@ -748,8 +740,6 @@ async function loadPageData() {
     return;
   }
   if (PAGE === "search") {
-    const box = $("example-chips");
-    if (box && !box.children.length) renderExampleChips(DEFAULT_EXAMPLES);
     const params = new URLSearchParams(location.search);
     const q = params.get("q");
     const input = $("query-input");

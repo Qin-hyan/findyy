@@ -167,3 +167,23 @@ def test_observe_uses_in_frame_summary_overlay(api_client):
 
     for path in ("/search", "/items", "/timeline"):
         assert 'id="summary-panel"' not in api_client.get(path).text
+
+
+def test_search_page_is_full_width_without_suggestion_panel(api_client):
+    page = api_client.get("/search")
+    assert page.status_code == 200
+    assert 'class="app-page search-page"' in page.text
+    assert 'class="card query-card search-reveal"' in page.text
+    assert 'id="query-form"' in page.text
+    assert 'id="query-input"' in page.text
+    assert 'id="results"' in page.text
+    assert "search-reveal" in page.text
+    assert 'class="page-subtitle"' not in page.text
+    assert 'class="search-side"' not in page.text
+    assert "可以这样问" not in page.text
+    assert "example-chips" not in page.text
+
+    stylesheet = api_client.get("/static/main.css")
+    assert stylesheet.status_code == 200
+    assert "findy-search-rise" in stylesheet.text
+    assert ".search-page .search-reveal" in stylesheet.text
