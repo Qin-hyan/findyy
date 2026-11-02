@@ -43,25 +43,34 @@
         <p class="page-kicker">FINDY MEMORY / OBJECTS</p>
         <h1>我的物品</h1>
       </div>
+      <div class="items-mode-switch" role="group" aria-label="展示模式">
+        <button class="items-mode-btn is-active" id="mode-orb" type="button" data-items-mode="orb" aria-pressed="true">球体</button>
+        <button class="items-mode-btn" id="mode-grid" type="button" data-items-mode="grid" aria-pressed="false">平铺</button>
+      </div>
     </header>
 
     <section class="orb-view" id="orb-view" aria-label="物品球体">
-      <div class="orb-stage" id="orb-stage" role="button" tabindex="0" aria-label="点击展开物品库">
-        <div class="orb-halo" aria-hidden="true"></div>
-        <div class="orb-orbit orb-orbit-a" aria-hidden="true"></div>
-        <div class="orb-orbit orb-orbit-b" aria-hidden="true"></div>
+      <div
+        class="orb-stage"
+        id="orb-stage"
+        role="img"
+        tabindex="0"
+        aria-label="可拖动旋转的物品图片球"
+        aria-describedby="orb-hint"
+      >
         <div class="orb-scene">
-          <div class="orb-tilt">
-            <div class="orb-sphere" id="orb-sphere"></div>
-          </div>
+          <div class="orb-sphere" id="orb-sphere"></div>
         </div>
       </div>
-      <button class="orb-count" id="orb-count" type="button">共记录 <strong id="objects-count">—</strong> 件</button>
+      <div class="orb-meta">
+        <p class="orb-count" id="orb-count">共记录 <strong id="objects-count">—</strong> 件</p>
+        <p class="orb-hint" id="orb-hint">拖动旋转 · 悬停暂停</p>
+        <p class="orb-selection" id="orb-selection" aria-live="polite"></p>
+      </div>
       <p class="orb-empty" id="orb-empty" hidden>还没有记录到物品。</p>
-      <p class="orb-hint">点击球体展开物品库</p>
     </section>
 
-    <section class="grid-view" id="grid-view" aria-hidden="true">
+    <section class="grid-view" id="grid-view" aria-hidden="true" inert>
       <div class="items-toolbar">
         <div class="items-toolbar-copy">
           <p class="items-toolbar-kicker">OBJECT ARCHIVE</p>

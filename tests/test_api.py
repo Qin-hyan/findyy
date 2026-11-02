@@ -189,7 +189,7 @@ def test_search_page_is_full_width_without_suggestion_panel(api_client):
     assert ".search-page .search-reveal" in stylesheet.text
 
 
-def test_items_page_has_orb_and_gallery_states(api_client):
+def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     page = api_client.get("/items")
     assert page.status_code == 200
     assert 'id="items-page"' in page.text
@@ -197,15 +197,37 @@ def test_items_page_has_orb_and_gallery_states(api_client):
     assert 'id="orb-sphere"' in page.text
     assert 'id="orb-count"' in page.text
     assert 'id="objects-count"' in page.text
+    assert 'id="orb-hint"' in page.text
+    assert 'id="orb-selection"' in page.text
+    assert 'data-items-mode="orb"' in page.text
+    assert 'data-items-mode="grid"' in page.text
     assert 'id="grid-view"' in page.text
     assert 'id="grid-count"' in page.text
     assert 'id="back-to-orb"' in page.text
     assert 'id="objects"' in page.text
     assert 'class="page-subtitle"' not in page.text
     assert 'class="page-meta"' not in page.text
+    assert "orb-halo" not in page.text
+    assert "orb-orbit" not in page.text
+    assert "orb-tilt" not in page.text
 
     stylesheet = api_client.get("/static/main.css")
-    assert "findy-orb-spin" in stylesheet.text
+    assert stylesheet.status_code == 200
     assert ".orb-tile" in stylesheet.text
+    assert ".orb-face" in stylesheet.text
+    assert ".orb-tile.is-hovered .orb-face" in stylesheet.text
     assert ".object-tile" in stylesheet.text
+    assert "findy-items-view-in" in stylesheet.text
     assert "findy-items-tile-in" in stylesheet.text
+    assert "findy-orb-spin" not in stylesheet.text
+    assert ".orb-halo" not in stylesheet.text
+    assert ".orb-orbit" not in stylesheet.text
+
+    script = api_client.get("/static/app.js")
+    assert script.status_code == 200
+    assert "function createItemsOrb" in script.text
+    assert "pointerdown" in script.text
+    assert "visibilitychange" in script.text
+    assert "prefers-reduced-motion" in script.text
+    assert "orbCopiesFor" in script.text
+    assert "setItemsMode" in script.text

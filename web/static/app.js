@@ -19,6 +19,9 @@ const state = {
   objects: [],
   objectsSignature: "",
   itemsHoverCapable: true,
+  itemsMode: "orb",
+  itemsSwitching: false,
+  itemsOrb: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -601,6 +604,11 @@ function renderEventResult(r) {
 }
 
 // ---------------- 我的物品 ----------------
+const ITEMS_AUTO_SPEED = 4.2;
+const ITEMS_DRAG_SPEED = 0.28;
+const ITEMS_PITCH_LIMIT = 74;
+const ITEMS_GOLDEN_ANGLE = 2.399963229728653;
+
 function objectLabel(o) {
   return o.label || o.class_zh || "物品";
 }
@@ -610,35 +618,453 @@ function objectWhen(o) {
   return o.time_ago || o.time_local || "—";
 }
 
+function clampNumber(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function orbCopiesFor(n) {
+  if (n <= 1) return 24;
+  if (n === 2) return 12;
+  if (n <= 5) return 6;
+  if (n <= 8) return 5;
+  if (n <= 12) return 4;
+  if (n <= 20) return 3;
+  if (n <= 30) return 2;
+  return 1;
+}
+
+function orbPointFor(index, tileCount) {
+  const y = 1 - (2 * (index + 0.5)) / tileCount;
+  const ring = Math.sqrt(Math.max(0, 1 - y * y));
+  const theta = index * ITEMS_GOLDEN_ANGLE;
+  return {
+    x: Math.cos(theta) * ring,
+    y,
+    z: Math.sin(theta) * ring,
+  };
+}
+
+function createItemsOrb(stage) {
+  const sphere = $("orb-sphere");
+  const selection = $("orb-selection");
+  const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const orb = {
+    yaw: -16,
+    pitch: -7,
+    velYaw: 0,
+    velPitch: 0,
+    active: false,
+    pageVisible: !document.hidden,
+    hovering: null,
+    selected: null,
+    pressing: false,
+    dragging: false,
+    pointerId: null,
+    pendingTile: null,
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+    lastAt: 0,
+    suppressHoverUntil: 0,
+    frameId: 0,
+    lastFrameAt: 0,
+  };
+  let reducedMotion = reducedQuery.matches;
+  let orbRadius = 0;
+
+  function measureRadius() {
+    const raw = getComputedStyle(stage).getPropertyValue("--orb-radius").trim();
+    const parsed = Number.parseFloat(raw);
+    orbRadius = Number.isFinite(parsed) && parsed > 0 ? parsed : Math.max(72, stage.clientWidth * 0.38);
+  }
+
+  function applyProjection() {
+    if (!sphere) return;
+    orb.yaw = ((orb.yaw % 360) + 360) % 360;
+    if (!orbRadius) measureRadius();
+    const yaw = (orb.yaw * Math.PI) / 180;
+    const pitch = (orb.pitch * Math.PI) / 180;
+    const cosY = Math.cos(yaw);
+    const sinY = Math.sin(yaw);
+    const cosP = Math.cos(pitch);
+    const sinP = Math.sin(pitch);
+    for (const tile of sphere.children) {
+      const point = tile._orbPoint;
+      if (!point) continue;
+      const x1 = point.x * cosY + point.z * sinY;
+      const z1 = -point.x * sinY + point.z * cosY;
+      const y2 = point.y * cosP - z1 * sinP;
+      const z2 = point.y * sinP + z1 * cosP;
+      const perspective = 1 + z2 * 0.06;
+      const x = x1 * orbRadius * perspective;
+      const y = -y2 * orbRadius * perspective;
+      const scale = 0.78 + ((z2 + 1) / 2) * 0.3;
+      const opacity = z2 >= 0 ? 1 : 0.12 + ((z2 + 1) / 2) * 0.1;
+      tile.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(3)})`;
+      tile.style.opacity = opacity.toFixed(3);
+      tile.style.zIndex = String(Math.round(100 + z2 * 100));
+      tile.style.pointerEvents = z2 > 0.02 ? "auto" : "none";
+    }
+    stage.dataset.yaw = orb.yaw.toFixed(3);
+    stage.dataset.pitch = orb.pitch.toFixed(3);
+  }
+
+  function stopLoop() {
+    if (orb.frameId) cancelAnimationFrame(orb.frameId);
+    orb.frameId = 0;
+  }
+
+  function canIdle() {
+    return (
+      orb.active &&
+      orb.pageVisible &&
+      !orb.pressing &&
+      !orb.dragging &&
+      !orb.hovering &&
+      !orb.selected
+    );
+  }
+
+  function startLoop(resetClock = true) {
+    if (orb.frameId || !canIdle()) return;
+    if (resetClock || !orb.lastFrameAt) orb.lastFrameAt = performance.now();
+    orb.frameId = requestAnimationFrame(step);
+  }
+
+  function step(timestamp) {
+    orb.frameId = 0;
+    if (!canIdle()) return;
+    const dt = Math.min(64, Math.max(0, timestamp - (orb.lastFrameAt || timestamp)));
+    orb.lastFrameAt = timestamp;
+    const spinning = Math.abs(orb.velYaw) > 0.4 || Math.abs(orb.velPitch) > 0.4;
+    if (spinning) {
+      orb.yaw += (orb.velYaw * dt) / 1000;
+      orb.pitch = clampNumber(orb.pitch + (orb.velPitch * dt) / 1000, -ITEMS_PITCH_LIMIT, ITEMS_PITCH_LIMIT);
+      const decay = Math.exp((-3.1 * dt) / 1000);
+      orb.velYaw = Math.abs(orb.velYaw) < 0.6 ? 0 : orb.velYaw * decay;
+      orb.velPitch = Math.abs(orb.velPitch) < 0.6 ? 0 : orb.velPitch * decay;
+      if (Math.abs(orb.pitch) >= ITEMS_PITCH_LIMIT) orb.velPitch = 0;
+    } else {
+      orb.velYaw = 0;
+      orb.velPitch = 0;
+      if (!reducedMotion) orb.yaw += (ITEMS_AUTO_SPEED * dt) / 1000;
+    }
+    applyProjection();
+    if (!reducedMotion) startLoop(false);
+  }
+
+  function clearHover() {
+    if (orb.hovering) orb.hovering.classList.remove("is-hovered");
+    orb.hovering = null;
+  }
+
+  function setHovered(tile) {
+    if (orb.hovering === tile) return;
+    clearHover();
+    if (!tile) {
+      if (!orb.selected) startLoop(true);
+      return;
+    }
+    orb.hovering = tile;
+    tile.classList.add("is-hovered");
+    orb.velYaw = 0;
+    orb.velPitch = 0;
+    stopLoop();
+  }
+
+  function clearSelection() {
+    if (orb.selected) orb.selected.classList.remove("is-selected");
+    orb.selected = null;
+    if (selection) selection.textContent = "";
+    if (orb.active) startLoop(true);
+  }
+
+  function selectTile(tile) {
+    if (!tile || !stage.contains(tile)) {
+      clearSelection();
+      return;
+    }
+    if (orb.selected === tile) {
+      clearSelection();
+      return;
+    }
+    clearHover();
+    if (orb.selected) orb.selected.classList.remove("is-selected");
+    orb.selected = tile;
+    tile.classList.add("is-selected");
+    orb.velYaw = 0;
+    orb.velPitch = 0;
+    stopLoop();
+    const object = state.objects[Number(tile.dataset.objectIndex)];
+    if (object && selection) {
+      const sightings = object.sightings ?? 0;
+      selection.textContent =
+        `${objectLabel(object)} · ${object.zone || "未分区"} · ` +
+        `最后出现 ${objectWhen(object)} · ${sightings} 次观测`;
+    }
+  }
+
+  function finishPointer(event, cancelled) {
+    if (!orb.pressing) return;
+    if (event && event.pointerId !== orb.pointerId) return;
+    const tile = orb.pendingTile;
+    const wasDragging = orb.dragging;
+    if (wasDragging) {
+      orb.suppressHoverUntil = performance.now() + 260;
+      if (performance.now() - orb.lastAt > 140) {
+        orb.velYaw = 0;
+        orb.velPitch = 0;
+      }
+    }
+    orb.pressing = false;
+    orb.dragging = false;
+    orb.pointerId = null;
+    orb.pendingTile = null;
+    stage.classList.remove("is-pressing", "is-dragging");
+    if (stage.hasPointerCapture?.(event?.pointerId)) {
+      try {
+        stage.releasePointerCapture(event.pointerId);
+      } catch (error) {
+        // 指针已释放时无需处理。
+      }
+    }
+    if (cancelled) {
+      clearHover();
+      if (orb.active) startLoop(true);
+      return;
+    }
+    if (wasDragging) {
+      if (reducedMotion) {
+        orb.velYaw = 0;
+        orb.velPitch = 0;
+      }
+      if (orb.active) startLoop(true);
+      return;
+    }
+    selectTile(tile);
+  }
+
+  function onPointerDown(event) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (orb.pressing || orb.pointerId !== null) return;
+    orb.pressing = true;
+    orb.dragging = false;
+    orb.pointerId = event.pointerId;
+    orb.pendingTile = event.target.closest(".orb-tile");
+    orb.startX = event.clientX;
+    orb.startY = event.clientY;
+    orb.lastX = event.clientX;
+    orb.lastY = event.clientY;
+    orb.lastAt = performance.now();
+    orb.velYaw = 0;
+    orb.velPitch = 0;
+    clearHover();
+    stopLoop();
+    stage.classList.add("is-pressing");
+    try {
+      stage.setPointerCapture(event.pointerId);
+    } catch (error) {
+      // 触屏浏览器可能不支持捕获，指针事件仍可继续。
+    }
+    event.preventDefault();
+  }
+
+  function onPointerMove(event) {
+    if (!orb.pressing || event.pointerId !== orb.pointerId) return;
+    const dx = event.clientX - orb.lastX;
+    const dy = event.clientY - orb.lastY;
+    const total = Math.hypot(event.clientX - orb.startX, event.clientY - orb.startY);
+    if (!orb.dragging && total >= 4) {
+      orb.dragging = true;
+      stage.classList.add("is-dragging");
+      clearHover();
+      clearSelection();
+      stopLoop();
+    }
+    if (!orb.dragging) {
+      orb.lastX = event.clientX;
+      orb.lastY = event.clientY;
+      orb.lastAt = performance.now();
+      return;
+    }
+    event.preventDefault();
+    const now = performance.now();
+    const dt = Math.max(8, now - orb.lastAt);
+    orb.yaw += dx * ITEMS_DRAG_SPEED;
+    orb.pitch = clampNumber(orb.pitch + dy * ITEMS_DRAG_SPEED, -ITEMS_PITCH_LIMIT, ITEMS_PITCH_LIMIT);
+    orb.velYaw = clampNumber(
+      orb.velYaw * 0.6 + ((dx * ITEMS_DRAG_SPEED) / dt) * 1000 * 0.4,
+      -520,
+      520
+    );
+    orb.velPitch = clampNumber(
+      orb.velPitch * 0.6 + ((dy * ITEMS_DRAG_SPEED) / dt) * 1000 * 0.4,
+      -520,
+      520
+    );
+    if (Math.abs(orb.pitch) >= ITEMS_PITCH_LIMIT) orb.velPitch = 0;
+    orb.lastX = event.clientX;
+    orb.lastY = event.clientY;
+    orb.lastAt = now;
+    applyProjection();
+  }
+
+  function onPointerOver(event) {
+    if (event.pointerType === "touch") return;
+    if (orb.pressing || orb.dragging || orb.selected) return;
+    if (performance.now() < orb.suppressHoverUntil) return;
+    const tile = event.target.closest(".orb-tile");
+    if (tile && stage.contains(tile)) setHovered(tile);
+  }
+
+  function onPointerOut(event) {
+    const tile = event.target.closest(".orb-tile");
+    if (!tile || orb.hovering !== tile) return;
+    if (event.relatedTarget && tile.contains(event.relatedTarget)) return;
+    setHovered(null);
+  }
+
+  function onPointerLeave() {
+    if (!orb.pressing && !orb.dragging) setHovered(null);
+  }
+
+  function onVisibilityChange() {
+    orb.pageVisible = !document.hidden;
+    if (!orb.pageVisible) {
+      stopLoop();
+      return;
+    }
+    if (orb.active) startLoop(true);
+  }
+
+  function onReducedMotionChange(event) {
+    reducedMotion = event.matches;
+    if (reducedMotion) {
+      orb.velYaw = 0;
+      orb.velPitch = 0;
+      stopLoop();
+    } else if (orb.active) {
+      startLoop(true);
+    }
+  }
+
+  function onKeyDown(event) {
+    const step = event.shiftKey ? 28 : 12;
+    let handled = true;
+    if (event.key === "ArrowLeft") orb.yaw -= step;
+    else if (event.key === "ArrowRight") orb.yaw += step;
+    else if (event.key === "ArrowUp") orb.pitch = clampNumber(orb.pitch - step, -ITEMS_PITCH_LIMIT, ITEMS_PITCH_LIMIT);
+    else if (event.key === "ArrowDown") orb.pitch = clampNumber(orb.pitch + step, -ITEMS_PITCH_LIMIT, ITEMS_PITCH_LIMIT);
+    else handled = false;
+    if (!handled) return;
+    event.preventDefault();
+    applyProjection();
+  }
+
+  stage.addEventListener("pointerdown", onPointerDown);
+  stage.addEventListener("pointermove", onPointerMove);
+  stage.addEventListener("pointerup", (event) => finishPointer(event, false));
+  stage.addEventListener("pointercancel", (event) => finishPointer(event, true));
+  stage.addEventListener("pointerover", onPointerOver);
+  stage.addEventListener("pointerout", onPointerOut);
+  stage.addEventListener("pointerleave", onPointerLeave);
+  stage.addEventListener("keydown", onKeyDown);
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  if (reducedQuery.addEventListener) reducedQuery.addEventListener("change", onReducedMotionChange);
+  else if (reducedQuery.addListener) reducedQuery.addListener(onReducedMotionChange);
+  measureRadius();
+  if (typeof ResizeObserver !== "undefined") {
+    const resizeObserver = new ResizeObserver(() => {
+      measureRadius();
+      applyProjection();
+    });
+    resizeObserver.observe(stage);
+  } else {
+    window.addEventListener("resize", () => {
+      measureRadius();
+      applyProjection();
+    });
+  }
+  applyProjection();
+
+  return {
+    setActive(active) {
+      orb.active = !!active;
+      if (!orb.active) {
+        stopLoop();
+        clearHover();
+        clearSelection();
+        orb.pressing = false;
+        orb.dragging = false;
+        orb.pointerId = null;
+        orb.pendingTile = null;
+        stage.classList.remove("is-pressing", "is-dragging");
+        return;
+      }
+      applyProjection();
+      startLoop(true);
+    },
+    resetForRender() {
+      stopLoop();
+      clearHover();
+      orb.selected = null;
+      if (selection) selection.textContent = "";
+    },
+    refresh() {
+      applyProjection();
+      if (orb.active) startLoop(true);
+    },
+  };
+}
+
 function renderOrb(objects) {
   const sphere = $("orb-sphere");
   const empty = $("orb-empty");
   if (!sphere) return;
+  state.itemsOrb?.resetForRender();
   sphere.innerHTML = "";
   if (empty) empty.hidden = !!objects.length;
+  const stage = $("orb-stage");
+  if (stage) {
+    stage.setAttribute(
+      "aria-label",
+      objects.length ? `可拖动旋转的物品图片球，共 ${objects.length} 件` : "物品图片球，暂无物品"
+    );
+  }
   const n = objects.length;
-  if (!n) return;
+  if (!n) {
+    state.itemsOrb?.refresh();
+    return;
+  }
 
-  objects.forEach((o, i) => {
+  const copies = orbCopiesFor(n);
+  const tileCount = Math.min(64, n * copies);
+  for (let i = 0; i < tileCount; i += 1) {
+    const objectIndex = i % n;
+    const o = objects[objectIndex];
     const label = objectLabel(o);
-    const y = 1 - (2 * (i + 0.5)) / n;
-    const theta = i * 2.399963229728653;
-    const yaw = (theta * 180) / Math.PI;
-    const pitch = (-Math.asin(Math.max(-1, Math.min(1, y))) * 180) / Math.PI;
     const tile = document.createElement("div");
     tile.className = "orb-tile" + (o.evidence_crop_url ? "" : " no-image");
-    tile.style.transform = `rotateY(${yaw}deg) rotateX(${pitch}deg) translateZ(var(--orb-radius))`;
-    tile.title = `${label} · ${o.zone || "未分区"}`;
+    tile.dataset.objectIndex = String(objectIndex);
+    tile.setAttribute("aria-hidden", "true");
+    tile._orbPoint = orbPointFor(i, tileCount);
+    const face = document.createElement("div");
+    face.className = "orb-face";
     if (o.evidence_crop_url) {
       const img = document.createElement("img");
       img.src = o.evidence_crop_url;
-      img.alt = label;
-      tile.appendChild(img);
+      img.alt = "";
+      img.decoding = "async";
+      img.draggable = false;
+      face.appendChild(img);
     } else {
-      tile.textContent = "无图";
+      face.textContent = label.slice(0, 1) || "物";
     }
+    tile.appendChild(face);
     sphere.appendChild(tile);
-  });
+  }
+  state.itemsOrb?.refresh();
 }
 
 function renderObjectGrid(objects) {
@@ -702,46 +1128,97 @@ function animateGridRows() {
   });
 }
 
-function openItemsGrid() {
+function updateItemsModeButtons(mode) {
+  document.querySelectorAll(".items-mode-btn").forEach((button) => {
+    const active = button.dataset.itemsMode === mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function applyItemsMode(mode) {
   const page = $("items-page");
-  if (!page || page.classList.contains("is-grid")) return;
-  page.classList.add("is-grid");
-  $("orb-view")?.setAttribute("aria-hidden", "true");
-  $("grid-view")?.setAttribute("aria-hidden", "false");
+  const orbView = $("orb-view");
+  const gridView = $("grid-view");
+  if (!page || !orbView || !gridView) return;
+  state.itemsMode = mode;
+  const isGrid = mode === "grid";
+  page.classList.toggle("is-mode-grid", isGrid);
+  orbView.setAttribute("aria-hidden", String(isGrid));
+  gridView.setAttribute("aria-hidden", String(!isGrid));
+  orbView.inert = isGrid;
+  gridView.inert = !isGrid;
+  updateItemsModeButtons(mode);
   document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
     el.classList.remove("is-touch-active");
   });
-  requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
+  if (isGrid) {
+    state.itemsOrb?.setActive(false);
+    requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
+  } else {
+    state.itemsOrb?.setActive(true);
+  }
+}
+
+function setItemsMode(mode) {
+  if (mode !== "orb" && mode !== "grid") return;
+  const page = $("items-page");
+  if (!page || state.itemsSwitching || state.itemsMode === mode) return;
+  const currentView = state.itemsMode === "grid" ? $("grid-view") : $("orb-view");
+  const nextView = mode === "grid" ? $("grid-view") : $("orb-view");
+  if (!currentView || !nextView) return;
+  const buttons = [...document.querySelectorAll(".items-mode-btn")];
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  state.itemsSwitching = true;
+  buttons.forEach((button) => {
+    button.disabled = true;
+  });
+  const finish = () => {
+    currentView.classList.remove("is-view-leaving");
+    applyItemsMode(mode);
+    nextView.classList.remove("is-view-entering");
+    void nextView.offsetWidth;
+    nextView.classList.add("is-view-entering");
+    setTimeout(() => nextView.classList.remove("is-view-entering"), 340);
+    buttons.forEach((button) => {
+      button.disabled = false;
+    });
+    state.itemsSwitching = false;
+  };
+  if (reducedMotion) {
+    finish();
+    return;
+  }
+  currentView.classList.add("is-view-leaving");
+  setTimeout(finish, 165);
+}
+
+function openItemsGrid() {
+  setItemsMode("grid");
 }
 
 function closeItemsGrid() {
-  const page = $("items-page");
-  if (!page || !page.classList.contains("is-grid")) return;
-  page.classList.remove("is-grid");
-  $("orb-view")?.setAttribute("aria-hidden", "false");
-  $("grid-view")?.setAttribute("aria-hidden", "true");
-  document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
-    el.classList.remove("is-touch-active");
-  });
-  $("orb-stage")?.focus();
+  setItemsMode("orb");
 }
 
 function initItems() {
   state.itemsHoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const stage = $("orb-stage");
-  const count = $("orb-count");
+  const hint = $("orb-hint");
   const back = $("back-to-orb");
-  if (stage) {
-    stage.addEventListener("click", openItemsGrid);
-    stage.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        openItemsGrid();
-      }
-    });
+  if (hint) {
+    hint.textContent = state.itemsHoverCapable
+      ? "拖动旋转 · 悬停暂停 · 点击图片查看"
+      : "单指拖动旋转 · 轻点图片查看";
   }
-  if (count) count.addEventListener("click", openItemsGrid);
+  if (stage) state.itemsOrb = createItemsOrb(stage);
+  document.querySelectorAll(".items-mode-btn").forEach((button) => {
+    button.addEventListener("click", () => setItemsMode(button.dataset.itemsMode));
+  });
   if (back) back.addEventListener("click", closeItemsGrid);
+  state.itemsMode = "orb";
+  updateItemsModeButtons("orb");
+  state.itemsOrb?.setActive(true);
 }
 
 async function loadObjects() {
@@ -763,7 +1240,7 @@ async function loadObjects() {
   setText("grid-count", `${objects.length} 件`);
   renderOrb(objects);
   renderObjectGrid(objects);
-  if ($("items-page")?.classList.contains("is-grid")) animateGridRows();
+  if (state.itemsMode === "grid") animateGridRows();
 }
 
 // ---------------- 观察时间线 ----------------

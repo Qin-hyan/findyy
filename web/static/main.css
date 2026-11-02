@@ -692,15 +692,62 @@ body.app-main {
 }
 
 .app-main .items-page {
-  --orb-size: clamp(320px, 52vw, 560px);
-  --orb-radius: clamp(130px, 19vw, 200px);
-  --orb-card: clamp(58px, 6.5vw, 82px);
+  --orb-size: clamp(300px, 46vw, 600px);
+  --orb-radius: clamp(112px, 17vw, 226px);
+  --orb-card: clamp(46px, 6vw, 80px);
   position: relative;
   padding-top: 18px;
 }
 
 .app-main .items-heading {
+  align-items: flex-end;
   margin-bottom: 4px;
+}
+
+.app-main .items-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(16, 24, 39, 0.86);
+  flex: none;
+}
+
+.app-main .items-mode-btn {
+  min-width: 66px;
+  padding: 7px 15px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.app-main .items-mode-btn:hover {
+  color: var(--text);
+  background: rgba(106, 168, 255, 0.1);
+}
+
+.app-main .items-mode-btn.is-active {
+  color: #04221f;
+  background: linear-gradient(135deg, var(--accent), #52b8ff);
+  box-shadow: 0 4px 14px rgba(55, 211, 192, 0.2);
+}
+
+.app-main .items-mode-btn:focus-visible {
+  outline: 2px solid rgba(55, 211, 192, 0.62);
+  outline-offset: 2px;
+}
+
+.app-main .items-mode-btn:disabled {
+  cursor: wait;
 }
 
 .app-main .orb-view {
@@ -716,84 +763,38 @@ body.app-main {
 
 .app-main .orb-stage {
   position: relative;
-  width: var(--orb-size);
-  max-width: 86vw;
+  width: min(var(--orb-size), 88vw);
+  max-width: 100%;
   aspect-ratio: 1 / 1;
-  perspective: 1100px;
-  cursor: pointer;
+  cursor: grab;
   outline: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.app-main .orb-stage::before {
-  content: "";
-  position: absolute;
-  inset: 8%;
-  z-index: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  border: 1px solid rgba(55, 211, 192, 0.12);
-  background:
-    radial-gradient(circle at 34% 28%, rgba(55, 211, 192, 0.16), transparent 44%),
-    radial-gradient(circle at 64% 74%, rgba(0, 0, 0, 0.52), transparent 72%),
-    radial-gradient(circle at 50% 50%, rgba(10, 31, 38, 0.58), rgba(3, 9, 15, 0.32));
-  box-shadow:
-    inset 0 0 80px rgba(0, 0, 0, 0.45),
-    0 0 60px rgba(55, 211, 192, 0.06);
+.app-main .orb-stage.is-dragging {
+  cursor: grabbing;
 }
 
 .app-main .orb-stage:focus-visible {
   border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(55, 211, 192, 0.55), 0 0 46px rgba(55, 211, 192, 0.14);
-}
-
-.app-main .orb-halo {
-  position: absolute;
-  inset: -9%;
-  border-radius: 50%;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 38% 34%, rgba(55, 211, 192, 0.2), transparent 52%),
-    radial-gradient(circle at 68% 70%, rgba(106, 168, 255, 0.18), transparent 56%);
-  filter: blur(26px);
-}
-
-.app-main .orb-orbit {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 110%;
-  height: 46%;
-  border: 1px solid rgba(106, 168, 255, 0.16);
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%) rotate(-14deg);
-}
-
-.app-main .orb-orbit-b {
-  width: 94%;
-  height: 72%;
-  border-color: rgba(55, 211, 192, 0.12);
-  transform: translate(-50%, -50%) rotate(58deg);
+  outline: 1px solid rgba(55, 211, 192, 0.55);
+  outline-offset: 8px;
 }
 
 .app-main .orb-scene,
-.app-main .orb-tilt,
 .app-main .orb-sphere {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
 }
 
 .app-main .orb-scene {
   z-index: 1;
 }
 
-.app-main .orb-tilt {
-  transform: rotateX(-10deg);
-}
-
 .app-main .orb-sphere {
-  animation: findy-orb-spin 38s linear infinite;
+  transform-origin: 50% 50%;
 }
 
 .app-main .orb-tile {
@@ -804,25 +805,23 @@ body.app-main {
   height: var(--orb-card);
   margin-left: calc(var(--orb-card) / -2);
   margin-top: calc(var(--orb-card) / -2);
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgba(222, 240, 255, 0.2);
-  background: #07101a;
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.58),
-    0 0 18px rgba(55, 211, 192, 0.08);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
+  border-radius: 50%;
+  transform-origin: center;
+  will-change: transform, opacity;
 }
 
-.app-main .orb-tile::after {
-  content: "";
+.app-main .orb-face {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 42%, rgba(0, 0, 0, 0.18));
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgba(226, 244, 255, 0.24);
+  background: #07101a;
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.52),
+    0 0 0 1px rgba(0, 0, 0, 0.22);
+  transform: translateZ(0) scale(1);
+  transition: transform 0.22s cubic-bezier(0.22, 0.75, 0.2, 1), border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .app-main .orb-tile img {
@@ -830,25 +829,45 @@ body.app-main {
   height: 100%;
   display: block;
   object-fit: cover;
+  pointer-events: none;
 }
 
-.app-main .orb-tile.no-image {
+.app-main .orb-tile.no-image .orb-face {
   display: grid;
   place-items: center;
   color: var(--muted);
   font-size: 10px;
 }
 
-.app-main .orb-count {
+.app-main .orb-tile.is-hovered,
+.app-main .orb-tile.is-selected {
+  z-index: 260 !important;
+}
+
+.app-main .orb-tile.is-hovered .orb-face,
+.app-main .orb-tile.is-selected .orb-face {
+  border-color: rgba(157, 244, 230, 0.9);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(55, 211, 192, 0.4),
+    0 0 24px rgba(55, 211, 192, 0.25);
+  transform: translateZ(18px) scale(1.3);
+}
+
+.app-main .orb-meta {
   position: relative;
   z-index: 2;
-  border: 0;
-  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.app-main .orb-count {
+  margin: 0;
   color: var(--muted);
-  font: inherit;
   font-size: 13px;
   letter-spacing: 0.3px;
-  cursor: pointer;
 }
 
 .app-main .orb-count strong {
@@ -860,14 +879,26 @@ body.app-main {
   text-shadow: 0 0 24px rgba(55, 211, 192, 0.35);
 }
 
-.app-main .orb-count:hover strong {
-  color: #9df4e6;
-}
-
 .app-main .orb-hint {
-  margin: -4px 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 11.5px;
+}
+
+.app-main .orb-selection {
+  min-height: 17px;
+  margin: 0;
+  max-width: min(100%, 680px);
+  color: #9df4e6;
+  font-size: 11.5px;
+  line-height: 1.45;
+  text-align: center;
+  opacity: 1;
+  transition: opacity 0.18s ease;
+}
+
+.app-main .orb-selection:empty {
+  opacity: 0;
 }
 
 .app-main .orb-empty {
@@ -880,13 +911,27 @@ body.app-main {
   display: none;
 }
 
-.app-main .items-page.is-grid .orb-view {
+.app-main .items-page.is-mode-grid .orb-view {
   display: none;
 }
 
-.app-main .items-page.is-grid .grid-view {
+.app-main .items-page.is-mode-grid .grid-view {
   display: block;
-  animation: findy-items-view-in 0.32s ease both;
+}
+
+.app-main .items-page .orb-view,
+.app-main .items-page .grid-view {
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.app-main .items-page .is-view-leaving {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+.app-main .items-page .is-view-entering {
+  animation: findy-items-view-in 0.3s ease both;
 }
 
 .app-main .items-toolbar {
@@ -1082,11 +1127,6 @@ body.app-main {
 .app-main .tile-sightings {
   right: 12px;
   text-align: right;
-}
-
-@keyframes findy-orb-spin {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
 }
 
 @keyframes findy-items-view-in {
@@ -1336,6 +1376,26 @@ body.app-main {
     font-size: 27px;
   }
 
+  .app-main .items-page {
+    --orb-size: min(88vw, 380px);
+    --orb-radius: min(36vw, 140px);
+    --orb-card: clamp(44px, 12vw, 56px);
+  }
+
+  .app-main .items-page .items-heading {
+    margin-bottom: 0;
+  }
+
+  .app-main .items-mode-switch {
+    padding: 3px;
+  }
+
+  .app-main .items-mode-btn {
+    min-width: 54px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+  }
+
   .app-main .card {
     padding: 14px 13px;
     border-radius: 14px;
@@ -1389,6 +1449,25 @@ body.app-main {
   .app-main .object-grid {
     grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
     gap: 9px;
+  }
+
+  .app-main .items-page {
+    --orb-size: min(86vw, 420px);
+    --orb-radius: min(34vw, 150px);
+    --orb-card: clamp(44px, 12vw, 62px);
+  }
+
+  .app-main .items-page .items-heading {
+    align-items: flex-end;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .app-main .items-mode-btn {
+    min-width: 58px;
+    padding: 6px 11px;
+    font-size: 12px;
   }
 
   .app-main .orb-view {
