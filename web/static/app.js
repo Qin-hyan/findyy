@@ -16,6 +16,9 @@ const state = {
   highlightedDetectionId: null,
   summaryPinned: false,
   summaryTimer: null,
+  objects: [],
+  objectsSignature: "",
+  itemsHoverCapable: true,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -598,44 +601,169 @@ function renderEventResult(r) {
 }
 
 // ---------------- 我的物品 ----------------
-async function loadObjects() {
-  const data = await api("/api/objects");
-  const box = $("objects");
-  if (!box) return;
-  if (!data.ok) {
-    box.innerHTML = '<p class="empty-note">读取物品库失败，请确认本地服务正常。</p>';
-    return;
-  }
-  const objects = data.objects || [];
-  setText("objects-count", `${objects.length} 件`);
-  box.innerHTML = "";
+function objectLabel(o) {
+  return o.label || o.class_zh || "物品";
+}
+
+function objectWhen(o) {
+  if (o.time_synced === false) return "时间未同步";
+  return o.time_ago || o.time_local || "—";
+}
+
+function renderOrb(objects) {
+  const sphere = $("orb-sphere");
+  const empty = $("orb-empty");
+  if (!sphere) return;
+  sphere.innerHTML = "";
+  if (empty) empty.hidden = !!objects.length;
+  const n = objects.length;
+  if (!n) return;
+
+  objects.forEach((o, i) => {
+    const label = objectLabel(o);
+    const y = 1 - (2 * (i + 0.5)) / n;
+    const theta = i * 2.399963229728653;
+    const yaw = (theta * 180) / Math.PI;
+    const pitch = (-Math.asin(Math.max(-1, Math.min(1, y))) * 180) / Math.PI;
+    const tile = document.createElement("div");
+    tile.className = "orb-tile" + (o.evidence_crop_url ? "" : " no-image");
+    tile.style.transform = `rotateY(${yaw}deg) rotateX(${pitch}deg) translateZ(var(--orb-radius))`;
+    tile.title = `${label} · ${o.zone || "未分区"}`;
+    if (o.evidence_crop_url) {
+      const img = document.createElement("img");
+      img.src = o.evidence_crop_url;
+      img.alt = label;
+      tile.appendChild(img);
+    } else {
+      tile.textContent = "无图";
+    }
+    sphere.appendChild(tile);
+  });
+}
+
+function renderObjectGrid(objects) {
+  const grid = $("objects");
+  if (!grid) return;
+  grid.innerHTML = "";
   if (!objects.length) {
-    box.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
+    grid.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
     return;
   }
   objects.forEach((o) => {
-    const label = o.label || o.class_zh || "物品";
-    const when = o.time_synced === false ? "时间未同步" : o.time_ago || o.time_local || "—";
-    const card = document.createElement("a");
-    card.className = "object-card";
-    card.href = `/search?q=${encodeURIComponent(`${label}在哪？`)}&autorun=1`;
-    card.innerHTML = `
-      <div class="pic ${o.evidence_crop_url ? "" : "no-image"}">${
-        o.evidence_crop_url
-          ? `<img alt="${escapeHtml(label)}" src="${escapeHtml(o.evidence_crop_url)}" />`
-          : "暂无图片"
-      }</div>
-      <div class="info">
-        <div class="name-row">
-          <div class="name">${escapeHtml(label)}</div>
-          ${sourceBadge(o.source_kind)}
-        </div>
-        <div class="sub">${escapeHtml(o.zone || "未分区")}</div>
-        <div class="sub">最后出现：${escapeHtml(when)}</div>
-        <div class="sub">${o.sightings ?? 0} 次观测</div>
+    const label = objectLabel(o);
+    const when = objectWhen(o);
+    const zone = o.zone || "未分区";
+    const sightings = o.sightings ?? 0;
+    const queryHref = `/search?q=${encodeURIComponent(`${label}在哪？`)}&autorun=1`;
+    const tile = document.createElement("div");
+    tile.className = "object-tile";
+    tile.tabIndex = 0;
+    tile.setAttribute("role", "group");
+    tile.setAttribute(
+      "aria-label",
+      `${label}，${zone}，最后出现 ${when}，${sightings} 次观测`
+    );
+    tile.innerHTML = `
+      ${o.evidence_crop_url
+        ? `<img alt="${escapeHtml(label)}" src="${escapeHtml(o.evidence_crop_url)}" />`
+        : '<span class="tile-no-image">暂无图片</span>'}
+      <div class="tile-overlay">
+        <span class="tile-source">${sourceBadge(o.source_kind)}</span>
+        <span class="tile-name">${escapeHtml(label)}</span>
+        <span class="tile-zone">${escapeHtml(zone)}</span>
+        <a class="tile-query" href="${escapeHtml(queryHref)}">查询</a>
+        <span class="tile-time">最后出现 ${escapeHtml(when)}</span>
+        <span class="tile-sightings">${sightings} 次观测</span>
       </div>`;
-    box.appendChild(card);
+    tile.addEventListener("click", (event) => {
+      if (event.target.closest(".tile-query")) return;
+      if (state.itemsHoverCapable) return;
+      event.preventDefault();
+      const active = tile.classList.contains("is-touch-active");
+      document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
+        el.classList.remove("is-touch-active");
+      });
+      if (!active) tile.classList.add("is-touch-active");
+    });
+    grid.appendChild(tile);
   });
+}
+
+function animateGridRows() {
+  const grid = $("objects");
+  if (!grid) return;
+  const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length || 1;
+  [...grid.querySelectorAll(".object-tile")].forEach((tile, i) => {
+    const row = Math.floor(i / cols);
+    tile.style.setProperty("--tile-delay", `${row * 120 + (i % cols) * 18}ms`);
+    tile.style.animation = "none";
+    void tile.offsetWidth;
+    tile.style.animation = "";
+  });
+}
+
+function openItemsGrid() {
+  const page = $("items-page");
+  if (!page || page.classList.contains("is-grid")) return;
+  page.classList.add("is-grid");
+  $("orb-view")?.setAttribute("aria-hidden", "true");
+  $("grid-view")?.setAttribute("aria-hidden", "false");
+  document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
+    el.classList.remove("is-touch-active");
+  });
+  requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
+}
+
+function closeItemsGrid() {
+  const page = $("items-page");
+  if (!page || !page.classList.contains("is-grid")) return;
+  page.classList.remove("is-grid");
+  $("orb-view")?.setAttribute("aria-hidden", "false");
+  $("grid-view")?.setAttribute("aria-hidden", "true");
+  document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
+    el.classList.remove("is-touch-active");
+  });
+  $("orb-stage")?.focus();
+}
+
+function initItems() {
+  state.itemsHoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const stage = $("orb-stage");
+  const count = $("orb-count");
+  const back = $("back-to-orb");
+  if (stage) {
+    stage.addEventListener("click", openItemsGrid);
+    stage.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openItemsGrid();
+      }
+    });
+  }
+  if (count) count.addEventListener("click", openItemsGrid);
+  if (back) back.addEventListener("click", closeItemsGrid);
+}
+
+async function loadObjects() {
+  const data = await api("/api/objects");
+  const grid = $("objects");
+  if (!data.ok) {
+    if (grid) grid.innerHTML = '<p class="empty-note">读取物品库失败，请确认本地服务正常。</p>';
+    return;
+  }
+  const objects = data.objects || [];
+  const signature = objects
+    .map((o) => [o.track_id, objectLabel(o), o.zone, o.time_ago, o.sightings, o.evidence_crop_url, o.source_kind].join("|"))
+    .join("~");
+  if (signature === state.objectsSignature) return;
+  state.objects = objects;
+  state.objectsSignature = signature;
+
+  setText("objects-count", String(objects.length));
+  setText("grid-count", `${objects.length} 件`);
+  renderOrb(objects);
+  renderObjectGrid(objects);
+  if ($("items-page")?.classList.contains("is-grid")) animateGridRows();
 }
 
 // ---------------- 观察时间线 ----------------
@@ -763,14 +891,15 @@ async function initPage() {
   initNav();
   if (PAGE === "observe") initObserve();
   if (PAGE === "search") initSearch();
+  if (PAGE === "items") initItems();
   await loadStatus();
   await loadPageData();
 
   setInterval(async () => {
     await loadStatus();
+    if (PAGE === "items") await loadObjects();
     if (!state.autoRunning) return;
     if (PAGE === "observe") await loadLatestCapture();
-    if (PAGE === "items") await loadObjects();
     if (PAGE === "timeline") await loadTimeline();
   }, 6000);
 }

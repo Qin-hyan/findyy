@@ -37,20 +37,40 @@
     </div>
   </header>
 
-  <main class="app-page">
-    <header class="page-heading">
+  <main class="app-page items-page" id="items-page">
+    <header class="page-heading items-heading">
       <div>
         <p class="page-kicker">FINDY MEMORY / OBJECTS</p>
         <h1>我的物品</h1>
-        <p class="page-subtitle">Findy 记住的物品、最后出现的位置和时间。点击物品可以继续查询。</p>
       </div>
-      <div class="page-meta"><span>共记录</span><strong id="objects-count">—</strong></div>
     </header>
 
-    <section class="card">
-      <div class="card-head">
-        <h2>物品库</h2>
-        <span class="muted small">按最后出现时间排序</span>
+    <section class="orb-view" id="orb-view" aria-label="物品球体">
+      <div class="orb-stage" id="orb-stage" role="button" tabindex="0" aria-label="点击展开物品库">
+        <div class="orb-halo" aria-hidden="true"></div>
+        <div class="orb-orbit orb-orbit-a" aria-hidden="true"></div>
+        <div class="orb-orbit orb-orbit-b" aria-hidden="true"></div>
+        <div class="orb-scene">
+          <div class="orb-tilt">
+            <div class="orb-sphere" id="orb-sphere"></div>
+          </div>
+        </div>
+      </div>
+      <button class="orb-count" id="orb-count" type="button">共记录 <strong id="objects-count">—</strong> 件</button>
+      <p class="orb-empty" id="orb-empty" hidden>还没有记录到物品。</p>
+      <p class="orb-hint">点击球体展开物品库</p>
+    </section>
+
+    <section class="grid-view" id="grid-view" aria-hidden="true">
+      <div class="items-toolbar">
+        <div class="items-toolbar-copy">
+          <p class="items-toolbar-kicker">OBJECT ARCHIVE</p>
+          <h2>物品库</h2>
+        </div>
+        <div class="items-toolbar-actions">
+          <span class="items-grid-count" id="grid-count">—</span>
+          <button class="ghost" id="back-to-orb" type="button">返回球体</button>
+        </div>
       </div>
       <div class="object-grid" id="objects">
         <p class="empty-note">正在读取本地物品库…</p>

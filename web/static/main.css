@@ -691,58 +691,412 @@ body.app-main {
   gap: 6px;
 }
 
-.app-main .object-grid {
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 12px;
+.app-main .items-page {
+  --orb-size: clamp(320px, 52vw, 560px);
+  --orb-radius: clamp(130px, 19vw, 200px);
+  --orb-card: clamp(58px, 6.5vw, 82px);
+  position: relative;
+  padding-top: 18px;
 }
 
-.app-main .object-card {
+.app-main .items-heading {
+  margin-bottom: 4px;
+}
+
+.app-main .orb-view {
+  position: relative;
+  min-height: calc(100vh - 300px);
+  padding: 6px 0 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.app-main .orb-stage {
+  position: relative;
+  width: var(--orb-size);
+  max-width: 86vw;
+  aspect-ratio: 1 / 1;
+  perspective: 1100px;
+  cursor: pointer;
+  outline: none;
+}
+
+.app-main .orb-stage::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  border: 1px solid rgba(55, 211, 192, 0.12);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(55, 211, 192, 0.16), transparent 44%),
+    radial-gradient(circle at 64% 74%, rgba(0, 0, 0, 0.52), transparent 72%),
+    radial-gradient(circle at 50% 50%, rgba(10, 31, 38, 0.58), rgba(3, 9, 15, 0.32));
+  box-shadow:
+    inset 0 0 80px rgba(0, 0, 0, 0.45),
+    0 0 60px rgba(55, 211, 192, 0.06);
+}
+
+.app-main .orb-stage:focus-visible {
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(55, 211, 192, 0.55), 0 0 46px rgba(55, 211, 192, 0.14);
+}
+
+.app-main .orb-halo {
+  position: absolute;
+  inset: -9%;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 34%, rgba(55, 211, 192, 0.2), transparent 52%),
+    radial-gradient(circle at 68% 70%, rgba(106, 168, 255, 0.18), transparent 56%);
+  filter: blur(26px);
+}
+
+.app-main .orb-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 110%;
+  height: 46%;
+  border: 1px solid rgba(106, 168, 255, 0.16);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-14deg);
+}
+
+.app-main .orb-orbit-b {
+  width: 94%;
+  height: 72%;
+  border-color: rgba(55, 211, 192, 0.12);
+  transform: translate(-50%, -50%) rotate(58deg);
+}
+
+.app-main .orb-scene,
+.app-main .orb-tilt,
+.app-main .orb-sphere {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.app-main .orb-scene {
+  z-index: 1;
+}
+
+.app-main .orb-tilt {
+  transform: rotateX(-10deg);
+}
+
+.app-main .orb-sphere {
+  animation: findy-orb-spin 38s linear infinite;
+}
+
+.app-main .orb-tile {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--orb-card);
+  height: var(--orb-card);
+  margin-left: calc(var(--orb-card) / -2);
+  margin-top: calc(var(--orb-card) / -2);
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(222, 240, 255, 0.2);
+  background: #07101a;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.58),
+    0 0 18px rgba(55, 211, 192, 0.08);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.app-main .orb-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 42%, rgba(0, 0, 0, 0.18));
+}
+
+.app-main .orb-tile img {
+  width: 100%;
+  height: 100%;
   display: block;
-  color: inherit;
-  text-decoration: none;
-  background: #0b1322;
-  border-radius: 13px;
-}
-
-.app-main .object-card .pic {
-  height: 150px;
-}
-
-.app-main .object-card .pic img {
   object-fit: cover;
 }
 
-.app-main .object-card .pic.no-image {
+.app-main .orb-tile.no-image {
   display: grid;
   place-items: center;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.app-main .orb-count {
+  position: relative;
+  z-index: 2;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+}
+
+.app-main .orb-count strong {
+  color: var(--text);
+  font-size: 30px;
+  line-height: 1;
+  margin: 0 4px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 24px rgba(55, 211, 192, 0.35);
+}
+
+.app-main .orb-count:hover strong {
+  color: #9df4e6;
+}
+
+.app-main .orb-hint {
+  margin: -4px 0 0;
   color: var(--muted);
   font-size: 11.5px;
 }
 
-.app-main .object-card .info {
-  padding: 10px 11px 12px;
+.app-main .orb-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
-.app-main .object-card .name-row {
+.app-main .grid-view {
+  display: none;
+}
+
+.app-main .items-page.is-grid .orb-view {
+  display: none;
+}
+
+.app-main .items-page.is-grid .grid-view {
+  display: block;
+  animation: findy-items-view-in 0.32s ease both;
+}
+
+.app-main .items-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 6px 0 16px;
+}
+
+.app-main .items-toolbar-kicker {
+  margin: 0 0 5px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+}
+
+.app-main .items-toolbar-copy h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.4px;
+}
+
+.app-main .items-toolbar-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
 }
 
-.app-main .object-card .name {
-  min-width: 0;
-  font-size: 13.5px;
-  font-weight: 700;
+.app-main .items-grid-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-main .object-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.app-main .object-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
+  border-radius: 15px;
+  border: 1px solid rgba(34, 48, 74, 0.8);
+  background: #07101a;
+  color: inherit;
+  text-decoration: none;
+  isolation: isolate;
+  cursor: pointer;
+  animation: findy-items-tile-in 0.46s cubic-bezier(0.22, 0.75, 0.2, 1) both;
+  animation-delay: var(--tile-delay, 0ms);
+}
+
+.app-main .object-tile:focus-visible {
+  outline: 2px solid rgba(55, 211, 192, 0.62);
+  outline-offset: 2px;
+}
+
+.app-main .object-tile img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: filter 0.26s ease, transform 0.34s ease;
+}
+
+.app-main .object-tile.no-image {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.app-main .tile-no-image {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.app-main .tile-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(3, 8, 14, 0.62), rgba(3, 8, 14, 0.18) 42%, rgba(3, 8, 14, 0.7));
+  transition: opacity 0.24s ease;
+}
+
+.app-main .object-tile:hover img,
+.app-main .object-tile:focus-visible img,
+.app-main .object-tile:focus-within img,
+.app-main .object-tile.is-touch-active img {
+  filter: blur(5px) brightness(0.54) saturate(0.85);
+  transform: scale(1.04);
+}
+
+.app-main .object-tile:hover .tile-overlay,
+.app-main .object-tile:focus-visible .tile-overlay,
+.app-main .object-tile:focus-within .tile-overlay,
+.app-main .object-tile.is-touch-active .tile-overlay {
+  opacity: 1;
+}
+
+.app-main .tile-source {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  pointer-events: none;
+}
+
+.app-main .tile-name {
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  width: calc(100% - 90px);
+  transform: translateX(-50%);
+  overflow: hidden;
+  color: #f2fbfa;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
 }
 
-.app-main .object-card .sub {
-  margin-top: 3px;
-  font-size: 11.5px;
-  line-height: 1.5;
+.app-main .tile-zone {
+  color: #e7fffb;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-align: center;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+}
+
+.app-main .tile-query {
+  margin-top: 9px;
+  padding: 3px 9px;
+  border: 1px solid rgba(55, 211, 192, 0.35);
+  border-radius: 999px;
+  color: #bff7ee;
+  background: rgba(55, 211, 192, 0.12);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-decoration: none;
+  pointer-events: none;
+}
+
+.app-main .object-tile:hover .tile-query,
+.app-main .object-tile:focus-visible .tile-query,
+.app-main .object-tile:focus-within .tile-query,
+.app-main .object-tile.is-touch-active .tile-query {
+  pointer-events: auto;
+}
+
+.app-main .tile-query:hover {
+  border-color: rgba(55, 211, 192, 0.7);
+  background: rgba(55, 211, 192, 0.2);
+}
+
+.app-main .tile-time,
+.app-main .tile-sightings {
+  position: absolute;
+  bottom: 11px;
+  color: rgba(232, 245, 255, 0.82);
+  font-size: 10.5px;
+  line-height: 1.3;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+.app-main .tile-time {
+  left: 12px;
+  max-width: 62%;
+}
+
+.app-main .tile-sightings {
+  right: 12px;
+  text-align: right;
+}
+
+@keyframes findy-orb-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+
+@keyframes findy-items-view-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes findy-items-tile-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .app-main .timeline {
@@ -1037,16 +1391,53 @@ body.app-main {
     gap: 9px;
   }
 
-  .app-main .object-card .pic {
-    height: 118px;
+  .app-main .orb-view {
+    min-height: calc(100vh - 280px);
+    gap: 10px;
   }
 
-  .app-main .object-card .name {
-    font-size: 12.5px;
+  .app-main .orb-count strong {
+    font-size: 26px;
   }
 
-  .app-main .object-card .sub {
-    font-size: 10.5px;
+  .app-main .items-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .app-main .items-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .app-main .tile-name {
+    top: 10px;
+    width: calc(100% - 66px);
+    font-size: 11.5px;
+  }
+
+  .app-main .tile-zone {
+    font-size: 13px;
+  }
+
+  .app-main .tile-time,
+  .app-main .tile-sightings {
+    bottom: 9px;
+    font-size: 9.5px;
+  }
+
+  .app-main .tile-time {
+    left: 9px;
+  }
+
+  .app-main .tile-sightings {
+    right: 9px;
+  }
+
+  .app-main .tile-source {
+    top: 8px;
+    right: 8px;
   }
 
   .app-main .timeline-card {

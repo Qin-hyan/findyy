@@ -187,3 +187,25 @@ def test_search_page_is_full_width_without_suggestion_panel(api_client):
     assert stylesheet.status_code == 200
     assert "findy-search-rise" in stylesheet.text
     assert ".search-page .search-reveal" in stylesheet.text
+
+
+def test_items_page_has_orb_and_gallery_states(api_client):
+    page = api_client.get("/items")
+    assert page.status_code == 200
+    assert 'id="items-page"' in page.text
+    assert 'id="orb-stage"' in page.text
+    assert 'id="orb-sphere"' in page.text
+    assert 'id="orb-count"' in page.text
+    assert 'id="objects-count"' in page.text
+    assert 'id="grid-view"' in page.text
+    assert 'id="grid-count"' in page.text
+    assert 'id="back-to-orb"' in page.text
+    assert 'id="objects"' in page.text
+    assert 'class="page-subtitle"' not in page.text
+    assert 'class="page-meta"' not in page.text
+
+    stylesheet = api_client.get("/static/main.css")
+    assert "findy-orb-spin" in stylesheet.text
+    assert ".orb-tile" in stylesheet.text
+    assert ".object-tile" in stylesheet.text
+    assert "findy-items-tile-in" in stylesheet.text
