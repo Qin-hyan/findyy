@@ -956,18 +956,6 @@ body.app-main {
   letter-spacing: 0.4px;
 }
 
-.app-main .items-toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.app-main .items-grid-count {
-  color: var(--muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
 .app-main .object-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1483,11 +1471,6 @@ body.app-main {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
-  }
-
-  .app-main .items-toolbar-actions {
-    width: 100%;
-    justify-content: space-between;
   }
 
   .app-main .tile-name {

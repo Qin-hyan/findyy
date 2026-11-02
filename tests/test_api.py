@@ -202,9 +202,10 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     assert 'data-items-mode="orb"' in page.text
     assert 'data-items-mode="grid"' in page.text
     assert 'id="grid-view"' in page.text
-    assert 'id="grid-count"' in page.text
-    assert 'id="back-to-orb"' in page.text
     assert 'id="objects"' in page.text
+    assert 'id="grid-count"' not in page.text
+    assert 'id="back-to-orb"' not in page.text
+    assert 'class="items-toolbar-actions"' not in page.text
     assert 'class="page-subtitle"' not in page.text
     assert 'class="page-meta"' not in page.text
     assert "orb-halo" not in page.text

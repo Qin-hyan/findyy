@@ -1193,19 +1193,10 @@ function setItemsMode(mode) {
   setTimeout(finish, 165);
 }
 
-function openItemsGrid() {
-  setItemsMode("grid");
-}
-
-function closeItemsGrid() {
-  setItemsMode("orb");
-}
-
 function initItems() {
   state.itemsHoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const stage = $("orb-stage");
   const hint = $("orb-hint");
-  const back = $("back-to-orb");
   if (hint) {
     hint.textContent = state.itemsHoverCapable
       ? "拖动旋转 · 悬停暂停 · 点击图片查看"
@@ -1215,7 +1206,6 @@ function initItems() {
   document.querySelectorAll(".items-mode-btn").forEach((button) => {
     button.addEventListener("click", () => setItemsMode(button.dataset.itemsMode));
   });
-  if (back) back.addEventListener("click", closeItemsGrid);
   state.itemsMode = "orb";
   updateItemsModeButtons("orb");
   state.itemsOrb?.setActive(true);
@@ -1237,7 +1227,6 @@ async function loadObjects() {
   state.objectsSignature = signature;
 
   setText("objects-count", String(objects.length));
-  setText("grid-count", `${objects.length} 件`);
   renderOrb(objects);
   renderObjectGrid(objects);
   if (state.itemsMode === "grid") animateGridRows();
