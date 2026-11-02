@@ -17,10 +17,12 @@ const state = {
   summaryPinned: false,
   summaryTimer: null,
   objects: [],
-  objectsSignature: "",
+  objectsSignature: null,
   itemsHoverCapable: true,
   itemsMode: "orb",
   itemsSwitching: false,
+  itemsSwitchTimer: 0,
+  itemsEnteringTimer: 0,
   itemsOrb: null,
 };
 
@@ -674,15 +676,19 @@ function createItemsOrb(stage) {
   let orbRadius = 0;
 
   function measureRadius() {
-    const raw = getComputedStyle(stage).getPropertyValue("--orb-radius").trim();
-    const parsed = Number.parseFloat(raw);
-    orbRadius = Number.isFinite(parsed) && parsed > 0 ? parsed : Math.max(72, stage.clientWidth * 0.38);
+    if (!stage.clientWidth) return;
+    const raw = getComputedStyle(stage).getPropertyValue("--orb-radius-ratio").trim();
+    const ratio = Number.parseFloat(raw);
+    orbRadius = stage.clientWidth * (Number.isFinite(ratio) && ratio > 0 ? ratio : 0.38);
   }
 
   function applyProjection() {
     if (!sphere) return;
     orb.yaw = ((orb.yaw % 360) + 360) % 360;
-    if (!orbRadius) measureRadius();
+    if (!orbRadius) {
+      measureRadius();
+      if (!orbRadius) return;
+    }
     const yaw = (orb.yaw * Math.PI) / 180;
     const pitch = (orb.pitch * Math.PI) / 180;
     const cosY = Math.cos(yaw);
@@ -701,9 +707,10 @@ function createItemsOrb(stage) {
       const y = -y2 * orbRadius * perspective;
       const scale = 0.78 + ((z2 + 1) / 2) * 0.3;
       const opacity = z2 >= 0 ? 1 : 0.12 + ((z2 + 1) / 2) * 0.1;
+      const lifted = z2 > 0.02 && (tile === orb.hovering || tile === orb.selected);
       tile.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(3)})`;
       tile.style.opacity = opacity.toFixed(3);
-      tile.style.zIndex = String(Math.round(100 + z2 * 100));
+      tile.style.zIndex = lifted ? "260" : String(Math.round(100 + z2 * 100));
       tile.style.pointerEvents = z2 > 0.02 ? "auto" : "none";
     }
     stage.dataset.yaw = orb.yaw.toFixed(3);
@@ -763,6 +770,7 @@ function createItemsOrb(stage) {
     if (orb.hovering === tile) return;
     clearHover();
     if (!tile) {
+      applyProjection();
       if (!orb.selected) startLoop(true);
       return;
     }
@@ -771,12 +779,14 @@ function createItemsOrb(stage) {
     orb.velYaw = 0;
     orb.velPitch = 0;
     stopLoop();
+    applyProjection();
   }
 
   function clearSelection() {
     if (orb.selected) orb.selected.classList.remove("is-selected");
     orb.selected = null;
     if (selection) selection.textContent = "";
+    applyProjection();
     if (orb.active) startLoop(true);
   }
 
@@ -796,13 +806,21 @@ function createItemsOrb(stage) {
     orb.velYaw = 0;
     orb.velPitch = 0;
     stopLoop();
+    updateSelectionText(tile);
+    applyProjection();
+  }
+
+  function updateSelectionText(tile) {
+    if (!selection || !tile) return;
     const object = state.objects[Number(tile.dataset.objectIndex)];
-    if (object && selection) {
-      const sightings = object.sightings ?? 0;
-      selection.textContent =
-        `${objectLabel(object)} · ${object.zone || "未分区"} · ` +
-        `最后出现 ${objectWhen(object)} · ${sightings} 次观测`;
+    if (!object) {
+      selection.textContent = "";
+      return;
     }
+    const sightings = object.sightings ?? 0;
+    selection.textContent =
+      `${objectLabel(object)} · ${object.zone || "未分区"} · ` +
+      `最后出现 ${objectWhen(object)} · ${sightings} 次观测`;
   }
 
   function finishPointer(event, cancelled) {
@@ -830,6 +848,8 @@ function createItemsOrb(stage) {
       }
     }
     if (cancelled) {
+      orb.velYaw = 0;
+      orb.velPitch = 0;
       clearHover();
       if (orb.active) startLoop(true);
       return;
@@ -872,6 +892,10 @@ function createItemsOrb(stage) {
 
   function onPointerMove(event) {
     if (!orb.pressing || event.pointerId !== orb.pointerId) return;
+    if (event.pointerType === "mouse" && event.buttons === 0) {
+      finishPointer(event, true);
+      return;
+    }
     const dx = event.clientX - orb.lastX;
     const dy = event.clientY - orb.lastY;
     const total = Math.hypot(event.clientX - orb.startX, event.clientY - orb.startY);
@@ -932,6 +956,7 @@ function createItemsOrb(stage) {
   function onVisibilityChange() {
     orb.pageVisible = !document.hidden;
     if (!orb.pageVisible) {
+      finishPointer(null, true);
       stopLoop();
       return;
     }
@@ -966,6 +991,8 @@ function createItemsOrb(stage) {
   stage.addEventListener("pointermove", onPointerMove);
   stage.addEventListener("pointerup", (event) => finishPointer(event, false));
   stage.addEventListener("pointercancel", (event) => finishPointer(event, true));
+  stage.addEventListener("lostpointercapture", (event) => finishPointer(event, true));
+  window.addEventListener("blur", () => finishPointer(null, true));
   stage.addEventListener("pointerover", onPointerOver);
   stage.addEventListener("pointerout", onPointerOut);
   stage.addEventListener("pointerleave", onPointerLeave);
@@ -1002,6 +1029,7 @@ function createItemsOrb(stage) {
         stage.classList.remove("is-pressing", "is-dragging");
         return;
       }
+      measureRadius();
       applyProjection();
       startLoop(true);
     },
@@ -1012,8 +1040,12 @@ function createItemsOrb(stage) {
       if (selection) selection.textContent = "";
     },
     refresh() {
+      measureRadius();
       applyProjection();
       if (orb.active) startLoop(true);
+    },
+    refreshSelection() {
+      if (orb.selected) updateSelectionText(orb.selected);
     },
   };
 }
@@ -1024,22 +1056,28 @@ function renderOrb(objects) {
   if (!sphere) return;
   state.itemsOrb?.resetForRender();
   sphere.innerHTML = "";
-  if (empty) empty.hidden = !!objects.length;
+  if (empty) {
+    empty.hidden = !!objects.length;
+    empty.textContent = "还没有记录到物品。";
+  }
   const stage = $("orb-stage");
   if (stage) {
     stage.setAttribute(
       "aria-label",
-      objects.length ? `可拖动旋转的物品图片球，共 ${objects.length} 件` : "物品图片球，暂无物品"
+      objects.length
+        ? `可拖动物品图片球，共 ${objects.length} 件，可拖动或使用方向键旋转`
+        : "物品图片球，暂无物品"
     );
   }
   const n = objects.length;
   if (!n) {
+    state.itemsOrb?.setActive(false);
     state.itemsOrb?.refresh();
     return;
   }
 
   const copies = orbCopiesFor(n);
-  const tileCount = Math.min(64, n * copies);
+  const tileCount = n > 64 ? n : Math.min(64, n * copies);
   for (let i = 0; i < tileCount; i += 1) {
     const objectIndex = i % n;
     const o = objects[objectIndex];
@@ -1064,6 +1102,7 @@ function renderOrb(objects) {
     tile.appendChild(face);
     sphere.appendChild(tile);
   }
+  state.itemsOrb?.setActive(state.itemsMode === "orb");
   state.itemsOrb?.refresh();
 }
 
@@ -1075,7 +1114,7 @@ function renderObjectGrid(objects) {
     grid.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
     return;
   }
-  objects.forEach((o) => {
+  objects.forEach((o, index) => {
     const label = objectLabel(o);
     const when = objectWhen(o);
     const zone = o.zone || "未分区";
@@ -1083,6 +1122,7 @@ function renderObjectGrid(objects) {
     const queryHref = `/search?q=${encodeURIComponent(`${label}在哪？`)}&autorun=1`;
     const tile = document.createElement("div");
     tile.className = "object-tile";
+    tile.dataset.objectIndex = String(index);
     tile.tabIndex = 0;
     tile.setAttribute("role", "group");
     tile.setAttribute(
@@ -1091,7 +1131,7 @@ function renderObjectGrid(objects) {
     );
     tile.innerHTML = `
       ${o.evidence_crop_url
-        ? `<img alt="${escapeHtml(label)}" src="${escapeHtml(o.evidence_crop_url)}" />`
+        ? `<img alt="${escapeHtml(label)}" src="${escapeHtml(o.evidence_crop_url)}" loading="lazy" decoding="async" />`
         : '<span class="tile-no-image">暂无图片</span>'}
       <div class="tile-overlay">
         <span class="tile-source">${sourceBadge(o.source_kind)}</span>
@@ -1101,9 +1141,16 @@ function renderObjectGrid(objects) {
         <span class="tile-time">最后出现 ${escapeHtml(when)}</span>
         <span class="tile-sightings">${sightings} 次观测</span>
       </div>`;
+    tile.addEventListener("pointerdown", (event) => {
+      tile._lastPointerType = event.pointerType;
+    });
     tile.addEventListener("click", (event) => {
       if (event.target.closest(".tile-query")) return;
-      if (state.itemsHoverCapable) return;
+      const touchLike =
+        tile._lastPointerType === "touch" ||
+        tile._lastPointerType === "pen" ||
+        !state.itemsHoverCapable;
+      if (!touchLike) return;
       event.preventDefault();
       const active = tile.classList.contains("is-touch-active");
       document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
@@ -1119,13 +1166,54 @@ function animateGridRows() {
   const grid = $("objects");
   if (!grid) return;
   const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length || 1;
-  [...grid.querySelectorAll(".object-tile")].forEach((tile, i) => {
+  const tiles = [...grid.querySelectorAll(".object-tile")];
+  tiles.forEach((tile, i) => {
     const row = Math.floor(i / cols);
     tile.style.setProperty("--tile-delay", `${row * 120 + (i % cols) * 18}ms`);
     tile.style.animation = "none";
-    void tile.offsetWidth;
+  });
+  void grid.offsetWidth;
+  tiles.forEach((tile) => {
     tile.style.animation = "";
   });
+}
+
+function refreshObjectTimes(objects) {
+  const grid = $("objects");
+  if (grid) {
+    grid.querySelectorAll(".object-tile").forEach((tile) => {
+      const object = objects[Number(tile.dataset.objectIndex)];
+      if (!object) return;
+      const when = objectWhen(object);
+      const sightings = object.sightings ?? 0;
+      const time = tile.querySelector(".tile-time");
+      const sighting = tile.querySelector(".tile-sightings");
+      if (time) time.textContent = `最后出现 ${when}`;
+      if (sighting) sighting.textContent = `${sightings} 次观测`;
+      tile.setAttribute(
+        "aria-label",
+        `${objectLabel(object)}，${object.zone || "未分区"}，最后出现 ${when}，${sightings} 次观测`
+      );
+    });
+  }
+  state.itemsOrb?.refreshSelection();
+}
+
+function objectSignature(objects) {
+  return objects
+    .map((o) =>
+      [
+        o.track_id,
+        objectLabel(o),
+        o.zone,
+        o.sightings,
+        o.evidence_crop_url,
+        o.source_kind,
+        o.time_synced,
+        o.time_local,
+      ].join("|")
+    )
+    .join("~");
 }
 
 function updateItemsModeButtons(mode) {
@@ -1168,10 +1256,13 @@ function setItemsMode(mode) {
   const nextView = mode === "grid" ? $("grid-view") : $("orb-view");
   if (!currentView || !nextView) return;
   const buttons = [...document.querySelectorAll(".items-mode-btn")];
+  const focused = document.activeElement;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   state.itemsSwitching = true;
+  clearTimeout(state.itemsSwitchTimer);
+  clearTimeout(state.itemsEnteringTimer);
   buttons.forEach((button) => {
-    button.disabled = true;
+    button.setAttribute("aria-disabled", "true");
   });
   const finish = () => {
     currentView.classList.remove("is-view-leaving");
@@ -1179,28 +1270,41 @@ function setItemsMode(mode) {
     nextView.classList.remove("is-view-entering");
     void nextView.offsetWidth;
     nextView.classList.add("is-view-entering");
-    setTimeout(() => nextView.classList.remove("is-view-entering"), 340);
+    clearTimeout(state.itemsEnteringTimer);
+    state.itemsEnteringTimer = window.setTimeout(() => {
+      nextView.classList.remove("is-view-entering");
+    }, 340);
     buttons.forEach((button) => {
-      button.disabled = false;
+      button.removeAttribute("aria-disabled");
     });
     state.itemsSwitching = false;
+    if (focused && currentView.contains(focused)) {
+      const activeButton = document.querySelector(`.items-mode-btn[data-items-mode="${mode}"]`);
+      activeButton?.focus({ preventScroll: true });
+    }
   };
   if (reducedMotion) {
     finish();
     return;
   }
   currentView.classList.add("is-view-leaving");
-  setTimeout(finish, 165);
+  state.itemsSwitchTimer = window.setTimeout(finish, 165);
 }
 
 function initItems() {
-  state.itemsHoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const hoverQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+  state.itemsHoverCapable = hoverQuery.matches;
   const stage = $("orb-stage");
   const hint = $("orb-hint");
   if (hint) {
     hint.textContent = state.itemsHoverCapable
-      ? "拖动旋转 · 悬停暂停 · 点击图片查看"
+      ? "拖动/方向键旋转 · 悬停暂停 · 点击图片查看"
       : "单指拖动旋转 · 轻点图片查看";
+  }
+  if (hoverQuery.addEventListener) {
+    hoverQuery.addEventListener("change", (event) => {
+      state.itemsHoverCapable = event.matches;
+    });
   }
   if (stage) state.itemsOrb = createItemsOrb(stage);
   document.querySelectorAll(".items-mode-btn").forEach((button) => {
@@ -1212,18 +1316,34 @@ function initItems() {
 }
 
 async function loadObjects() {
-  const data = await api("/api/objects");
+  let data;
+  try {
+    data = await api("/api/objects");
+  } catch (error) {
+    data = { ok: false };
+  }
   const grid = $("objects");
   if (!data.ok) {
-    if (grid) grid.innerHTML = '<p class="empty-note">读取物品库失败，请确认本地服务正常。</p>';
+    const message = "读取物品库失败，请确认本地服务正常。";
+    if (grid) grid.innerHTML = `<p class="empty-note">${message}</p>`;
+    if (!state.objects.length) {
+      setText("objects-count", "0");
+      const empty = $("orb-empty");
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent = message;
+      }
+      state.itemsOrb?.setActive(false);
+    }
     return;
   }
   const objects = data.objects || [];
-  const signature = objects
-    .map((o) => [o.track_id, objectLabel(o), o.zone, o.time_ago, o.sightings, o.evidence_crop_url, o.source_kind].join("|"))
-    .join("~");
-  if (signature === state.objectsSignature) return;
   state.objects = objects;
+  const signature = objectSignature(objects);
+  if (signature === state.objectsSignature) {
+    refreshObjectTimes(objects);
+    return;
+  }
   state.objectsSignature = signature;
 
   setText("objects-count", String(objects.length));

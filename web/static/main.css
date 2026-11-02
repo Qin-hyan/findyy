@@ -693,7 +693,7 @@ body.app-main {
 
 .app-main .items-page {
   --orb-size: clamp(300px, 46vw, 600px);
-  --orb-radius: clamp(112px, 17vw, 226px);
+  --orb-radius-ratio: 0.38;
   --orb-card: clamp(46px, 6vw, 80px);
   position: relative;
   padding-top: 18px;
@@ -746,7 +746,8 @@ body.app-main {
   outline-offset: 2px;
 }
 
-.app-main .items-mode-btn:disabled {
+.app-main .items-mode-btn[aria-disabled="true"] {
+  opacity: 0.6;
   cursor: wait;
 }
 
@@ -768,7 +769,7 @@ body.app-main {
   aspect-ratio: 1 / 1;
   cursor: grab;
   outline: none;
-  touch-action: none;
+  touch-action: pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -837,11 +838,6 @@ body.app-main {
   place-items: center;
   color: var(--muted);
   font-size: 10px;
-}
-
-.app-main .orb-tile.is-hovered,
-.app-main .orb-tile.is-selected {
-  z-index: 260 !important;
 }
 
 .app-main .orb-tile.is-hovered .orb-face,
@@ -1364,26 +1360,6 @@ body.app-main {
     font-size: 27px;
   }
 
-  .app-main .items-page {
-    --orb-size: min(88vw, 380px);
-    --orb-radius: min(36vw, 140px);
-    --orb-card: clamp(44px, 12vw, 56px);
-  }
-
-  .app-main .items-page .items-heading {
-    margin-bottom: 0;
-  }
-
-  .app-main .items-mode-switch {
-    padding: 3px;
-  }
-
-  .app-main .items-mode-btn {
-    min-width: 54px;
-    padding: 6px 10px;
-    font-size: 11.5px;
-  }
-
   .app-main .card {
     padding: 14px 13px;
     border-radius: 14px;
@@ -1440,9 +1416,9 @@ body.app-main {
   }
 
   .app-main .items-page {
-    --orb-size: min(86vw, 420px);
-    --orb-radius: min(34vw, 150px);
-    --orb-card: clamp(44px, 12vw, 62px);
+    --orb-size: min(86vw, 380px);
+    --orb-radius-ratio: 0.4;
+    --orb-card: clamp(44px, 12vw, 56px);
   }
 
   .app-main .items-page .items-heading {
@@ -1450,12 +1426,17 @@ body.app-main {
     flex-direction: row;
     justify-content: space-between;
     gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .app-main .items-mode-switch {
+    padding: 3px;
   }
 
   .app-main .items-mode-btn {
-    min-width: 58px;
-    padding: 6px 11px;
-    font-size: 12px;
+    min-width: 54px;
+    padding: 6px 10px;
+    font-size: 11.5px;
   }
 
   .app-main .orb-view {

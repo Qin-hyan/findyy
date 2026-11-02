@@ -53,9 +53,10 @@
       <div
         class="orb-stage"
         id="orb-stage"
-        role="img"
+        role="group"
+        aria-roledescription="可拖动物品球"
         tabindex="0"
-        aria-label="可拖动旋转的物品图片球"
+        aria-label="可拖动物品图片球"
         aria-describedby="orb-hint"
       >
         <div class="orb-scene">
@@ -64,7 +65,7 @@
       </div>
       <div class="orb-meta">
         <p class="orb-count" id="orb-count">共记录 <strong id="objects-count">—</strong> 件</p>
-        <p class="orb-hint" id="orb-hint">拖动旋转 · 悬停暂停</p>
+        <p class="orb-hint" id="orb-hint">拖动/方向键旋转 · 悬停暂停 · 点击图片查看</p>
         <p class="orb-selection" id="orb-selection" aria-live="polite"></p>
       </div>
       <p class="orb-empty" id="orb-empty" hidden>还没有记录到物品。</p>

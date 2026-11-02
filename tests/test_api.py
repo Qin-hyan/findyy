@@ -194,6 +194,8 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     assert page.status_code == 200
     assert 'id="items-page"' in page.text
     assert 'id="orb-stage"' in page.text
+    assert 'role="group"' in page.text
+    assert 'aria-roledescription="可拖动物品球"' in page.text
     assert 'id="orb-sphere"' in page.text
     assert 'id="orb-count"' in page.text
     assert 'id="objects-count"' in page.text
@@ -218,6 +220,7 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     assert ".orb-face" in stylesheet.text
     assert ".orb-tile.is-hovered .orb-face" in stylesheet.text
     assert ".object-tile" in stylesheet.text
+    assert "touch-action: pan-y pinch-zoom" in stylesheet.text
     assert "findy-items-view-in" in stylesheet.text
     assert "findy-items-tile-in" in stylesheet.text
     assert "findy-orb-spin" not in stylesheet.text
@@ -228,7 +231,10 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     assert script.status_code == 200
     assert "function createItemsOrb" in script.text
     assert "pointerdown" in script.text
+    assert "lostpointercapture" in script.text
     assert "visibilitychange" in script.text
     assert "prefers-reduced-motion" in script.text
     assert "orbCopiesFor" in script.text
+    assert "n > 64 ? n" in script.text
+    assert "objectsSignature: null" in script.text
     assert "setItemsMode" in script.text
