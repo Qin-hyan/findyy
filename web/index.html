@@ -37,51 +37,59 @@
     </div>
   </header>
 
-  <main class="app-page">
-    <header class="page-heading">
+  <main class="app-page observe-page">
+    <header class="page-heading observe-heading">
       <div>
         <p class="page-kicker">FINDY MEMORY / LIVE VIEW</p>
         <h1>最近观察</h1>
       </div>
-      <div class="page-meta"><span>最近抓拍</span><strong id="capture-time">—</strong></div>
     </header>
 
-    <div class="observe-grid">
-      <section class="card camera-card">
-        <div class="card-head">
-          <h2>本次画面</h2>
-          <span class="muted small" id="capture-meta">加载中…</span>
+    <section class="capture-stage" aria-label="最近观察画面">
+      <div class="viewport" id="viewport">
+        <div class="placeholder" id="viewport-placeholder">
+          <p>还没有抓拍记录</p>
+          <p class="muted small">点击“立即抓拍”，或运行演示数据脚本</p>
         </div>
-        <div class="viewport" id="viewport">
-          <div class="placeholder" id="viewport-placeholder">
-            <p>还没有抓拍记录</p>
-            <p class="muted small">点击“立即抓拍”，或运行演示数据脚本</p>
-          </div>
-          <img id="capture-img" alt="最近一次抓拍" hidden />
-          <div class="overlay" id="overlay"></div>
-        </div>
-        <div class="controls">
-          <button class="primary" id="capture-btn">立即抓拍</button>
-          <button class="ghost" id="auto-btn">开始自动采集</button>
-          <span class="muted small" id="capture-status"></span>
-        </div>
-      </section>
+        <img id="capture-img" alt="最近一次抓拍" hidden />
+        <div class="overlay" id="overlay"></div>
 
-      <aside class="card observe-side">
-        <div class="card-head">
-          <h2>识别摘要</h2>
-          <span id="capture-source" class="source-badge src-unknown">未知来源</span>
+        <div class="summary-hotzone" id="summary-hotzone" aria-hidden="true"></div>
+        <button class="summary-trigger" id="summary-trigger" type="button"
+                aria-expanded="false" aria-controls="summary-panel" aria-label="展开识别摘要">
+          <span class="summary-trigger-pulse" aria-hidden="true"></span>
+          <span class="summary-trigger-label">识别摘要</span>
+          <span class="summary-trigger-count" id="summary-trigger-count">—</span>
+          <span class="summary-trigger-caret" aria-hidden="true">⌄</span>
+        </button>
+
+        <section class="summary-panel" id="summary-panel" aria-hidden="true" aria-label="本帧识别摘要">
+          <div class="summary-panel-head">
+            <div>
+              <p class="summary-eyebrow">FRAME INTELLIGENCE</p>
+              <h2>识别摘要</h2>
+            </div>
+            <button class="summary-pin" id="summary-pin" type="button" aria-pressed="false">固定</button>
+          </div>
+          <p class="summary-copy" id="capture-summary">正在读取最近一次观察…</p>
+          <div class="detection-list" id="detections-list">
+            <p class="empty-note">正在加载检测结果…</p>
+          </div>
+        </section>
+
+        <div class="stage-badges" aria-live="polite">
+          <span class="stage-badge stage-time" id="capture-time">—</span>
+          <span class="stage-badge" id="stage-detections">—</span>
+          <span class="source-badge src-unknown" id="capture-source">未知来源</span>
         </div>
-        <p class="observe-summary" id="capture-summary">正在读取最近一次观察…</p>
-        <div class="detection-list" id="detections-list">
-          <p class="empty-note">正在加载检测结果…</p>
-        </div>
-        <div class="observe-note">
-          <strong>判定边界</strong>
-          <p>检测置信度不等于事实确认；关联状态为“待确认”时，请在轨迹详情中核对。</p>
-        </div>
-      </aside>
-    </div>
+      </div>
+
+      <div class="stage-actions">
+        <button class="primary" id="capture-btn">立即抓拍</button>
+        <button class="ghost" id="auto-btn">开始自动采集</button>
+        <span class="muted small" id="capture-status"></span>
+      </div>
+    </section>
   </main>
 
   <footer class="app-footer">

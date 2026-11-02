@@ -14,6 +14,8 @@ const state = {
   warmupDone: false,
   busy: false,
   highlightedDetectionId: null,
+  summaryPinned: false,
+  summaryTimer: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -85,9 +87,7 @@ function linkStatusLabel(status) {
 
 function captureTime(cap) {
   if (!cap) return "—";
-  if (!cap.time_synced) {
-    return cap.captured_at_local ? `时间未同步（${cap.captured_at_local}）` : "时间未同步";
-  }
+  if (!cap.time_synced) return "时间未同步";
   return cap.captured_at_local || cap.captured_at_utc || "时间未知";
 }
 
@@ -220,20 +220,116 @@ function renderDetectionList(detections, highlightId = null) {
 
 function summarizeCapture(cap, detections) {
   const labels = [...new Set((detections || []).map((d) => d.class_zh).filter(Boolean))];
-  const recognized = labels.length
-    ? `识别到 ${labels.length} 类物品：${labels.slice(0, 6).join("、")}${labels.length > 6 ? " 等" : ""}。`
-    : "这一帧没有识别到词表内物品。";
-  const source = `来源：${sourceLabel(cap.source_kind)}。`;
-  const time = cap.time_synced
-    ? `时间：${cap.captured_at_local || cap.captured_at_utc || "未知"}。`
-    : "时间未同步，当前时间不可信。";
-  return recognized + source + time;
+  if (!labels.length) return "这一帧没有识别到词表内物品。";
+  return `识别到 ${labels.length} 类物品：${labels.slice(0, 6).join("、")}${labels.length > 6 ? " 等" : ""}。`;
+}
+
+function setSummaryOpen(open) {
+  const panel = $("summary-panel");
+  const trigger = $("summary-trigger");
+  const pin = $("summary-pin");
+  if (!panel || !trigger) return;
+  panel.classList.toggle("is-open", open);
+  panel.setAttribute("aria-hidden", open ? "false" : "true");
+  trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  trigger.setAttribute("aria-label", open ? "收起识别摘要" : "展开识别摘要");
+  trigger.classList.toggle("is-pinned", state.summaryPinned && open);
+  if (pin) pin.setAttribute("aria-pressed", state.summaryPinned ? "true" : "false");
+}
+
+function openSummary(pin = false) {
+  clearTimeout(state.summaryTimer);
+  state.summaryTimer = null;
+  if (pin) state.summaryPinned = true;
+  setSummaryOpen(true);
+}
+
+function closeSummary() {
+  clearTimeout(state.summaryTimer);
+  state.summaryTimer = null;
+  state.summaryPinned = false;
+  setSummaryOpen(false);
+}
+
+function scheduleSummaryClose() {
+  if (state.summaryPinned) return;
+  clearTimeout(state.summaryTimer);
+  state.summaryTimer = setTimeout(() => {
+    state.summaryTimer = null;
+    setSummaryOpen(false);
+  }, 520);
+}
+
+function bindSummaryOverlay() {
+  const hotzone = $("summary-hotzone");
+  const trigger = $("summary-trigger");
+  const panel = $("summary-panel");
+  const pin = $("summary-pin");
+  if (!trigger || !panel) return;
+  const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  const enter = () => {
+    if (!hoverCapable) return;
+    clearTimeout(state.summaryTimer);
+    state.summaryTimer = null;
+    setSummaryOpen(true);
+  };
+  const leave = () => {
+    if (!hoverCapable) return;
+    scheduleSummaryClose();
+  };
+
+  [hotzone, trigger, panel].forEach((el) => {
+    if (!el) return;
+    el.addEventListener("mouseenter", enter);
+    el.addEventListener("mouseleave", leave);
+  });
+
+  trigger.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const open = panel.classList.contains("is-open");
+    if (!open) openSummary(true);
+    else if (!state.summaryPinned) openSummary(true);
+    else closeSummary();
+  });
+
+  if (pin) {
+    pin.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.summaryPinned = !state.summaryPinned;
+      setSummaryOpen(true);
+    });
+  }
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!panel.classList.contains("is-open")) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest("#summary-panel, #summary-trigger, #summary-hotzone")) return;
+    closeSummary();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && panel.classList.contains("is-open")) closeSummary();
+  });
+
+  trigger.addEventListener("focus", () => {
+    if (hoverCapable) openSummary(false);
+  });
+}
+
+function setStageCount(count) {
+  setText("stage-detections", `${count} 检测`);
+  setText("summary-trigger-count", String(count));
 }
 
 function showEmptyCapture() {
   state.currentCapture = null;
+  state.highlightedDetectionId = null;
   const placeholder = $("viewport-placeholder");
   if (placeholder) placeholder.classList.remove("hidden");
+  const viewport = $("viewport");
+  if (viewport) viewport.style.aspectRatio = "4 / 3";
   const img = $("capture-img");
   if (img) {
     img.hidden = true;
@@ -241,7 +337,7 @@ function showEmptyCapture() {
   }
   clearOverlay();
   setText("capture-time", "—");
-  setText("capture-meta", "尚无抓拍");
+  setStageCount(0);
   setText("capture-summary", "还没有抓拍记录。点击“立即抓拍”，或运行演示数据脚本后再回来。");
   const source = $("capture-source");
   if (source) {
@@ -250,6 +346,7 @@ function showEmptyCapture() {
   }
   const list = $("detections-list");
   if (list) list.innerHTML = '<p class="empty-note">还没有检测结果。</p>';
+  closeSummary();
 }
 
 async function showCapture(captureId) {
@@ -265,19 +362,23 @@ async function showCapture(captureId) {
 
   const placeholder = $("viewport-placeholder");
   if (placeholder) placeholder.classList.add("hidden");
+  const viewport = $("viewport");
+  if (viewport) {
+    const ratioWidth = Number(cap.width);
+    const ratioHeight = Number(cap.height);
+    viewport.style.aspectRatio =
+      ratioWidth > 0 && ratioHeight > 0 ? `${ratioWidth} / ${ratioHeight}` : "4 / 3";
+  }
   const img = $("capture-img");
   if (img) {
     const base = cap.image_url || `/api/captures/${cap.id}/image`;
     img.src = `${base}${base.includes("?") ? "&" : "?"}t=${Date.now()}`;
+    img.alt = `抓拍 #${cap.id}`;
     img.hidden = false;
   }
 
   setText("capture-time", captureTime(cap));
-  setText(
-    "capture-meta",
-    `抓拍 #${cap.id} · ${cap.width || "?"}×${cap.height || "?"} · ${detections.length} 个检测 · ` +
-      `${sourceLabel(cap.source_kind)} · ${cap.time_synced ? "时间已同步" : "时间未同步"}`
-  );
+  setStageCount(detections.length);
   setText("capture-summary", summarizeCapture(cap, detections));
 
   const source = $("capture-source");
@@ -621,6 +722,7 @@ function initObserve() {
   if (captureBtn) captureBtn.onclick = doCapture;
   const autoBtn = $("auto-btn");
   if (autoBtn) autoBtn.onclick = toggleAuto;
+  bindSummaryOverlay();
 }
 
 function initSearch() {

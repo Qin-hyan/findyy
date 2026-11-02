@@ -147,3 +147,23 @@ def test_main_pages_are_distinct_navigation_targets(api_client):
     workbench = api_client.get("/workbench")
     assert workbench.status_code == 200
     assert "端到端验收工作台" in workbench.text
+
+
+def test_observe_uses_in_frame_summary_overlay(api_client):
+    page = api_client.get("/")
+    assert page.status_code == 200
+    assert 'class="capture-stage"' in page.text
+    assert 'id="summary-panel"' in page.text
+    assert 'id="summary-trigger"' in page.text
+    assert 'aria-expanded="false"' in page.text
+    assert 'id="summary-hotzone"' in page.text
+    assert 'id="stage-detections"' in page.text
+    assert 'id="capture-source"' in page.text
+    assert 'id="capture-btn"' in page.text
+    assert 'id="auto-btn"' in page.text
+    assert 'id="capture-meta"' not in page.text
+    assert 'class="observe-side"' not in page.text
+    assert 'class="page-subtitle"' not in page.text
+
+    for path in ("/search", "/items", "/timeline"):
+        assert 'id="summary-panel"' not in api_client.get(path).text
