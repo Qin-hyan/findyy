@@ -706,12 +706,17 @@ function createItemsOrb(stage) {
       const x = x1 * orbRadius * perspective;
       const y = -y2 * orbRadius * perspective;
       const scale = 0.78 + ((z2 + 1) / 2) * 0.3;
-      const opacity = z2 >= 0 ? 1 : 0.12 + ((z2 + 1) / 2) * 0.1;
+      const opacity = z2 >= 0 ? 1 : 0;
       const lifted = z2 > 0.02 && (tile === orb.hovering || tile === orb.selected);
       tile.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(3)})`;
       tile.style.opacity = opacity.toFixed(3);
       tile.style.zIndex = lifted ? "260" : String(Math.round(100 + z2 * 100));
       tile.style.pointerEvents = z2 > 0.02 ? "auto" : "none";
+      const isBack = z2 < 0;
+      if (tile._isBack !== isBack) {
+        tile.classList.toggle("is-back", isBack);
+        tile._isBack = isBack;
+      }
     }
     stage.dataset.yaw = orb.yaw.toFixed(3);
     stage.dataset.pitch = orb.pitch.toFixed(3);

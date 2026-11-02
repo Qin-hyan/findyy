@@ -238,3 +238,31 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     assert "n > 64 ? n" in script.text
     assert "objectsSignature: null" in script.text
     assert "setItemsMode" in script.text
+
+
+def test_warm_minimal_theme_is_isolated_from_workbench(api_client):
+    for path in ("/", "/search", "/items", "/timeline"):
+        page = api_client.get(path)
+        assert page.status_code == 200
+        assert 'name="theme-color" content="#F4F0E8"' in page.text
+        assert "/static/warm.css" in page.text
+        assert page.text.index("/static/main.css") < page.text.index("/static/warm.css")
+
+    workbench = api_client.get("/workbench")
+    assert workbench.status_code == 200
+    assert "/static/warm.css" not in workbench.text
+    assert "/static/workbench.css" in workbench.text
+
+    theme = api_client.get("/static/warm.css")
+    assert theme.status_code == 200
+    assert "body.app-main" in theme.text
+    for token in ("#f4f0e8", "#e8e1d5", "#d2c6b5", "#756858", "#4c463e", "#a3a77a"):
+        assert token in theme.text
+    assert ".app-main .orb-tile.is-back .orb-face" in theme.text
+    assert ".app-main .toast" in theme.text
+
+    # 工作台继续使用原深色基础变量，不因主界面主题而改变。
+    base = api_client.get("/static/styles.css")
+    assert base.status_code == 200
+    assert "--bg: #070b13" in base.text
+    assert "--text: #e8eefc" in base.text
