@@ -240,6 +240,28 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     assert "setItemsMode" in script.text
 
 
+def test_main_pages_share_warm_entrance_motion(api_client):
+    for path in ("/", "/items", "/timeline"):
+        page = api_client.get(path)
+        assert page.status_code == 200
+        assert "wm-enter" in page.text
+
+    search = api_client.get("/search")
+    assert "search-reveal" in search.text
+
+    theme = api_client.get("/static/warm.css")
+    assert theme.status_code == 200
+    assert "@keyframes findy-warm-rise" in theme.text
+    assert ".app-main .wm-enter" in theme.text
+    assert "animation-delay: var(--enter-delay, 0ms)" in theme.text
+    assert "prefers-reduced-motion: reduce" in theme.text
+    assert ".object-tile.is-entering" in theme.text
+
+    main = api_client.get("/static/main.css")
+    assert ".app-main .object-tile.is-entering" in main.text
+    assert ".app-main .object-tile {" in main.text
+
+
 def test_warm_minimal_theme_is_isolated_from_workbench(api_client):
     for path in ("/", "/search", "/items", "/timeline"):
         page = api_client.get(path)

@@ -23,6 +23,8 @@ const state = {
   itemsSwitching: false,
   itemsSwitchTimer: 0,
   itemsEnteringTimer: 0,
+  gridEntrancePending: false,
+  gridAnimationTimer: 0,
   itemsOrb: null,
 };
 
@@ -1172,15 +1174,20 @@ function animateGridRows() {
   if (!grid) return;
   const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length || 1;
   const tiles = [...grid.querySelectorAll(".object-tile")];
+  if (!tiles.length) return;
+  state.gridEntrancePending = false;
+  clearTimeout(state.gridAnimationTimer);
   tiles.forEach((tile, i) => {
     const row = Math.floor(i / cols);
-    tile.style.setProperty("--tile-delay", `${row * 120 + (i % cols) * 18}ms`);
-    tile.style.animation = "none";
+    tile.style.setProperty("--tile-delay", `${row * 110 + (i % cols) * 16}ms`);
+    tile.classList.remove("is-entering");
   });
   void grid.offsetWidth;
-  tiles.forEach((tile) => {
-    tile.style.animation = "";
-  });
+  tiles.forEach((tile) => tile.classList.add("is-entering"));
+  const maxDelay = Math.floor((tiles.length - 1) / cols) * 110 + (cols - 1) * 16;
+  state.gridAnimationTimer = window.setTimeout(() => {
+    tiles.forEach((tile) => tile.classList.remove("is-entering"));
+  }, maxDelay + 560);
 }
 
 function refreshObjectTimes(objects) {
@@ -1247,6 +1254,7 @@ function applyItemsMode(mode) {
   });
   if (isGrid) {
     state.itemsOrb?.setActive(false);
+    state.gridEntrancePending = true;
     requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
   } else {
     state.itemsOrb?.setActive(true);
@@ -1354,7 +1362,9 @@ async function loadObjects() {
   setText("objects-count", String(objects.length));
   renderOrb(objects);
   renderObjectGrid(objects);
-  if (state.itemsMode === "grid") animateGridRows();
+  if (state.itemsMode === "grid" && state.gridEntrancePending) {
+    requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
+  }
 }
 
 // ---------------- 观察时间线 ----------------

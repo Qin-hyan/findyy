@@ -40,7 +40,7 @@
   </header>
 
   <main class="app-page observe-page">
-    <header class="page-heading observe-heading">
+    <header class="page-heading observe-heading wm-enter" style="--enter-delay: 0ms">
       <div>
         <p class="page-kicker">FINDY MEMORY / LIVE VIEW</p>
         <h1>最近观察</h1>
@@ -48,7 +48,7 @@
     </header>
 
     <section class="capture-stage" aria-label="最近观察画面">
-      <div class="viewport" id="viewport">
+      <div class="viewport wm-enter" id="viewport" style="--enter-delay: 100ms">
         <div class="placeholder" id="viewport-placeholder">
           <p>还没有抓拍记录</p>
           <p class="muted small">点击“立即抓拍”，或运行演示数据脚本</p>
@@ -86,7 +86,7 @@
         </div>
       </div>
 
-      <div class="stage-actions">
+      <div class="stage-actions wm-enter" style="--enter-delay: 180ms">
         <button class="primary" id="capture-btn">立即抓拍</button>
         <button class="ghost" id="auto-btn">开始自动采集</button>
         <span class="muted small" id="capture-status"></span>

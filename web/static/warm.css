@@ -46,10 +46,30 @@ body.app-main {
   color-scheme: light;
   color: var(--wm-text);
   background:
-    radial-gradient(1100px 560px at 10% -14%, rgba(163, 167, 122, 0.11), transparent 64%),
-    radial-gradient(900px 460px at 94% 0%, rgba(210, 198, 181, 0.26), transparent 58%),
+    radial-gradient(1100px 560px at 10% -14%, rgba(163, 167, 122, 0.12), transparent 64%),
+    radial-gradient(900px 460px at 94% 0%, rgba(210, 198, 181, 0.28), transparent 58%),
+    linear-gradient(180deg, rgba(251, 248, 242, 0.72) 0%, rgba(244, 240, 232, 0) 30%),
     var(--wm-cream);
   scrollbar-color: #c7baa7 var(--wm-cream);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@keyframes findy-warm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 页面级进入动效：只由静态页面元素或首次渲染的行使用，避免轮询重播。 */
+.app-main .wm-enter {
+  animation: findy-warm-rise 0.42s cubic-bezier(0.22, 0.75, 0.2, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
 }
 
 body.app-main ::selection {
@@ -66,10 +86,12 @@ body.app-main input:focus-visible {
 
 /* ---------- 顶栏与导航 ---------- */
 .app-main .app-header {
-  background: rgba(248, 244, 237, 0.95);
+  background: rgba(247, 243, 236, 0.93);
   border-bottom-color: var(--wm-line);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(14px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.72),
+    0 8px 28px rgba(76, 70, 62, 0.045);
+  backdrop-filter: blur(16px) saturate(1.05);
 }
 
 .app-main .app-brand {
@@ -155,13 +177,25 @@ body.app-main input:focus-visible {
 
 /* ---------- 页面标题与卡片 ---------- */
 .app-main .page-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--wm-olive-deep);
+}
+
+.app-main .page-kicker::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.68;
 }
 
 .app-main .page-heading h1 {
   color: var(--wm-text-strong);
-  font-weight: 750;
-  letter-spacing: 0.5px;
+  font-weight: 760;
+  letter-spacing: 0.35px;
+  text-wrap: balance;
 }
 
 .app-main .page-subtitle,
@@ -180,7 +214,9 @@ body.app-main input:focus-visible {
 .app-main .card {
   background: var(--wm-cream-2);
   border: 1px solid var(--wm-line);
-  box-shadow: var(--wm-shadow);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.66) inset,
+    var(--wm-shadow);
 }
 
 .app-main .card-head h2 {
@@ -197,10 +233,17 @@ body.app-main input:focus-visible {
   border-color: #8e9369;
   background: var(--wm-olive);
   box-shadow: 0 5px 14px rgba(100, 106, 73, 0.16);
+  transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.1s ease;
 }
 
 .app-main button.primary:hover {
-  background: #979c6e;
+  background: #9aa076;
+  border-color: #858a61;
+  box-shadow: 0 8px 20px rgba(100, 106, 73, 0.2);
+}
+
+.app-main button.primary:active {
+  transform: translateY(1px);
 }
 
 .app-main button.ghost {
@@ -624,4 +667,14 @@ body.app-main input:focus-visible {
   color: #fffdf8;
   border-color: rgba(79, 98, 57, 0.7);
   background: var(--wm-success);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-main .wm-enter,
+  .app-main .timeline-day-head.is-entering,
+  .app-main .timeline-event.is-entering,
+  .app-main .object-tile.is-entering {
+    animation: none !important;
+    transition: none !important;
+  }
 }

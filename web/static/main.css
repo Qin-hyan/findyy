@@ -970,6 +970,10 @@ body.app-main {
   text-decoration: none;
   isolation: isolate;
   cursor: pointer;
+}
+
+/* 仅在首次进入平铺视图或主动切换视图时逐行播放，轮询刷新不重播。 */
+.app-main .object-tile.is-entering {
   animation: findy-items-tile-in 0.46s cubic-bezier(0.22, 0.75, 0.2, 1) both;
   animation-delay: var(--tile-delay, 0ms);
 }
