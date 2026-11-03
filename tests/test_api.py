@@ -262,6 +262,44 @@ def test_main_pages_share_warm_entrance_motion(api_client):
     assert ".app-main .object-tile {" in main.text
 
 
+def test_timeline_is_grouped_expandable_activity_feed(api_client):
+    page = api_client.get("/timeline")
+    assert page.status_code == 200
+    assert 'class="timeline-board"' in page.text
+    assert 'class="page-subtitle"' not in page.text
+    assert 'class="card"' not in page.text
+    assert "timeline-card" not in page.text
+    assert 'id="timeline"' in page.text
+
+    script = api_client.get("/static/app.js")
+    assert script.status_code == 200
+    for token in (
+        "timelineDayKey",
+        "timelineDayMeta",
+        "timeline-event-card",
+        "timeline-detail-inner",
+        "timeline-detail-link",
+        "aria-expanded",
+        "timelineEntered",
+        "timelineSignature",
+        "if (signature === state.timelineSignature) return;",
+    ):
+        assert token in script.text
+
+    theme = api_client.get("/static/warm.css")
+    assert theme.status_code == 200
+    for token in (
+        ".timeline-day-head",
+        ".timeline-events::before",
+        ".timeline-event-card",
+        ".timeline-detail-inner",
+        ".timeline-evidence-box",
+        "@keyframes findy-timeline-detail-in",
+        ".timeline-event.is-latest .timeline-node",
+    ):
+        assert token in theme.text
+
+
 def test_warm_minimal_theme_is_isolated_from_workbench(api_client):
     for path in ("/", "/search", "/items", "/timeline"):
         page = api_client.get(path)

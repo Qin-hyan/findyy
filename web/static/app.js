@@ -20,6 +20,8 @@ const state = {
   objectsSignature: null,
   itemsHoverCapable: true,
   itemsMode: "orb",
+  timelineSignature: null,
+  timelineEntered: false,
   itemsSwitching: false,
   itemsSwitchTimer: 0,
   itemsEnteringTimer: 0,
@@ -1326,6 +1328,12 @@ function initItems() {
   state.itemsMode = "orb";
   updateItemsModeButtons("orb");
   state.itemsOrb?.setActive(true);
+  // 首屏动画结束后移除类名，避免球体/平铺切换时重播。
+  window.setTimeout(() => {
+    document.querySelectorAll(".items-page .wm-enter").forEach((el) => {
+      el.classList.remove("wm-enter");
+    });
+  }, 850);
 }
 
 async function loadObjects() {
@@ -1368,61 +1376,328 @@ async function loadObjects() {
 }
 
 // ---------------- 观察时间线 ----------------
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function captureDateParts(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(
+    String(value || "")
+  );
+  if (!match) return null;
+  return {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+    hour: Number(match[4] || 0),
+    minute: Number(match[5] || 0),
+    second: Number(match[6] || 0),
+  };
+}
+
+function captureTimestamp(capture) {
+  if (!capture || capture.time_synced === false) return Number.NEGATIVE_INFINITY;
+  const parts = captureDateParts(capture.captured_at_local || capture.captured_at_utc);
+  if (!parts) return Number.NEGATIVE_INFINITY;
+  return new Date(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second).getTime();
+}
+
+function timelineDayKey(capture) {
+  if (!capture || capture.time_synced === false) return "unsynced";
+  const parts = captureDateParts(capture.captured_at_local || capture.captured_at_utc);
+  if (!parts) return "unsynced";
+  return `${parts.year}-${pad2(parts.month)}-${pad2(parts.day)}`;
+}
+
+function timelineDayMeta(key) {
+  if (key === "unsynced") return { main: "时间未同步", sub: "设备时间不可用" };
+  const parts = captureDateParts(key);
+  if (!parts) return { main: "时间未知", sub: "日期不可用" };
+  const date = new Date(parts.year, parts.month - 1, parts.day);
+  const weekday = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][date.getDay()];
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.round((today.getTime() - date.getTime()) / 86400000);
+  if (diff === 0) return { main: "今天", sub: `${parts.month}月${parts.day}日 · ${weekday}` };
+  if (diff === 1) return { main: "昨天", sub: `${parts.month}月${parts.day}日 · ${weekday}` };
+  return { main: `${parts.month}月${parts.day}日`, sub: `${parts.year} · ${weekday}` };
+}
+
+function timelineClock(capture) {
+  if (!capture || capture.time_synced === false) {
+    return { text: "时间未同步", iso: "", unsynced: true };
+  }
+  const parts = captureDateParts(capture.captured_at_local || capture.captured_at_utc);
+  if (!parts) return { text: "时间未知", iso: "", unsynced: true };
+  return {
+    text: `${pad2(parts.hour)}:${pad2(parts.minute)}:${pad2(parts.second)}`,
+    iso: capture.captured_at_utc || capture.captured_at_local || "",
+    unsynced: false,
+  };
+}
+
+function timelineSourceBadge(kind) {
+  const key = ["esp32", "replay", "upload", "webcam"].includes(kind) ? kind : "unknown";
+  const text = {
+    esp32: "真机 · ESP32",
+    replay: "图片回放",
+    upload: "上传图片",
+    webcam: "摄像头",
+    unknown: "未知来源",
+  }[key];
+  const title = key === "esp32" ? "真实设备采集" : `采集来源：${text}`;
+  return `<span class="source-badge src-${key}" title="${title}">${text}</span>`;
+}
+
+function timelineEvidenceBoxes(detections) {
+  return (detections || [])
+    .map((detection) => {
+      const box = detection.bbox_norm;
+      if (!Array.isArray(box) || box.length < 4) return "";
+      const x1 = Math.max(0, Math.min(1, Number(box[0]) || 0));
+      const y1 = Math.max(0, Math.min(1, Number(box[1]) || 0));
+      const x2 = Math.max(0, Math.min(1, Number(box[2]) || 0));
+      const y2 = Math.max(0, Math.min(1, Number(box[3]) || 0));
+      const width = Math.max(0.01, x2 - x1);
+      const height = Math.max(0.01, y2 - y1);
+      const ambiguous = detection.link_status === "ambiguous" ? " is-ambiguous" : "";
+      const label = `${detection.class_zh || "物品"} ${Math.round((Number(detection.confidence) || 0) * 100)}%`;
+      return `<span class="timeline-evidence-box${ambiguous}" style="left:${(x1 * 100).toFixed(2)}%;top:${(y1 * 100).toFixed(2)}%;width:${(width * 100).toFixed(2)}%;height:${(height * 100).toFixed(2)}%" title="${escapeHtml(label)}"></span>`;
+    })
+    .join("");
+}
+
+function timelineDetectionList(detections) {
+  if (!detections?.length) {
+    return '<p class="timeline-detail-empty">这一帧没有识别到词表内物品。</p>';
+  }
+  return `<ul class="timeline-detections">${detections
+    .map((detection) => {
+      const label = escapeHtml(detection.class_zh || "物品");
+      const meta = [
+        detection.region || "未分区",
+        linkStatusLabel(detection.link_status),
+        detection.link_score != null ? `关联分 ${Number(detection.link_score).toFixed(2)}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      const thumb = detection.crop_url
+        ? `<img class="timeline-detection-thumb" src="${escapeHtml(detection.crop_url)}" alt="" loading="lazy" decoding="async" />`
+        : '<span class="timeline-detection-thumb is-empty" aria-hidden="true"></span>';
+      return `<li class="timeline-detection">
+        ${thumb}
+        <span class="timeline-detection-copy">
+          <strong>${label}</strong>
+          <span>${escapeHtml(meta)}</span>
+        </span>
+        <span class="timeline-detection-score">${Math.round((Number(detection.confidence) || 0) * 100)}%</span>
+      </li>`;
+    })
+    .join("")}</ul>`;
+}
+
+function buildTimelineDetail(capture, detail) {
+  const detections = detail?.detections || [];
+  const media = detail?.capture || {};
+  const width = Number(media.width || capture.width || 0);
+  const height = Number(media.height || capture.height || 0);
+  const imageUrl = capture.image_url || media.image_url || capture.thumbnail_url || "";
+  const count = capture.detections_count ?? detections.length;
+  const boxes = imageUrl ? timelineEvidenceBoxes(detections) : "";
+  const note = `抓拍 #${capture.id} · ${width && height ? `${width} × ${height}` : "本地图像"}`;
+  const image = imageUrl
+    ? `<img class="timeline-evidence-img" data-src="${escapeHtml(imageUrl)}" alt="抓拍 #${capture.id} 的完整画面" loading="lazy" decoding="async" />`
+    : '<span class="timeline-evidence-empty">图像不可用</span>';
+  return `<div class="timeline-detail-inner">
+    <div class="timeline-evidence">
+      <div class="timeline-evidence-frame">
+        ${image}
+        <div class="timeline-evidence-boxes" aria-hidden="true">${boxes}</div>
+      </div>
+      <div class="timeline-evidence-caption">
+        <span>抓拍证据</span>
+        <span>${width && height ? `${width} × ${height}` : "本地图像"}</span>
+      </div>
+    </div>
+    <div class="timeline-detail-body">
+      <div class="timeline-detail-head">
+        <strong>识别证据</strong>
+        <span>${count} 个物品</span>
+      </div>
+      ${timelineDetectionList(detections)}
+      <div class="timeline-detail-actions">
+        <span class="timeline-detail-note">${escapeHtml(note)}</span>
+        <a class="timeline-detail-link" href="/observe?capture=${encodeURIComponent(capture.id)}">打开完整观察 →</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildTimelineEvent(capture, detail, isLatest, delay, enter) {
+  const detections = detail?.detections || [];
+  const labels = [...new Set(detections.map((detection) => detection.class_zh).filter(Boolean))];
+  const zones = [...new Set(detections.map((detection) => detection.region).filter(Boolean))];
+  const count = capture.detections_count ?? detections.length;
+  const clock = timelineClock(capture);
+  const objects = labels.length
+    ? `${labels
+        .slice(0, 3)
+        .map((label) => `<span class="timeline-object">${escapeHtml(label)}</span>`)
+        .join("")}${
+        labels.length > 3 ? `<span class="timeline-object is-more">+${labels.length - 3}</span>` : ""
+      }`
+    : '<span class="timeline-object is-empty">无识别结果</span>';
+  const summary = labels.length
+    ? `${count} 个物品${zones.length ? ` · ${zones.slice(0, 2).join(" / ")}` : ""}`
+    : "这一帧没有识别到词表内物品";
+  const thumb = capture.thumbnail_url
+    ? `<img class="timeline-thumb" src="${escapeHtml(capture.thumbnail_url)}" alt="抓拍 #${capture.id} 缩略图" loading="lazy" decoding="async" />`
+    : '<span class="timeline-thumb-empty">无图</span>';
+  const event = document.createElement("li");
+  event.className = `timeline-event${isLatest ? " is-latest" : ""}${enter ? " is-entering" : ""}`;
+  if (enter) event.style.setProperty("--enter-delay", `${delay}ms`);
+  event.innerHTML = `
+    <span class="timeline-node" aria-hidden="true"></span>
+    <div class="timeline-entry">
+      <button class="timeline-event-card" type="button" aria-expanded="false" aria-controls="timeline-detail-${capture.id}">
+        <span class="timeline-thumb-wrap">
+          ${thumb}
+          ${isLatest ? '<span class="timeline-latest-mark">最新</span>' : ""}
+        </span>
+        <span class="timeline-event-body">
+          <span class="timeline-event-top">
+            <time class="timeline-clock${clock.unsynced ? " is-unsynced" : ""}"${
+              clock.iso ? ` datetime="${escapeHtml(clock.iso)}"` : ""
+            }>${escapeHtml(clock.text)}</time>
+            ${timelineSourceBadge(capture.source_kind)}
+            <span class="timeline-capture-id">#${capture.id}</span>
+          </span>
+          <span class="timeline-objects">${objects}</span>
+          <span class="timeline-event-summary">${escapeHtml(summary)}</span>
+        </span>
+        <span class="timeline-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div class="timeline-detail" id="timeline-detail-${capture.id}" role="region" aria-label="抓拍 #${capture.id} 识别证据" hidden>
+        ${buildTimelineDetail(capture, detail)}
+      </div>
+    </div>`;
+  event.querySelector(".timeline-event-card")?.addEventListener("click", (clickEvent) => {
+    toggleTimelineEvent(clickEvent.currentTarget);
+  });
+  return event;
+}
+
+function closeTimelineEvent(event) {
+  const button = event?.querySelector(".timeline-event-card");
+  const detail = event?.querySelector(".timeline-detail");
+  if (!button || !detail) return;
+  button.setAttribute("aria-expanded", "false");
+  event.classList.remove("is-open");
+  detail.hidden = true;
+}
+
+function toggleTimelineEvent(button) {
+  const event = button?.closest(".timeline-event");
+  const detail = event?.querySelector(".timeline-detail");
+  if (!event || !detail) return;
+  const opening = button.getAttribute("aria-expanded") !== "true";
+  if (opening) {
+    document.querySelectorAll("#timeline .timeline-event.is-open").forEach((other) => {
+      if (other !== event) closeTimelineEvent(other);
+    });
+  }
+  button.setAttribute("aria-expanded", String(opening));
+  event.classList.toggle("is-open", opening);
+  detail.hidden = !opening;
+  if (opening) {
+    detail.querySelectorAll("img[data-src]").forEach((image) => {
+      if (!image.getAttribute("src")) image.setAttribute("src", image.dataset.src);
+    });
+  }
+}
+
+function renderTimeline(captures, details) {
+  const box = $("timeline");
+  if (!box) return;
+  const detailById = new Map();
+  captures.forEach((capture, index) => detailById.set(capture.id, details[index] || null));
+  const ordered = [...captures].sort((a, b) => captureTimestamp(b) - captureTimestamp(a));
+  const groups = new Map();
+  ordered.forEach((capture) => {
+    const key = timelineDayKey(capture);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(capture);
+  });
+  const enter = !state.timelineEntered;
+  const fragment = document.createDocumentFragment();
+  let order = 0;
+  groups.forEach((items, key) => {
+    const meta = timelineDayMeta(key);
+    const section = document.createElement("section");
+    section.className = "timeline-day";
+    const head = document.createElement("h2");
+    head.className = `timeline-day-head${enter ? " is-entering" : ""}`;
+    if (enter) head.style.setProperty("--enter-delay", `${100 + order * 55}ms`);
+    head.innerHTML = `<span class="timeline-day-main">${escapeHtml(meta.main)}</span>
+      <span class="timeline-day-sub">${escapeHtml(meta.sub)}</span>
+      <span class="timeline-day-count">${items.length} 次观察</span>`;
+    const list = document.createElement("ol");
+    list.className = "timeline-events";
+    items.forEach((capture) => {
+      const isLatest = order === 0;
+      list.appendChild(buildTimelineEvent(capture, detailById.get(capture.id), isLatest, 140 + order * 55, enter));
+      order += 1;
+    });
+    section.append(head, list);
+    fragment.appendChild(section);
+  });
+  box.replaceChildren(fragment);
+  state.timelineEntered = true;
+}
+
+function renderTimelineEmpty(message, detail) {
+  const box = $("timeline");
+  if (!box) return;
+  box.innerHTML = `<div class="timeline-empty">
+    <span class="timeline-empty-mark" aria-hidden="true"></span>
+    <div><p>${escapeHtml(message)}</p><span>${escapeHtml(detail)}</span></div>
+  </div>`;
+}
+
 async function loadTimeline() {
   const data = await api("/api/captures?limit=12");
   const box = $("timeline");
   if (!box) return;
   if (!data.ok) {
-    box.innerHTML = '<p class="empty-note">读取历史抓拍失败，请确认本地服务正常。</p>';
+    state.timelineSignature = null;
+    renderTimelineEmpty("读取历史抓拍失败", "请确认本地服务正常后稍后重试。");
     return;
   }
-  const caps = data.captures || [];
-  setText("timeline-count", `${caps.length} 帧`);
-  if (!caps.length) {
-    box.innerHTML = '<p class="empty-note">还没有抓拍帧。先到“最近观察”抓拍一张。</p>';
+  const captures = data.captures || [];
+  setText("timeline-count", `${captures.length} 帧`);
+  if (!captures.length) {
+    state.timelineSignature = "";
+    renderTimelineEmpty("还没有抓拍记录", "先到“最近观察”抓拍一张，活动记录会自动出现在这里。");
     return;
   }
 
+  const signature = captures
+    .map((capture) => `${capture.id}:${capture.detections_count ?? 0}:${capture.thumbnail_url || ""}`)
+    .join("|");
+  if (signature === state.timelineSignature) return;
+
   const details = await Promise.all(
-    caps.map(async (c) => {
+    captures.map(async (capture) => {
       try {
-        const d = await api(`/api/captures/${c.id}`);
-        return d.ok ? d : null;
-      } catch (e) {
+        const detail = await api(`/api/captures/${capture.id}`);
+        return detail.ok ? detail : null;
+      } catch (error) {
         return null;
       }
     })
   );
-
-  box.innerHTML = "";
-  caps.forEach((c, i) => {
-    const detail = details[i];
-    const detections = detail?.detections || [];
-    const labels = [...new Set(detections.map((d) => d.class_zh).filter(Boolean))];
-    const when = c.time_synced ? c.captured_at_local || c.captured_at_utc : "时间未同步";
-    const summary = labels.length
-      ? `识别：${labels.slice(0, 4).join("、")}${labels.length > 4 ? " 等" : ""}`
-      : "这一帧没有识别到词表内物品";
-    const card = document.createElement("a");
-    card.className = "timeline-card";
-    card.href = `/observe?capture=${encodeURIComponent(c.id)}`;
-    card.innerHTML = `
-      <img class="timeline-thumb" alt="抓拍 #${c.id}" src="${escapeHtml(c.thumbnail_url || "")}" />
-      <div class="timeline-main">
-        <div class="timeline-when">
-          ${escapeHtml(when || "时间未知")}
-          ${sourceBadge(c.source_kind)}
-          ${c.time_synced === false ? '<span class="badge warn">时间未同步</span>' : ""}
-        </div>
-        <div class="timeline-summary">${escapeHtml(summary)}</div>
-        <div class="timeline-badges">
-          <span>抓拍 #${c.id}</span>
-          <span>${c.detections_count ?? detections.length} 个物品</span>
-          <span>查看观察详情 →</span>
-        </div>
-      </div>`;
-    box.appendChild(card);
-  });
+  state.timelineSignature = signature;
+  renderTimeline(captures, details);
 }
 
 // ---------------- 页面初始化 ----------------
@@ -1452,8 +1727,34 @@ function restartSearchEntrance() {
   });
 }
 
+function restartWarmEntrance() {
+  document.querySelectorAll(".app-main .wm-enter").forEach((el) => {
+    el.style.animation = "none";
+    void el.offsetWidth;
+    el.style.animation = "";
+  });
+}
+
+function restartTimelineEntrance() {
+  const nodes = document.querySelectorAll("#timeline .timeline-day-head, #timeline .timeline-event");
+  nodes.forEach((el) => {
+    el.style.animation = "none";
+  });
+  void document.body.offsetWidth;
+  nodes.forEach((el) => {
+    el.style.animation = "";
+  });
+}
+
 window.addEventListener("pageshow", (event) => {
-  if (event.persisted && PAGE === "search") restartSearchEntrance();
+  if (!event.persisted) return;
+  if (PAGE === "search") {
+    restartSearchEntrance();
+    return;
+  }
+  restartWarmEntrance();
+  if (PAGE === "timeline") restartTimelineEntrance();
+  if (PAGE === "items" && state.itemsMode === "grid") animateGridRows();
 });
 
 async function loadPageData() {

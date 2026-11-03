@@ -39,21 +39,16 @@
     </div>
   </header>
 
-  <main class="app-page">
-    <header class="page-heading wm-enter" style="--enter-delay: 0ms">
+  <main class="app-page timeline-page">
+    <header class="page-heading timeline-heading wm-enter" style="--enter-delay: 0ms">
       <div>
         <p class="page-kicker">FINDY MEMORY / TIMELINE</p>
         <h1>观察时间线</h1>
-        <p class="page-subtitle">按时间回看每一帧抓拍和当时识别到的物品，点击进入对应观察详情。</p>
       </div>
       <div class="page-meta"><span>最近抓拍</span><strong id="timeline-count">—</strong></div>
     </header>
 
-    <section class="card">
-      <div class="card-head">
-        <h2>历史抓拍</h2>
-        <span class="muted small">最近 12 帧 · 点击查看观察详情</span>
-      </div>
+    <section class="timeline-board" aria-label="观察活动时间线">
       <div class="timeline" id="timeline">
         <p class="empty-note">正在读取历史抓拍…</p>
       </div>
