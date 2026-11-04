@@ -28,6 +28,15 @@ const state = {
   gridEntrancePending: false,
   gridAnimationTimer: 0,
   itemsOrb: null,
+  homeObjects: [],
+  homeCaptureId: null,
+  searchBase: [],
+  searchItems: [],
+  searchCategory: "all",
+  searchRange: "all",
+  searchQuery: "",
+  itemDetailTrackId: null,
+  itemDetailReturnFocus: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -89,6 +98,49 @@ function sourceBadge(kind) {
   return `<span class="source-badge src-${key}">${sourceLabel(key)}</span>`;
 }
 
+function sourceName(kind) {
+  return {
+    esp32: "ESP32 真机",
+    replay: "图片回放",
+    upload: "上传图片",
+    webcam: "本机摄像头",
+    unknown: "未知来源",
+  }[kind] || "未知来源";
+}
+
+function splitLocalTime(value) {
+  const parts = captureDateParts(value);
+  if (!parts) return null;
+  return parts;
+}
+
+function localDateLabel(value) {
+  const parts = splitLocalTime(value);
+  if (!parts) return "时间未知";
+  return `${parts.month}月${parts.day}日 ${pad2(parts.hour)}:${pad2(parts.minute)}`;
+}
+
+function localShortDate(value) {
+  const parts = splitLocalTime(value);
+  if (!parts) return "时间未知";
+  return `${parts.month}月${parts.day}日`;
+}
+
+function categoryFor(item) {
+  if (!item) return "其他";
+  if (item.class_zh) return item.class_zh;
+  const known = state.status?.classes?.map((c) => c.zh).filter(Boolean) || [];
+  return known.find((name) => String(item.label || "").includes(name)) || "其他";
+}
+
+function objectSearchHref(label) {
+  return `/search?q=${encodeURIComponent(`${label}在哪？`)}&autorun=1`;
+}
+
+function objectImage(object) {
+  return object?.evidence_crop_url || object?.crop_url || "";
+}
+
 function linkStatusLabel(status) {
   return {
     ambiguous: "关联待确认",
@@ -101,6 +153,78 @@ function captureTime(cap) {
   if (!cap) return "—";
   if (!cap.time_synced) return "时间未同步";
   return cap.captured_at_local || cap.captured_at_utc || "时间未知";
+}
+
+function observeTimeLabel(cap) {
+  if (!cap) return "正在读取…";
+  if (!cap.time_synced) return "时间未同步";
+  const parts = splitLocalTime(cap.captured_at_local || cap.captured_at_utc);
+  if (!parts) return "时间未知";
+  const now = new Date();
+  const sameDay =
+    now.getFullYear() === parts.year &&
+    now.getMonth() + 1 === parts.month &&
+    now.getDate() === parts.day;
+  const clock = `${pad2(parts.hour)}:${pad2(parts.minute)}:${pad2(parts.second)}`;
+  return sameDay ? `今天 ${clock}` : `${parts.month}月${parts.day}日 ${clock}`;
+}
+
+function renderObserveFeature(cap, detections) {
+  const list = $("observe-detected-list");
+  const count = $("observe-detected-count");
+  const time = $("observe-time");
+  const zone = $("observe-zone");
+  const id = $("observe-capture-id");
+  const source = $("observe-feature-source");
+
+  if (!cap) {
+    if (list) list.innerHTML = '<span class="muted small">还没有检测结果。</span>';
+    if (count) count.textContent = "—";
+    if (time) time.textContent = "还没有抓拍记录";
+    if (zone) zone.textContent = "点击“立即抓拍”开始记录";
+    if (id) id.textContent = "—";
+    if (source) {
+      source.className = "source-badge src-unknown";
+      source.textContent = "未知来源";
+    }
+    return;
+  }
+
+  if (time) time.textContent = observeTimeLabel(cap);
+  if (zone) {
+    const zones = [...new Set((detections || []).map((d) => d.region).filter(Boolean))];
+    zone.textContent = zones.length ? `${zones.slice(0, 2).join(" / ")} · 最近一次观察` : "最近一次观察";
+  }
+  if (id) id.textContent = `#${cap.id}`;
+  if (count) count.textContent = `${(detections || []).length} 个`;
+  if (source) {
+    const kind = ["esp32", "replay", "upload", "webcam"].includes(cap.source_kind)
+      ? cap.source_kind
+      : "unknown";
+    source.className = `source-badge src-${kind}`;
+    source.textContent = sourceName(kind);
+  }
+  if (!list) return;
+  if (!detections?.length) {
+    list.innerHTML = '<span class="muted small">这一帧没有识别到词表内物品。</span>';
+    return;
+  }
+  list.innerHTML = detections
+    .slice(0, 4)
+    .map((detection) => {
+      const label = escapeHtml(detection.class_zh || "物品");
+      const thumb = detection.crop_url
+        ? `<img src="${escapeHtml(detection.crop_url)}" alt="" loading="lazy" decoding="async" />`
+        : '<span class="is-empty">无图</span>';
+      return `<span class="observe-object">
+        ${thumb}
+        <span class="observe-object-copy">
+          <strong>${label}</strong>
+          <span>${escapeHtml(detection.region || "未分区")} · ${Math.round(Number(detection.confidence || 0) * 100)}%</span>
+        </span>
+      </span>`;
+    })
+    .join("");
 }
 
 function initNav() {
@@ -121,8 +245,23 @@ async function loadStatus() {
     state.warmupDone = !!data.warmup_done;
     state.autoRunning = !!(data.service && data.service.running);
 
+    const deviceChip = $("header-device");
+    if (deviceChip) {
+      deviceChip.classList.remove("is-warn");
+      const label = deviceChip.querySelector("span");
+      if (label) label.textContent = "本机在线";
+    }
+
     const stats = data.pipeline?.stats || {};
     setPill("pill-db", `数据库 · ${stats.captures ?? 0} 帧 / ${stats.active_tracks ?? 0} 物品`, "ok");
+
+    const sourceKind = data.source?.type || "unknown";
+    setText(
+      "home-source-state",
+      { replay: "图片回放", esp32: "ESP32 真机", webcam: "本机摄像头", upload: "上传图片" }[sourceKind] ||
+        "本地采集"
+    );
+    setText("home-source-note", `${stats.captures ?? 0} 帧 · ${stats.active_tracks ?? 0} 件物品`);
 
     const det = data.pipeline?.detector || {};
     const emb = data.pipeline?.embedder || {};
@@ -170,6 +309,14 @@ async function loadStatus() {
     if (input && examples[0]) input.placeholder = `例如：${examples[0]}`;
   } catch (err) {
     setPill("pill-db", "服务不可用", "bad");
+    const deviceChip = $("header-device");
+    if (deviceChip) {
+      deviceChip.classList.add("is-warn");
+      const label = deviceChip.querySelector("span");
+      if (label) label.textContent = "本机离线";
+    }
+    setText("home-source-state", "服务离线");
+    setText("home-source-note", "请检查本地服务");
   }
 }
 
@@ -357,6 +504,7 @@ function showEmptyCapture() {
   }
   const list = $("detections-list");
   if (list) list.innerHTML = '<p class="empty-note">还没有检测结果。</p>';
+  renderObserveFeature(null, []);
   closeSummary();
 }
 
@@ -403,6 +551,7 @@ async function showCapture(captureId) {
 
   renderDetectionList(detections);
   drawDetections(detections);
+  renderObserveFeature(cap, detections);
   return true;
 }
 
@@ -443,6 +592,7 @@ async function doCapture() {
         (data.warnings?.length ? ` · ${data.warnings.join("；")}` : "")
     );
     await Promise.all([showCapture(data.capture_id), loadStatus()]);
+    await loadObserveRecent();
     toast("抓拍完成，已写入本地记忆", true);
   } catch (err) {
     toast(`抓拍失败：${err}`);
@@ -467,6 +617,190 @@ async function toggleAuto() {
 }
 
 // ---------------- 找找物品 ----------------
+function normalizeSearchItem(r, fallbackLabel = "") {
+  const label = r.label || r.class_zh || fallbackLabel || "物品";
+  return {
+    label,
+    category: categoryFor({ ...r, label }),
+    zone: r.zone || "未分区",
+    time_local: r.time_local || null,
+    time_synced: r.time_synced !== false,
+    time_ago: r.time_ago || "",
+    source_kind: r.source_kind || "unknown",
+    confidence: Number(r.confidence || 0),
+    capture_id: r.capture_id || null,
+    track_id: r.track_id || null,
+    crop_url: r.crop_url || r.evidence_crop_url || "",
+    link_status: r.link_status || "matched",
+    link_score: r.link_score,
+    sightings: r.sightings,
+    uncertainty: r.uncertainty || "",
+  };
+}
+
+function searchTimestamp(item) {
+  if (!item.time_local) return Number.NEGATIVE_INFINITY;
+  const parts = splitLocalTime(item.time_local);
+  if (!parts) return Number.NEGATIVE_INFINITY;
+  return new Date(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second).getTime();
+}
+
+function searchRangeMatches(item) {
+  if (state.searchRange === "all") return true;
+  if (!item.time_synced) return false;
+  const timestamp = searchTimestamp(item);
+  if (!Number.isFinite(timestamp)) return false;
+  const days = state.searchRange === "7" ? 7 : 30;
+  return Date.now() - timestamp <= days * 86400000;
+}
+
+function renderFilterCategories() {
+  const box = $("filter-categories");
+  if (!box) return;
+  const source = state.searchQuery ? state.searchItems : state.searchBase;
+  const counts = new Map();
+  source.forEach((object) => {
+    const category = object.category || categoryFor(object);
+    counts.set(category, (counts.get(category) || 0) + 1);
+  });
+  const categories = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const allActive = state.searchCategory === "all" ? " is-active" : "";
+  box.innerHTML = `
+    <button class="filter-btn${allActive}" type="button" data-filter-category="all">
+      <span>全部</span><span class="filter-count">${source.length}</span>
+    </button>
+    ${categories
+      .map(
+        ([category, count]) => `<button class="filter-btn${
+          state.searchCategory === category ? " is-active" : ""
+        }" type="button" data-filter-category="${escapeHtml(category)}">
+          <span>${escapeHtml(category)}</span><span class="filter-count">${count}</span>
+        </button>`
+      )
+      .join("")}`;
+}
+
+function updateFilterButtonState() {
+  document.querySelectorAll("[data-filter-category]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.filterCategory === state.searchCategory);
+  });
+  document.querySelectorAll("[data-filter-range]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.filterRange === state.searchRange);
+  });
+}
+
+function resultLink(item, label = "查看详情") {
+  if (!item.capture_id) {
+    return `<span class="result-link" aria-disabled="true">${label}</span>`;
+  }
+  return `<a class="result-link" href="/observe?capture=${encodeURIComponent(item.capture_id)}">${label} <span aria-hidden="true">›</span></a>`;
+}
+
+function buildSearchCard(item) {
+  const label = escapeHtml(item.label);
+  const category = escapeHtml(item.category || "物品");
+  const image = item.crop_url
+    ? `<img src="${escapeHtml(item.crop_url)}" alt="${label}" loading="lazy" decoding="async" data-fallback-class="thumb-empty" data-fallback-text="无图" />`
+    : '<span class="thumb-empty">无图</span>';
+  const timeLabel = item.time_synced === false ? "时间未同步" : localDateLabel(item.time_local);
+  const relation =
+    item.link_status === "ambiguous"
+      ? "关联待确认"
+      : item.link_status === "new"
+        ? "新轨迹"
+        : "已关联到我的物品";
+  const evidence =
+    item.sightings != null
+      ? `识别到${category}，${relation} · 共 ${item.sightings} 次观测`
+      : `识别到${category}，${relation}`;
+  const media = item.capture_id
+    ? `<a class="thumb" href="/observe?capture=${encodeURIComponent(item.capture_id)}" aria-label="查看${label}的观察详情">${image}</a>`
+    : `<span class="thumb">${image}</span>`;
+  return `<article class="result" data-category="${category}">
+    ${media}
+    <div class="result-copy">
+      <div class="result-top">
+        <span class="result-label">${category}</span>
+        ${sourceBadge(item.source_kind)}
+      </div>
+      <h3>${timeLabel}</h3>
+      <span class="result-meta-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 21s6-5.3 6-10a6 6 0 1 0-12 0c0 4.7 6 10 6 10Z"/><circle cx="12" cy="11" r="2"/></svg>
+        ${escapeHtml(item.zone)}
+      </span>
+      <span class="result-evidence">${escapeHtml(evidence)}</span>
+    </div>
+    ${resultLink(item)}
+  </article>`;
+}
+
+function renderSearchItems() {
+  const results = $("results");
+  if (!results) return;
+  const visible = state.searchItems.filter(
+    (item) =>
+      (state.searchCategory === "all" || item.category === state.searchCategory) &&
+      searchRangeMatches(item)
+  );
+  updateFilterButtonState();
+  const label = $("result-count");
+  if (label) {
+    label.textContent = state.searchQuery
+      ? `找到 ${visible.length} 条相关结果`
+      : `最近记住的 ${visible.length} 件物品`;
+  }
+  if (!visible.length) {
+    results.innerHTML =
+      '<p class="search-empty">当前筛选条件下没有记录。可以放宽物品类型或时间范围后再试。</p>';
+    return;
+  }
+  results.innerHTML = visible.map(buildSearchCard).join("");
+}
+
+async function loadSearchBase() {
+  const results = $("results");
+  if (results) results.innerHTML = '<p class="empty-note">正在读取本地物品库…</p>';
+  try {
+    const data = await api("/api/objects");
+    if (!data.ok) throw new Error(data.error || "读取失败");
+    state.searchBase = data.objects || [];
+    state.searchItems = state.searchBase.map((object) => normalizeSearchItem(object));
+    state.searchQuery = "";
+    state.searchCategory = "all";
+    state.searchRange = "all";
+    const heroImage = $("search-hero-img");
+    const heroArt = document.querySelector(".search-hero-art");
+    const heroSource = state.searchBase.find((object) => object.evidence_image_url);
+    if (heroImage && heroSource) {
+      heroImage.src = heroSource.evidence_image_url;
+      heroImage.alt = "最近一次真实抓拍";
+      heroImage.hidden = false;
+      heroImage.addEventListener(
+        "error",
+        () => {
+          heroImage.hidden = true;
+          if (heroArt) heroArt.hidden = true;
+        },
+        { once: true }
+      );
+    } else if (heroArt) {
+      heroArt.hidden = true;
+    }
+    const answer = $("answer");
+    if (answer) {
+      answer.classList.add("hidden");
+      answer.textContent = "";
+    }
+    setText("query-intent", "");
+    renderFilterCategories();
+    renderSearchItems();
+  } catch (error) {
+    if (results) {
+      results.innerHTML = '<p class="search-empty">读取本地物品库失败，请确认本地服务正常。</p>';
+    }
+  }
+}
+
 async function runQuery(text) {
   const input = $("query-input");
   const q = ((text ?? input?.value) || "").trim();
@@ -478,7 +812,7 @@ async function runQuery(text) {
     answer.classList.remove("hidden", "notfound", "help");
     answer.textContent = "正在检索本地记忆…";
   }
-  if (results) results.innerHTML = "";
+  if (results) results.innerHTML = '<p class="empty-note">正在检索本地记忆…</p>';
   try {
     const data = await api("/api/query", {
       method: "POST",
@@ -489,6 +823,7 @@ async function runQuery(text) {
     renderAnswer(data);
   } catch (err) {
     if (answer) answer.textContent = `查询失败：${err}`;
+    if (results) results.innerHTML = '<p class="search-empty">查询失败，请确认本地服务正常。</p>';
   }
 }
 
@@ -516,97 +851,24 @@ function renderAnswer(data) {
     answer.after(nb);
   }
 
-  const results = $("results");
-  if (!results) return;
-  results.innerHTML = "";
+  const items = [];
   (data.results || []).forEach((r) => {
     if (r.events) {
-      renderEventResult(r);
+      r.events.forEach((event) => items.push(normalizeSearchItem(event, r.label || r.class_zh)));
       return;
     }
     if (r.items) {
-      r.items.forEach((item) => {
-        results.appendChild(
-          buildResultCard({
-            label: item.class_zh,
-            class_zh: item.class_zh,
-            zone: item.zone,
-            time_local: null,
-            time_synced: r.time_synced,
-            confidence: item.confidence,
-            crop_url: item.crop_url,
-            capture_id: r.capture_id,
-            detection_id: item.detection_id,
-            source_kind: item.source_kind || r.source_kind,
-            link_status: "matched",
-            sightings: null,
-          })
-        );
-      });
+      r.items.forEach((item) => items.push(normalizeSearchItem(item, r.label || r.class_zh)));
       return;
     }
-    results.appendChild(buildResultCard(r));
+    items.push(normalizeSearchItem(r));
   });
-}
-
-function resultThumb(url, alt) {
-  if (!url) return '<span class="thumb-empty">无图</span>';
-  return `<img alt="${escapeHtml(alt)}" src="${escapeHtml(url)}" />`;
-}
-
-function buildResultCard(r) {
-  const card = document.createElement(r.capture_id ? "a" : "div");
-  card.className = "result";
-  if (r.capture_id) card.href = `/observe?capture=${encodeURIComponent(r.capture_id)}`;
-
-  const label = r.label || r.class_zh || "物品";
-  const statusBadge =
-    r.link_status === "ambiguous"
-      ? '<span class="badge warn">关联待确认</span>'
-      : r.link_status === "new"
-        ? '<span class="badge warn">新轨迹</span>'
-        : '<span class="badge">已关联</span>';
-  const synced =
-    r.time_synced === false
-      ? '<span class="badge warn">时间未同步</span>'
-      : `<span class="badge dim">${escapeHtml(r.time_local || "时间未知")}</span>`;
-
-  card.innerHTML = `
-    <div class="thumb">${resultThumb(r.crop_url || r.evidence_crop_url, label)}</div>
-    <div class="meta">
-      <strong>${escapeHtml(label)}</strong>
-      <div class="row">${statusBadge}${sourceBadge(r.source_kind)}${synced}</div>
-      <div class="row">
-        <span class="badge dim">置信度 ${Math.round((r.confidence || 0) * 100)}%</span>
-        <span class="badge dim">区域 ${escapeHtml(r.zone || "未分区")}</span>
-      </div>
-      ${r.time_ago ? `<div>${escapeHtml(r.time_ago)}</div>` : ""}
-      ${r.sightings != null ? `<div>共记录 ${r.sightings} 次</div>` : ""}
-      ${r.link_score != null ? `<div>外观关联相似度 ${Number(r.link_score).toFixed(2)}</div>` : ""}
-      ${r.uncertainty ? `<div class="note">⚠ ${escapeHtml(r.uncertainty)}</div>` : ""}
-    </div>`;
-  return card;
-}
-
-function renderEventResult(r) {
-  const results = $("results");
-  if (!results) return;
-  (r.events || []).forEach((e) => {
-    const card = document.createElement(e.capture_id ? "a" : "div");
-    card.className = "result";
-    if (e.capture_id) card.href = `/observe?capture=${encodeURIComponent(e.capture_id)}`;
-    card.innerHTML = `
-      <div class="thumb">${resultThumb(e.evidence_crop_url, "证据")}</div>
-      <div class="meta">
-        <strong>${escapeHtml(r.label || r.class_zh || "物品")} · ${escapeHtml(e.zone || "未分区")}</strong>
-        <div class="row">
-          ${sourceBadge(e.source_kind || r.source_kind)}
-          <span class="badge dim">${escapeHtml(e.time_synced ? e.time_local : "时间未同步")}</span>
-          <span class="badge dim">置信度 ${Math.round((e.confidence || 0) * 100)}%</span>
-        </div>
-      </div>`;
-    results.appendChild(card);
-  });
+  state.searchItems = items;
+  state.searchQuery = data.query || "";
+  state.searchCategory = "all";
+  state.searchRange = "all";
+  renderFilterCategories();
+  renderSearchItems();
 }
 
 // ---------------- 我的物品 ----------------
@@ -1104,6 +1366,8 @@ function renderOrb(objects) {
       img.alt = "";
       img.decoding = "async";
       img.draggable = false;
+      img.dataset.fallbackClass = "tile-no-image";
+      img.dataset.fallbackText = "无图";
       face.appendChild(img);
     } else {
       face.textContent = label.slice(0, 1) || "物";
@@ -1119,6 +1383,7 @@ function renderObjectGrid(objects) {
   const grid = $("objects");
   if (!grid) return;
   grid.innerHTML = "";
+  setText("grid-count", `（${objects.length}）`);
   if (!objects.length) {
     grid.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
     return;
@@ -1128,44 +1393,32 @@ function renderObjectGrid(objects) {
     const when = objectWhen(o);
     const zone = o.zone || "未分区";
     const sightings = o.sightings ?? 0;
-    const queryHref = `/search?q=${encodeURIComponent(`${label}在哪？`)}&autorun=1`;
-    const tile = document.createElement("div");
+    const tile = document.createElement("button");
+    tile.type = "button";
     tile.className = "object-tile";
     tile.dataset.objectIndex = String(index);
-    tile.tabIndex = 0;
-    tile.setAttribute("role", "group");
+    if (o.track_id != null) tile.dataset.trackId = String(o.track_id);
     tile.setAttribute(
       "aria-label",
-      `${label}，${zone}，最后出现 ${when}，${sightings} 次观测`
+      `查看${label}详情，${zone}，最后出现 ${when}，${sightings} 次观测`
     );
     tile.innerHTML = `
-      ${o.evidence_crop_url
-        ? `<img alt="${escapeHtml(label)}" src="${escapeHtml(o.evidence_crop_url)}" loading="lazy" decoding="async" />`
-        : '<span class="tile-no-image">暂无图片</span>'}
-      <div class="tile-overlay">
-        <span class="tile-source">${sourceBadge(o.source_kind)}</span>
-        <span class="tile-name">${escapeHtml(label)}</span>
-        <span class="tile-zone">${escapeHtml(zone)}</span>
-        <a class="tile-query" href="${escapeHtml(queryHref)}">查询</a>
-        <span class="tile-time">最后出现 ${escapeHtml(when)}</span>
-        <span class="tile-sightings">${sightings} 次观测</span>
-      </div>`;
-    tile.addEventListener("pointerdown", (event) => {
-      tile._lastPointerType = event.pointerType;
-    });
-    tile.addEventListener("click", (event) => {
-      if (event.target.closest(".tile-query")) return;
-      const touchLike =
-        tile._lastPointerType === "touch" ||
-        tile._lastPointerType === "pen" ||
-        !state.itemsHoverCapable;
-      if (!touchLike) return;
-      event.preventDefault();
-      const active = tile.classList.contains("is-touch-active");
-      document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
-        el.classList.remove("is-touch-active");
-      });
-      if (!active) tile.classList.add("is-touch-active");
+      <span class="tile-media">
+        ${
+          o.evidence_crop_url
+            ? `<img alt="${escapeHtml(label)}" src="${escapeHtml(o.evidence_crop_url)}" loading="lazy" decoding="async" data-fallback-class="tile-no-image" data-fallback-text="图片不可用" />`
+            : '<span class="tile-no-image">暂无图片</span>'
+        }
+      </span>
+      <span class="tile-info">
+        <span class="tile-copy">
+          <span class="tile-name">${escapeHtml(label)}</span>
+          <span class="tile-time">${escapeHtml(when)} · ${sightings} 次观测</span>
+        </span>
+        <span class="tile-chevron" aria-hidden="true">›</span>
+      </span>`;
+    tile.addEventListener("click", () => {
+      if (o.track_id != null) openItemDetail(o.track_id, tile);
     });
     grid.appendChild(tile);
   });
@@ -1201,12 +1454,10 @@ function refreshObjectTimes(objects) {
       const when = objectWhen(object);
       const sightings = object.sightings ?? 0;
       const time = tile.querySelector(".tile-time");
-      const sighting = tile.querySelector(".tile-sightings");
-      if (time) time.textContent = `最后出现 ${when}`;
-      if (sighting) sighting.textContent = `${sightings} 次观测`;
+      if (time) time.textContent = `${when} · ${sightings} 次观测`;
       tile.setAttribute(
         "aria-label",
-        `${objectLabel(object)}，${object.zone || "未分区"}，最后出现 ${when}，${sightings} 次观测`
+        `查看${objectLabel(object)}详情，${object.zone || "未分区"}，最后出现 ${when}，${sightings} 次观测`
       );
     });
   }
@@ -1230,6 +1481,83 @@ function objectSignature(objects) {
     .join("~");
 }
 
+function closeItemDetail() {
+  const dialog = $("item-dialog");
+  if (!dialog || dialog.hidden) return;
+  dialog.hidden = true;
+  document.body.style.overflow = "";
+  state.itemDetailTrackId = null;
+  const target = state.itemDetailReturnFocus;
+  state.itemDetailReturnFocus = null;
+  if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+}
+
+async function openItemDetail(trackId, origin) {
+  const dialog = $("item-dialog");
+  const body = $("item-dialog-body");
+  if (!dialog || !body) return;
+  state.itemDetailTrackId = trackId;
+  state.itemDetailReturnFocus = origin || document.activeElement;
+  dialog.hidden = false;
+  document.body.style.overflow = "hidden";
+  body.innerHTML = '<p class="empty-note">正在读取物品详情…</p>';
+  const close = dialog.querySelector(".item-dialog-close");
+  close?.focus({ preventScroll: true });
+  try {
+    const detail = await api(`/api/tracks/${trackId}`);
+    if (state.itemDetailTrackId !== trackId) return;
+    if (!detail.ok) throw new Error(detail.error || "读取失败");
+    const track = detail.track || {};
+    const detections = detail.detections || [];
+    const label = track.label || track.class_zh || "物品";
+    const latest = detections[0] || {};
+    const image = latest.crop_url || latest.image_url || "";
+    const sources = (track.source_kinds || []).map(sourceName).filter(Boolean);
+    const history = detections
+      .slice(0, 8)
+      .map((detection) => {
+        const thumb = detection.crop_url
+          ? `<img src="${escapeHtml(detection.crop_url)}" alt="" loading="lazy" decoding="async" data-fallback-class="item-history-empty" data-fallback-text="无图" />`
+          : '<span class="item-history-empty" aria-hidden="true"></span>';
+        return `<li>
+          ${thumb}
+          <span class="item-history-copy">
+            <strong>${escapeHtml(localDateLabel(detection.time_local))}</strong>
+            <span>${escapeHtml(detection.zone || "未分区")} · ${sourceName(detection.source_kind)}</span>
+          </span>
+          <span class="item-history-score">${Math.round(Number(detection.confidence || 0) * 100)}%</span>
+        </li>`;
+      })
+      .join("");
+    body.innerHTML = `
+      <div class="item-detail-media">
+        ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(label)} 的真实裁剪图" data-fallback-class="thumb-empty" data-fallback-text="图片不可用" />` : '<span class="thumb-empty">暂无图片</span>'}
+      </div>
+      <div class="item-detail-copy">
+        <p class="item-detail-kicker">OBJECT DETAIL</p>
+        <h2 id="item-dialog-title">${escapeHtml(label)}</h2>
+        <p class="item-detail-sub" id="item-dialog-sub">${escapeHtml(latest.zone || "未分区")} · ${escapeHtml(sources.join(" / ") || "来源未知")}</p>
+        <div class="item-detail-stats">
+          <div class="item-stat"><strong>${track.sightings ?? detections.length}</strong><span>次观测</span></div>
+          <div class="item-stat"><strong>${escapeHtml(localShortDate(latest.time_local))}</strong><span>最近出现</span></div>
+          <div class="item-stat"><strong>${sources.length || 0}</strong><span>种来源</span></div>
+        </div>
+        <div class="item-detail-actions">
+          <a class="primary-link" href="${escapeHtml(objectSearchHref(label))}">查找这个物品 <span aria-hidden="true">→</span></a>
+          <a href="/timeline">观察时间线</a>
+        </div>
+        <p class="item-history-title">最近观测记录</p>
+        <ul class="item-history">${history || '<li class="timeline-detail-empty">还没有观测记录。</li>'}</ul>
+      </div>`;
+    const title = $("item-dialog-title");
+    if (title) title.setAttribute("tabindex", "-1");
+  } catch (error) {
+    if (state.itemDetailTrackId === trackId) {
+      body.innerHTML = `<p class="empty-note">读取物品详情失败：${escapeHtml(error.message || error)}</p>`;
+    }
+  }
+}
+
 function updateItemsModeButtons(mode) {
   document.querySelectorAll(".items-mode-btn").forEach((button) => {
     const active = button.dataset.itemsMode === mode;
@@ -1247,17 +1575,13 @@ function applyItemsMode(mode) {
   const isGrid = mode === "grid";
   page.classList.toggle("is-mode-grid", isGrid);
   orbView.setAttribute("aria-hidden", String(isGrid));
-  gridView.setAttribute("aria-hidden", String(!isGrid));
   orbView.inert = isGrid;
-  gridView.inert = !isGrid;
+  gridView.removeAttribute("aria-hidden");
+  gridView.inert = false;
   updateItemsModeButtons(mode);
-  document.querySelectorAll(".object-tile.is-touch-active").forEach((el) => {
-    el.classList.remove("is-touch-active");
-  });
   if (isGrid) {
     state.itemsOrb?.setActive(false);
     state.gridEntrancePending = true;
-    requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
   } else {
     state.itemsOrb?.setActive(true);
   }
@@ -1313,8 +1637,8 @@ function initItems() {
   const hint = $("orb-hint");
   if (hint) {
     hint.textContent = state.itemsHoverCapable
-      ? "拖动/方向键旋转 · 悬停暂停 · 点击图片查看"
-      : "单指拖动旋转 · 轻点图片查看";
+      ? "拖动或使用方向键旋转 · 悬停暂停 · 点击查看物品详情"
+      : "单指拖动旋转 · 轻点查看物品详情";
   }
   if (hoverQuery.addEventListener) {
     hoverQuery.addEventListener("change", (event) => {
@@ -1325,9 +1649,14 @@ function initItems() {
   document.querySelectorAll(".items-mode-btn").forEach((button) => {
     button.addEventListener("click", () => setItemsMode(button.dataset.itemsMode));
   });
-  state.itemsMode = "orb";
-  updateItemsModeButtons("orb");
-  state.itemsOrb?.setActive(true);
+  const dialog = $("item-dialog");
+  dialog?.querySelectorAll("[data-item-close]").forEach((element) => {
+    element.addEventListener("click", closeItemDetail);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeItemDetail();
+  });
+  applyItemsMode("orb");
   // 首屏动画结束后移除类名，避免球体/平铺切换时重播。
   window.setTimeout(() => {
     document.querySelectorAll(".items-page .wm-enter").forEach((el) => {
@@ -1370,12 +1699,231 @@ async function loadObjects() {
   setText("objects-count", String(objects.length));
   renderOrb(objects);
   renderObjectGrid(objects);
-  if (state.itemsMode === "grid" && state.gridEntrancePending) {
-    requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
+  requestAnimationFrame(() => requestAnimationFrame(animateGridRows));
+}
+
+// ---------------- 首页 ----------------
+function renderHomeObjects(objects) {
+  const box = $("home-objects");
+  if (!box) return;
+  const items = objects.slice(0, 5);
+  if (!items.length) {
+    box.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
+    return;
+  }
+  box.innerHTML = items
+    .map((object) => {
+      const label = objectLabel(object);
+      const image = objectImage(object)
+        ? `<img src="${escapeHtml(objectImage(object))}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" data-fallback-class="tile-no-image" data-fallback-text="暂无图片" />`
+        : '<span class="tile-no-image">暂无图片</span>';
+      return `<a class="mini-object" href="${escapeHtml(objectSearchHref(label))}">
+        <span class="mini-object-media">${image}</span>
+        <span class="mini-object-copy">
+          <strong>${escapeHtml(label)}</strong>
+          <span>${escapeHtml(objectWhen(object))}</span>
+        </span>
+      </a>`;
+    })
+    .join("");
+}
+
+function renderHomeCapture(capture, detail) {
+  const image = $("home-capture-img");
+  const empty = $("home-capture-empty");
+  const card = $("home-capture");
+  const heroImage = $("home-hero-img");
+  const heroEmpty = $("home-hero-empty");
+  const heroCaption = $("home-hero-caption");
+  const floatTitle = $("home-float-title");
+  const heroLink = $("home-hero-link");
+  const detections = detail?.detections || [];
+  const labels = [...new Set(detections.map((detection) => detection.class_zh).filter(Boolean))];
+  if (!capture) {
+    if (empty) empty.textContent = "还没有真实抓拍记录。";
+    if (image) image.hidden = true;
+    if (heroEmpty) heroEmpty.innerHTML = "<p>还没有真实抓拍记录，抓拍后会显示在这里。</p>";
+    return;
+  }
+  const imageUrl = capture.image_url || `/api/captures/${capture.id}/image`;
+  if (card) card.href = `/observe?capture=${encodeURIComponent(capture.id)}`;
+  if (heroLink) heroLink.href = `/observe?capture=${encodeURIComponent(capture.id)}`;
+  if (image) {
+    image.src = imageUrl;
+    image.alt = `抓拍 #${capture.id}，${observeTimeLabel(capture)}`;
+    image.hidden = false;
+    if (empty) empty.hidden = true;
+    image.addEventListener(
+      "error",
+      () => {
+        image.hidden = true;
+        if (empty) {
+          empty.hidden = false;
+          empty.textContent = "图像文件不可用。";
+        }
+      },
+      { once: true }
+    );
+  }
+  if (heroImage) {
+    heroImage.src = imageUrl;
+    heroImage.alt = `最近一次真实抓拍，${observeTimeLabel(capture)}`;
+    heroImage.hidden = false;
+    if (heroEmpty) heroEmpty.hidden = true;
+    heroImage.addEventListener(
+      "error",
+      () => {
+        heroImage.hidden = true;
+        if (heroEmpty) {
+          heroEmpty.hidden = false;
+          heroEmpty.innerHTML = "<p>图像文件不可用。</p>";
+        }
+      },
+      { once: true }
+    );
+  }
+  if (heroCaption) heroCaption.hidden = false;
+  setText("home-hero-source", sourceName(capture.source_kind));
+  setText("home-hero-meta", `${observeTimeLabel(capture)} · ${detections.length} 个识别结果`);
+  setText("home-capture-time", observeTimeLabel(capture));
+  if (floatTitle) {
+    floatTitle.textContent = labels.length ? `${labels.slice(0, 2).join("、")} · 最近一次` : "最近一次观察";
+  }
+  const source = $("home-capture-source");
+  if (source) {
+    const kind = ["esp32", "replay", "upload", "webcam"].includes(capture.source_kind)
+      ? capture.source_kind
+      : "unknown";
+    source.className = `source-badge src-${kind}`;
+    source.textContent = sourceName(kind);
+  }
+  const objects = $("home-capture-objects");
+  if (objects) {
+    objects.innerHTML = labels.length
+      ? labels
+          .slice(0, 4)
+          .map((label) => `<span class="object-pill">${escapeHtml(label)}</span>`)
+          .join("")
+      : '<span class="muted small">这一帧没有识别到词表内物品。</span>';
   }
 }
 
-// ---------------- 观察时间线 ----------------
+async function loadHome() {
+  const form = $("home-search-form");
+  const input = $("home-search-input");
+  if (form && !form.dataset.bound) {
+    form.dataset.bound = "1";
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const q = (input?.value || "").trim();
+      if (q) location.href = `/search?q=${encodeURIComponent(q)}&autorun=1`;
+      else input?.focus();
+    });
+  }
+  const [objectsData, capturesData] = await Promise.all([
+    api("/api/objects").catch(() => ({ ok: false })),
+    api("/api/captures?limit=1").catch(() => ({ ok: false })),
+  ]);
+  const objects = objectsData.ok ? objectsData.objects || [] : [];
+  state.homeObjects = objects;
+  setText("home-object-count", String(objects.length));
+  renderHomeObjects(objects);
+  const capture = capturesData.ok ? (capturesData.captures || [])[0] : null;
+  if (!capture) {
+    renderHomeCapture(null);
+    return;
+  }
+  let detail = null;
+  try {
+    const response = await api(`/api/captures/${capture.id}`);
+    if (response.ok) detail = response;
+  } catch (error) {
+    detail = null;
+  }
+  renderHomeCapture(capture, detail);
+}
+
+// ---------------- 最近观察 · 历史列表 ----------------
+function renderObserveRecent(captures, details) {
+  const box = $("observe-recent");
+  if (!box) return;
+  if (!captures.length) {
+    box.innerHTML = '<p class="empty-note">还没有历史抓拍。点击“立即抓拍”开始记录。</p>';
+    return;
+  }
+  const detailById = new Map();
+  captures.forEach((capture, index) => detailById.set(capture.id, details[index] || null));
+  const ordered = [...captures].sort((a, b) => captureTimestamp(b) - captureTimestamp(a));
+  const groups = new Map();
+  ordered.forEach((capture) => {
+    const key = timelineDayKey(capture);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(capture);
+  });
+  box.innerHTML = [...groups.entries()]
+    .map(([key, items]) => {
+      const meta = timelineDayMeta(key);
+      const rows = items
+        .map((capture) => {
+          const detail = detailById.get(capture.id);
+          const detections = detail?.detections || [];
+          const labels = [...new Set(detections.map((d) => d.class_zh).filter(Boolean))];
+          const zones = [...new Set(detections.map((d) => d.region).filter(Boolean))];
+          const clock = timelineClock(capture);
+          const thumb = capture.thumbnail_url
+            ? `<img src="${escapeHtml(capture.thumbnail_url)}" alt="抓拍 #${capture.id} 缩略图" loading="lazy" decoding="async" data-fallback-class="observe-row-empty" data-fallback-text="无图" />`
+            : '<span class="observe-row-empty">无图</span>';
+          return `<button class="observe-row" type="button" data-capture-id="${capture.id}">
+            ${thumb}
+            <span class="observe-row-copy">
+              <span class="observe-row-top">
+                <time>${escapeHtml(clock.text)}</time>
+                ${timelineSourceBadge(capture.source_kind)}
+              </span>
+              <span class="observe-row-objects">${labels.length ? labels.map(escapeHtml).join("、") : "没有识别到词表内物品"}</span>
+              <span class="observe-row-meta">${zones.length ? escapeHtml(zones.slice(0, 2).join(" / ")) : "未分区"} · ${capture.detections_count ?? detections.length} 个识别结果</span>
+            </span>
+            <span class="observe-row-chevron" aria-hidden="true">›</span>
+          </button>`;
+        })
+        .join("");
+      return `<div class="observe-day">
+        <h2 class="observe-day-head">${escapeHtml(meta.main)}<span>${escapeHtml(meta.sub)}</span></h2>
+        ${rows}
+      </div>`;
+    })
+    .join("");
+  box.querySelectorAll("[data-capture-id]").forEach((row) => {
+    row.addEventListener("click", async () => {
+      const id = Number(row.dataset.captureId);
+      if (!Number.isFinite(id)) return;
+      const ok = await showCapture(id);
+      if (ok) window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+}
+
+async function loadObserveRecent() {
+  const box = $("observe-recent");
+  if (!box) return;
+  const data = await api("/api/captures?limit=6");
+  if (!data.ok) {
+    box.innerHTML = '<p class="empty-note">读取历史抓拍失败，请确认本地服务正常。</p>';
+    return;
+  }
+  const captures = data.captures || [];
+  const details = await Promise.all(
+    captures.map(async (capture) => {
+      try {
+        const detail = await api(`/api/captures/${capture.id}`);
+        return detail.ok ? detail : null;
+      } catch (error) {
+        return null;
+      }
+    })
+  );
+  renderObserveRecent(captures, details);
+}
 function pad2(value) {
   return String(value).padStart(2, "0");
 }
@@ -1439,11 +1987,11 @@ function timelineClock(capture) {
 function timelineSourceBadge(kind) {
   const key = ["esp32", "replay", "upload", "webcam"].includes(kind) ? kind : "unknown";
   const text = {
-    esp32: "真机 · ESP32",
-    replay: "图片回放",
-    upload: "上传图片",
-    webcam: "摄像头",
-    unknown: "未知来源",
+    esp32: "来自 · ESP32",
+    replay: "来自 · 图片回放",
+    upload: "来自 · 上传图片",
+    webcam: "来自 · 摄像头",
+    unknown: "来源未知",
   }[key];
   const title = key === "esp32" ? "真实设备采集" : `采集来源：${text}`;
   return `<span class="source-badge src-${key}" title="${title}">${text}</span>`;
@@ -1482,7 +2030,7 @@ function timelineDetectionList(detections) {
         .filter(Boolean)
         .join(" · ");
       const thumb = detection.crop_url
-        ? `<img class="timeline-detection-thumb" src="${escapeHtml(detection.crop_url)}" alt="" loading="lazy" decoding="async" />`
+        ? `<img class="timeline-detection-thumb" src="${escapeHtml(detection.crop_url)}" alt="" loading="lazy" decoding="async" data-fallback-class="timeline-detection-thumb is-empty" data-fallback-text="无图" />`
         : '<span class="timeline-detection-thumb is-empty" aria-hidden="true"></span>';
       return `<li class="timeline-detection">
         ${thumb}
@@ -1506,7 +2054,7 @@ function buildTimelineDetail(capture, detail) {
   const boxes = imageUrl ? timelineEvidenceBoxes(detections) : "";
   const note = `抓拍 #${capture.id} · ${width && height ? `${width} × ${height}` : "本地图像"}`;
   const image = imageUrl
-    ? `<img class="timeline-evidence-img" data-src="${escapeHtml(imageUrl)}" alt="抓拍 #${capture.id} 的完整画面" loading="lazy" decoding="async" />`
+    ? `<img class="timeline-evidence-img" data-src="${escapeHtml(imageUrl)}" alt="抓拍 #${capture.id} 的完整画面" loading="lazy" decoding="async" data-fallback-class="timeline-evidence-empty" data-fallback-text="图像不可用" />`
     : '<span class="timeline-evidence-empty">图像不可用</span>';
   return `<div class="timeline-detail-inner">
     <div class="timeline-evidence">
@@ -1548,10 +2096,10 @@ function buildTimelineEvent(capture, detail, isLatest, delay, enter) {
       }`
     : '<span class="timeline-object is-empty">无识别结果</span>';
   const summary = labels.length
-    ? `${count} 个物品${zones.length ? ` · ${zones.slice(0, 2).join(" / ")}` : ""}`
+    ? `${zones.length ? `${zones.slice(0, 2).join(" / ")} · ` : ""}${count} 个识别结果`
     : "这一帧没有识别到词表内物品";
   const thumb = capture.thumbnail_url
-    ? `<img class="timeline-thumb" src="${escapeHtml(capture.thumbnail_url)}" alt="抓拍 #${capture.id} 缩略图" loading="lazy" decoding="async" />`
+    ? `<img class="timeline-thumb" src="${escapeHtml(capture.thumbnail_url)}" alt="抓拍 #${capture.id} 缩略图" loading="lazy" decoding="async" data-fallback-class="timeline-thumb-empty" data-fallback-text="无图" />`
     : '<span class="timeline-thumb-empty">无图</span>';
   const event = document.createElement("li");
   event.className = `timeline-event${isLatest ? " is-latest" : ""}${enter ? " is-entering" : ""}`;
@@ -1652,12 +2200,21 @@ function renderTimeline(captures, details) {
     fragment.appendChild(section);
   });
   box.replaceChildren(fragment);
+  box.querySelectorAll(".timeline-day-head.is-entering, .timeline-event.is-entering").forEach((element) => {
+    element.addEventListener("animationend", () => element.classList.remove("is-entering"), {
+      once: true,
+    });
+  });
   state.timelineEntered = true;
+  const end = $("timeline-end");
+  if (end) end.hidden = false;
 }
 
 function renderTimelineEmpty(message, detail) {
   const box = $("timeline");
   if (!box) return;
+  const end = $("timeline-end");
+  if (end) end.hidden = true;
   box.innerHTML = `<div class="timeline-empty">
     <span class="timeline-empty-mark" aria-hidden="true"></span>
     <div><p>${escapeHtml(message)}</p><span>${escapeHtml(detail)}</span></div>
@@ -1698,6 +2255,8 @@ async function loadTimeline() {
   );
   state.timelineSignature = signature;
   renderTimeline(captures, details);
+  const end = $("timeline-end");
+  if (end) end.textContent = captures.length < 12 ? "已加载全部记录" : "显示最近 12 条观察";
 }
 
 // ---------------- 页面初始化 ----------------
@@ -1706,6 +2265,14 @@ function initObserve() {
   if (captureBtn) captureBtn.onclick = doCapture;
   const autoBtn = $("auto-btn");
   if (autoBtn) autoBtn.onclick = toggleAuto;
+  const detailBtn = $("observe-detail-btn");
+  if (detailBtn) {
+    detailBtn.addEventListener("click", () => {
+      const summarize = $("summary-trigger");
+      openSummary(true);
+      summarize?.focus({ preventScroll: true });
+    });
+  }
   bindSummaryOverlay();
 }
 
@@ -1717,10 +2284,22 @@ function initSearch() {
       runQuery();
     };
   }
+  $("filter-categories")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-filter-category]");
+    if (!button) return;
+    state.searchCategory = button.dataset.filterCategory || "all";
+    renderSearchItems();
+  });
+  $("filter-ranges")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-filter-range]");
+    if (!button || button.disabled) return;
+    state.searchRange = button.dataset.filterRange || "all";
+    renderSearchItems();
+  });
 }
 
 function restartSearchEntrance() {
-  document.querySelectorAll(".search-page .search-reveal").forEach((el) => {
+  document.querySelectorAll(".search-page .search-reveal, .search-page .wm-enter").forEach((el) => {
     el.style.animation = "none";
     void el.offsetWidth;
     el.style.animation = "";
@@ -1754,10 +2333,14 @@ window.addEventListener("pageshow", (event) => {
   }
   restartWarmEntrance();
   if (PAGE === "timeline") restartTimelineEntrance();
-  if (PAGE === "items" && state.itemsMode === "grid") animateGridRows();
+  if (PAGE === "items") animateGridRows();
 });
 
 async function loadPageData() {
+  if (PAGE === "home") {
+    await loadHome();
+    return;
+  }
   if (PAGE === "observe") {
     const params = new URLSearchParams(location.search);
     const requested = Number.parseInt(params.get("capture") || "", 10);
@@ -1767,9 +2350,11 @@ async function loadPageData() {
     } else {
       await loadLatestCapture();
     }
+    await loadObserveRecent();
     return;
   }
   if (PAGE === "search") {
+    await loadSearchBase();
     const params = new URLSearchParams(location.search);
     const q = params.get("q");
     const input = $("query-input");
@@ -1790,6 +2375,23 @@ async function loadPageData() {
 }
 
 async function initPage() {
+  document.addEventListener(
+    "error",
+    (event) => {
+      if (!(event.target instanceof HTMLImageElement)) return;
+      const image = event.target;
+      const fallbackClass = image.dataset.fallbackClass;
+      if (fallbackClass) {
+        const fallback = document.createElement("span");
+        fallback.className = fallbackClass;
+        fallback.textContent = image.dataset.fallbackText || "无图";
+        image.replaceWith(fallback);
+      } else {
+        image.classList.add("is-broken");
+      }
+    },
+    true
+  );
   initNav();
   if (PAGE === "observe") initObserve();
   if (PAGE === "search") initSearch();
@@ -1801,7 +2403,10 @@ async function initPage() {
     await loadStatus();
     if (PAGE === "items") await loadObjects();
     if (!state.autoRunning) return;
-    if (PAGE === "observe") await loadLatestCapture();
+    if (PAGE === "observe") {
+      await loadLatestCapture();
+      await loadObserveRecent();
+    }
     if (PAGE === "timeline") await loadTimeline();
   }, 6000);
 }

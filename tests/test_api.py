@@ -1,4 +1,5 @@
 import io
+import re
 
 from PIL import Image
 
@@ -111,12 +112,13 @@ def test_health_and_index(api_client):
 
 def test_main_pages_are_distinct_navigation_targets(api_client):
     pages = {
-        "/": ("observe", 'id="capture-img"'),
+        "/": ("home", 'id="home-hero-img"'),
+        "/observe": ("observe", 'id="capture-img"'),
         "/search": ("search", 'id="query-form"'),
         "/items": ("items", 'id="objects"'),
         "/timeline": ("timeline", 'id="timeline"'),
     }
-    nav_hrefs = ['href="/"', 'href="/search"', 'href="/items"', 'href="/timeline"']
+    nav_hrefs = ['href="/"', 'href="/observe"', 'href="/search"', 'href="/items"', 'href="/timeline"']
 
     for path, (page, marker) in pages.items():
         response = api_client.get(path)
@@ -129,9 +131,10 @@ def test_main_pages_are_distinct_navigation_targets(api_client):
         for href in nav_hrefs:
             assert href in response.text
 
-    # 四个 URL 返回不同页面，而不是同一页面的隐藏区块。
+    # 五个 URL 返回不同页面，而不是同一页面的隐藏区块。
     bodies = {path: api_client.get(path).text for path in pages}
-    assert len({body for body in bodies.values()}) == 4
+    assert len({body for body in bodies.values()}) == 5
+    assert 'id="home-hero-img"' not in bodies["/observe"]
     assert 'id="capture-img"' not in bodies["/search"]
     assert 'id="query-form"' not in bodies["/"]
     assert 'id="objects"' not in bodies["/timeline"]
@@ -143,6 +146,7 @@ def test_main_pages_are_distinct_navigation_targets(api_client):
     observe_alias = api_client.get("/observe?capture=1")
     assert observe_alias.status_code == 200
     assert 'data-page="observe"' in observe_alias.text
+    assert 'id="capture-img"' in observe_alias.text
 
     workbench = api_client.get("/workbench")
     assert workbench.status_code == 200
@@ -150,7 +154,7 @@ def test_main_pages_are_distinct_navigation_targets(api_client):
 
 
 def test_observe_uses_in_frame_summary_overlay(api_client):
-    page = api_client.get("/")
+    page = api_client.get("/observe")
     assert page.status_code == 200
     assert 'class="capture-stage"' in page.text
     assert 'id="summary-panel"' in page.text
@@ -161,32 +165,47 @@ def test_observe_uses_in_frame_summary_overlay(api_client):
     assert 'id="capture-source"' in page.text
     assert 'id="capture-btn"' in page.text
     assert 'id="auto-btn"' in page.text
+    assert 'id="observe-detail-btn"' in page.text
+    assert 'id="observe-recent"' in page.text
     assert 'id="capture-meta"' not in page.text
-    assert 'class="observe-side"' not in page.text
-    assert 'class="page-subtitle"' not in page.text
 
-    for path in ("/search", "/items", "/timeline"):
+    for path in ("/", "/search", "/items", "/timeline"):
         assert 'id="summary-panel"' not in api_client.get(path).text
 
 
-def test_search_page_is_full_width_without_suggestion_panel(api_client):
+def test_search_page_has_workspace_filters_and_results(api_client):
     page = api_client.get("/search")
     assert page.status_code == 200
     assert 'class="app-page search-page"' in page.text
-    assert 'class="card query-card search-reveal"' in page.text
+    assert 'class="search-bar wm-enter"' in page.text
     assert 'id="query-form"' in page.text
     assert 'id="query-input"' in page.text
     assert 'id="results"' in page.text
-    assert "search-reveal" in page.text
+    assert 'id="filter-categories"' in page.text
+    assert 'id="filter-ranges"' in page.text
+    assert "data-filter-category" in page.text
+    assert "data-filter-range" in page.text
+    assert "我的耳机最后出现在哪里？" in page.text
     assert 'class="page-subtitle"' not in page.text
     assert 'class="search-side"' not in page.text
     assert "可以这样问" not in page.text
     assert "example-chips" not in page.text
 
-    stylesheet = api_client.get("/static/main.css")
-    assert stylesheet.status_code == 200
-    assert "findy-search-rise" in stylesheet.text
-    assert ".search-page .search-reveal" in stylesheet.text
+    script = api_client.get("/static/app.js")
+    assert script.status_code == 200
+    for token in (
+        "loadSearchBase",
+        "renderFilterCategories",
+        "searchRangeMatches",
+        "renderSearchItems",
+        "/api/objects",
+    ):
+        assert token in script.text
+
+    theme = api_client.get("/static/warm.css")
+    assert theme.status_code == 200
+    assert ".filter-panel" in theme.text
+    assert ".result" in theme.text
 
 
 def test_items_page_has_orb_gallery_and_mode_switch(api_client):
@@ -205,54 +224,94 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
     assert 'data-items-mode="grid"' in page.text
     assert 'id="grid-view"' in page.text
     assert 'id="objects"' in page.text
-    assert 'id="grid-count"' not in page.text
+    assert 'id="grid-count"' in page.text
+    assert 'id="item-dialog"' in page.text
     assert 'id="back-to-orb"' not in page.text
     assert 'class="items-toolbar-actions"' not in page.text
-    assert 'class="page-subtitle"' not in page.text
     assert 'class="page-meta"' not in page.text
     assert "orb-halo" not in page.text
     assert "orb-orbit" not in page.text
     assert "orb-tilt" not in page.text
 
-    stylesheet = api_client.get("/static/main.css")
-    assert stylesheet.status_code == 200
-    assert ".orb-tile" in stylesheet.text
-    assert ".orb-face" in stylesheet.text
-    assert ".orb-tile.is-hovered .orb-face" in stylesheet.text
-    assert ".object-tile" in stylesheet.text
-    assert "touch-action: pan-y pinch-zoom" in stylesheet.text
-    assert "findy-items-view-in" in stylesheet.text
-    assert "findy-items-tile-in" in stylesheet.text
-    assert "findy-orb-spin" not in stylesheet.text
-    assert ".orb-halo" not in stylesheet.text
-    assert ".orb-orbit" not in stylesheet.text
+    theme = api_client.get("/static/warm.css")
+    assert theme.status_code == 200
+    for token in (
+        ".orb-tile",
+        ".orb-face",
+        ".orb-tile.is-hovered .orb-face",
+        ".object-tile",
+        "touch-action: pan-y pinch-zoom",
+        "findy-items-view-in",
+        "findy-items-tile-in",
+        ".item-dialog",
+    ):
+        assert token in theme.text
+    assert "findy-orb-spin" not in theme.text
+    assert ".orb-halo" not in theme.text
+    assert ".orb-orbit" not in theme.text
 
     script = api_client.get("/static/app.js")
     assert script.status_code == 200
-    assert "function createItemsOrb" in script.text
-    assert "pointerdown" in script.text
-    assert "lostpointercapture" in script.text
-    assert "visibilitychange" in script.text
-    assert "prefers-reduced-motion" in script.text
-    assert "orbCopiesFor" in script.text
-    assert "n > 64 ? n" in script.text
-    assert "objectsSignature: null" in script.text
-    assert "setItemsMode" in script.text
+    for token in (
+        "function createItemsOrb",
+        "pointerdown",
+        "lostpointercapture",
+        "visibilitychange",
+        "prefers-reduced-motion",
+        "orbCopiesFor",
+        "n > 64 ? n",
+        "objectsSignature: null",
+        "setItemsMode",
+        "function openItemDetail",
+        "/api/tracks/${trackId}",
+    ):
+        assert token in script.text
+
+
+def test_home_uses_real_capture_and_object_data(api_client):
+    page = api_client.get("/")
+    assert page.status_code == 200
+    assert 'id="home-hero-img"' in page.text
+    assert 'id="home-capture-img"' in page.text
+    assert 'id="home-objects"' in page.text
+    assert 'id="home-object-count"' in page.text
+    assert "home-hero-frame" in page.text
+
+    script = api_client.get("/static/app.js")
+    assert script.status_code == 200
+    for token in ("function loadHome", "renderHomeObjects", "renderHomeCapture", "/api/objects", "/api/captures?limit=1"):
+        assert token in script.text
+    # 首页不使用外部图库、AI 生成图或跨站图片。
+    assert "findy-tips" not in page.text
+    assert not re.search(r'(?:src|href)="https?://', page.text)
+
+
+def test_search_and_items_expose_real_data_contracts(api_client):
+    script = api_client.get("/static/app.js")
+    assert script.status_code == 200
+    for token in (
+        "evidence_crop_url",
+        "evidence_image_url",
+        "openItemDetail",
+        "objectSearchHref",
+        "localDateLabel",
+        "sourceName",
+    ):
+        assert token in script.text
+    assert "https://" not in script.text
+    assert "http://" not in script.text
 
 
 def test_main_pages_share_warm_entrance_motion(api_client):
-    for path in ("/", "/items", "/timeline"):
+    for path in ("/", "/observe", "/search", "/items", "/timeline"):
         page = api_client.get(path)
         assert page.status_code == 200
         assert "wm-enter" in page.text
 
-    search = api_client.get("/search")
-    assert "search-reveal" in search.text
-
     theme = api_client.get("/static/warm.css")
     assert theme.status_code == 200
     assert "@keyframes findy-warm-rise" in theme.text
-    assert ".app-main .wm-enter" in theme.text
+    assert ".wm-enter" in theme.text
     assert "animation-delay: var(--enter-delay, 0ms)" in theme.text
     assert "prefers-reduced-motion: reduce" in theme.text
     assert ".object-tile.is-entering" in theme.text
@@ -270,6 +329,7 @@ def test_timeline_is_grouped_expandable_activity_feed(api_client):
     assert 'class="card"' not in page.text
     assert "timeline-card" not in page.text
     assert 'id="timeline"' in page.text
+    assert 'id="timeline-end"' in page.text
 
     script = api_client.get("/static/app.js")
     assert script.status_code == 200
@@ -301,10 +361,10 @@ def test_timeline_is_grouped_expandable_activity_feed(api_client):
 
 
 def test_warm_minimal_theme_is_isolated_from_workbench(api_client):
-    for path in ("/", "/search", "/items", "/timeline"):
+    for path in ("/", "/observe", "/search", "/items", "/timeline"):
         page = api_client.get(path)
         assert page.status_code == 200
-        assert 'name="theme-color" content="#F4F0E8"' in page.text
+        assert 'name="theme-color" content="#F6F3EC"' in page.text
         assert "/static/warm.css" in page.text
         assert page.text.index("/static/main.css") < page.text.index("/static/warm.css")
 
@@ -316,7 +376,7 @@ def test_warm_minimal_theme_is_isolated_from_workbench(api_client):
     theme = api_client.get("/static/warm.css")
     assert theme.status_code == 200
     assert "body.app-main" in theme.text
-    for token in ("#f4f0e8", "#e8e1d5", "#d2c6b5", "#756858", "#4c463e", "#a3a77a"):
+    for token in ("#f6f3ec", "#fbfaf7", "#e4ded2", "#aeb98d", "#1d1b17"):
         assert token in theme.text
     assert ".app-main .orb-tile.is-back .orb-face" in theme.text
     assert ".app-main .toast" in theme.text

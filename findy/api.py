@@ -154,7 +154,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
 
     @app.get("/observe")
     def observe_page():
-        return _static_page("index.html", "最近观察")
+        return _static_page("observe.html", "最近观察")
 
     @app.get("/search")
     def search_page():
