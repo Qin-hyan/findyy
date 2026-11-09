@@ -50,11 +50,10 @@
 ## 3. 页面改造
 
 ### 首页 `/`
-- 新增独立首页，原“最近观察”迁移到 `/observe`。
-- 左侧大标题、真实抓拍主视觉、自然语言搜索；右侧浮层显示最近观察。
-- 系统状态卡展示真实 `12` 件物品与当前采集源（本次为“图片回放”，不伪造在线设备）。
-- “最近记住的物品”直接取 `/api/objects` 的真实裁剪图。
-- “最近观察”取 `/api/captures?limit=1`，显示真实抓拍、ESP32 来源、时间与识别物品。
+- 首页只保留产品 Hero 与搜索，不展示本机概览、最近观察或最近物品。
+- 标题为 `Findy，记住你的物品`，副标题为 `自然界的Ctrl+F`。
+- 全站移除英文眉题；功能说明只保留必要操作提示。
+- 所有主页面与工作台文案不再使用中文句号。
 
 ### 首页产品摄影与统一背景（本轮增量）
 - 首页 Hero 使用 `web/static/images/findy_homepage_camera_original_proportions.png` 整张产品摄影作为 CSS `background-image`，原始尺寸 `1672×941`，不使用独立 `<img>` 容器。
@@ -94,9 +93,9 @@
 
 ## 4. 真实图片与数据来源
 
-- 首页 Hero 产品图：`/static/images/findy_homepage_camera_original_proportions.png`，原始产品摄影。
+- 首页产品背景：`/static/images/findy_homepage_camera_original_proportions.png`，静态产品摄影。
 - 其他页面统一背景：`/static/images/findy-universal-background.png`，原始无摄像头背景。
-- 首页最近观察、最近观察页、时间线：`/api/captures/{id}/image` 或 `?thumb=1`。
+- 最近观察页、时间线：`/api/captures/{id}/image` 或 `?thumb=1`。
 - 物品网格、球体、搜索结果：`/api/detections/{detection_id}/crop`。
 - 物品详情：`/api/tracks/{track_id}` 返回的检测裁剪图。
 - 所有图片均在本机 SQLite 与本地文件中；没有外链图片、没有 AI 生成图、没有图库图片。
@@ -111,9 +110,9 @@ node --check web\static\app.js
 D:\Anaconda3\python.exe .tmp\acceptance_fullsite.py
 ```
 
-- 自动化测试：**102 passed**
-- 浏览器验收：**122 项全部通过**
-- 覆盖：五个页面的真实数据、首页整图背景 / cover / 移动端背景定位 / 左侧文字可读、最近观察与最近物品不重复、通用背景仅用于非首页、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
+- 自动化测试：**103 passed**
+- 浏览器验收：**129 项全部通过**
+- 覆盖：五个页面的真实数据、首页整图背景 / cover / 移动端背景定位 / 左侧文字可读 / 无数据概览区、全站无句号与英文眉题、最近观察页、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
 - 验收期间未触发 `/api/capture`、`/api/observe`、`/api/service/*`、`/api/acceptance/*`。
 
 截图目录：`docs/evidence/full-site-redesign/`。

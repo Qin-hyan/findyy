@@ -185,7 +185,7 @@ def test_search_page_has_workspace_filters_and_results(api_client):
     assert 'id="filter-ranges"' in page.text
     assert "data-filter-category" in page.text
     assert "data-filter-range" in page.text
-    assert "我的耳机最后出现在哪里？" in page.text
+    assert "我的耳机在哪" in page.text
     assert 'class="page-subtitle"' not in page.text
     assert 'class="search-side"' not in page.text
     assert "可以这样问" not in page.text
@@ -268,15 +268,21 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
         assert token in script.text
 
 
-def test_home_uses_product_background_and_real_capture_data(api_client):
+def test_home_is_focused_product_landing(api_client):
     page = api_client.get("/")
     assert page.status_code == 200
     assert 'id="home-hero"' in page.text
     assert 'id="home-search-form"' in page.text
-    assert 'id="home-capture-img"' in page.text
-    assert 'id="home-objects"' in page.text
-    assert 'id="home-object-count"' in page.text
-    assert 'id="home-source-state"' in page.text
+    assert "Findy，" in page.text
+    assert "记住你的物品" in page.text
+    assert "自然界的Ctrl+F" in page.text
+    assert 'id="home-capture-img"' not in page.text
+    assert 'id="home-objects"' not in page.text
+    assert 'id="home-object-count"' not in page.text
+    assert 'id="home-source-state"' not in page.text
+    assert "home-dashboard" not in page.text
+    assert "本机概览" not in page.text
+    assert "最近记住的物品" not in page.text
     # 产品图改为 Hero CSS 背景，不再使用独立 img 容器。
     assert 'id="home-product-img"' not in page.text
     assert 'src="/static/images/findy_homepage_camera_original_proportions.png"' not in page.text
@@ -289,14 +295,24 @@ def test_home_uses_product_background_and_real_capture_data(api_client):
 
     script = api_client.get("/static/app.js")
     assert script.status_code == 200
-    for token in ("function loadHome", "renderHomeObjects", "renderHomeCapture", "/api/objects", "/api/captures?limit=1"):
-        assert token in script.text
-    # 产品图是静态产品摄影，最近观察才是真实抓拍。
-    assert "home-capture-img" in script.text
-    assert "home-product-img" not in script.text
+    assert "async function loadHome" in script.text
+    # 首页不再加载物品和最近观察数据。
+    assert "renderHomeObjects" not in script.text
+    assert "home-capture-img" not in script.text
     # 首页不使用外部图库、AI 生成图或跨站图片。
     assert "findy-tips" not in page.text
     assert not re.search(r'(?:src|href)="https?://', page.text)
+
+
+def test_main_ui_copy_has_no_chinese_full_stop(api_client):
+    for path in ("/", "/observe", "/search", "/items", "/timeline"):
+        page = api_client.get(path)
+        assert page.status_code == 200
+        assert "\u3002" not in page.text
+    script = api_client.get("/static/app.js")
+    assert script.status_code == 200
+    assert "\u3002" not in script.text
+    assert "stripPeriods" in script.text
 
 
 def test_product_and_universal_backgrounds_are_local_originals(api_client):
