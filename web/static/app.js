@@ -261,7 +261,7 @@ async function loadStatus() {
       { replay: "图片回放", esp32: "ESP32 真机", webcam: "本机摄像头", upload: "上传图片" }[sourceKind] ||
         "本地采集"
     );
-    setText("home-source-note", `${stats.captures ?? 0} 帧 · ${stats.active_tracks ?? 0} 件物品`);
+    setText("home-source-note", `${stats.captures ?? 0} 帧观察 · 本地运行`);
 
     const det = data.pipeline?.detector || {};
     const emb = data.pipeline?.embedder || {};
@@ -1703,10 +1703,20 @@ async function loadObjects() {
 }
 
 // ---------------- 首页 ----------------
-function renderHomeObjects(objects) {
+function renderHomeObjects(objects, excludeCaptureId = null) {
   const box = $("home-objects");
   if (!box) return;
-  const items = objects.slice(0, 5);
+  const distinct = excludeCaptureId
+    ? objects.filter((object) => object.capture_id !== excludeCaptureId)
+    : objects;
+  const seenLabels = new Set();
+  const distinctLabels = distinct.filter((object) => {
+    const label = objectLabel(object);
+    if (seenLabels.has(label)) return false;
+    seenLabels.add(label);
+    return true;
+  });
+  const items = (distinctLabels.length >= 3 ? distinctLabels : distinct).slice(0, 5);
   if (!items.length) {
     box.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
     return;
@@ -1732,22 +1742,15 @@ function renderHomeCapture(capture, detail) {
   const image = $("home-capture-img");
   const empty = $("home-capture-empty");
   const card = $("home-capture");
-  const heroImage = $("home-hero-img");
-  const heroEmpty = $("home-hero-empty");
-  const heroCaption = $("home-hero-caption");
-  const floatTitle = $("home-float-title");
-  const heroLink = $("home-hero-link");
   const detections = detail?.detections || [];
   const labels = [...new Set(detections.map((detection) => detection.class_zh).filter(Boolean))];
   if (!capture) {
     if (empty) empty.textContent = "还没有真实抓拍记录。";
     if (image) image.hidden = true;
-    if (heroEmpty) heroEmpty.innerHTML = "<p>还没有真实抓拍记录，抓拍后会显示在这里。</p>";
     return;
   }
   const imageUrl = capture.image_url || `/api/captures/${capture.id}/image`;
   if (card) card.href = `/observe?capture=${encodeURIComponent(capture.id)}`;
-  if (heroLink) heroLink.href = `/observe?capture=${encodeURIComponent(capture.id)}`;
   if (image) {
     image.src = imageUrl;
     image.alt = `抓拍 #${capture.id}，${observeTimeLabel(capture)}`;
@@ -1765,30 +1768,7 @@ function renderHomeCapture(capture, detail) {
       { once: true }
     );
   }
-  if (heroImage) {
-    heroImage.src = imageUrl;
-    heroImage.alt = `最近一次真实抓拍，${observeTimeLabel(capture)}`;
-    heroImage.hidden = false;
-    if (heroEmpty) heroEmpty.hidden = true;
-    heroImage.addEventListener(
-      "error",
-      () => {
-        heroImage.hidden = true;
-        if (heroEmpty) {
-          heroEmpty.hidden = false;
-          heroEmpty.innerHTML = "<p>图像文件不可用。</p>";
-        }
-      },
-      { once: true }
-    );
-  }
-  if (heroCaption) heroCaption.hidden = false;
-  setText("home-hero-source", sourceName(capture.source_kind));
-  setText("home-hero-meta", `${observeTimeLabel(capture)} · ${detections.length} 个识别结果`);
   setText("home-capture-time", observeTimeLabel(capture));
-  if (floatTitle) {
-    floatTitle.textContent = labels.length ? `${labels.slice(0, 2).join("、")} · 最近一次` : "最近一次观察";
-  }
   const source = $("home-capture-source");
   if (source) {
     const kind = ["esp32", "replay", "upload", "webcam"].includes(capture.source_kind)
@@ -1825,10 +1805,10 @@ async function loadHome() {
     api("/api/captures?limit=1").catch(() => ({ ok: false })),
   ]);
   const objects = objectsData.ok ? objectsData.objects || [] : [];
+  const capture = capturesData.ok ? (capturesData.captures || [])[0] : null;
   state.homeObjects = objects;
   setText("home-object-count", String(objects.length));
-  renderHomeObjects(objects);
-  const capture = capturesData.ok ? (capturesData.captures || [])[0] : null;
+  renderHomeObjects(objects, capture?.id);
   if (!capture) {
     renderHomeCapture(null);
     return;

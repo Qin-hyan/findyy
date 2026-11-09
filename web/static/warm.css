@@ -748,6 +748,49 @@ body.app-main .hero-float-arrow {
   font-size: 19px;
 }
 
+body.app-main .hero-product {
+  position: relative;
+  width: 100%;
+  margin: 0;
+}
+
+body.app-main .hero-product::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 30px 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #f6f3ec 0, rgba(246, 243, 236, 0) 7%, rgba(246, 243, 236, 0) 93%, #f6f3ec 100%),
+    linear-gradient(90deg, #f6f3ec 0, rgba(246, 243, 236, 0) 9%, rgba(246, 243, 236, 0) 91%, #f6f3ec 100%);
+}
+
+body.app-main .hero-product img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+body.app-main .hero-product-caption {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--site-muted);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+}
+
+body.app-main .hero-product-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--site-sage-deep);
+}
+
 body.app-main .home-dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
@@ -830,6 +873,42 @@ body.app-main .status-chevron {
   color: var(--site-muted-2);
   font-size: 22px;
   line-height: 1;
+}
+
+body.app-main .status-strip {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 6px 0 2px;
+}
+
+body.app-main .status-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+body.app-main .status-item strong {
+  color: var(--site-text);
+  font-size: 18px;
+  font-weight: 720;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+body.app-main .status-item span {
+  color: var(--site-muted);
+  font-size: 11.5px;
+}
+
+body.app-main .status-divider {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  background: var(--site-line);
 }
 
 body.app-main .recent-objects {
@@ -3233,6 +3312,25 @@ body.app-main .toast.ok {
 }
 
 /* ---------------- 入场动效 ---------------- */
+/* ---------------- 全站通用背景 ----------------
+ * 首页使用产品摄影，其他主页面使用无摄像头的统一背景。
+ * 背景图保持原始比例，以视口裁切而非拉伸，并叠加轻微暖白遮罩。
+ */
+html {
+  background: #f6f3ec;
+}
+
+body.app-main:not(.home-page) {
+  background-color: var(--site-bg);
+  background-image:
+    linear-gradient(180deg, rgba(246, 243, 236, 0.84) 0%, rgba(246, 243, 236, 0.9) 58%, rgba(246, 243, 236, 0.94) 100%),
+    url("/static/images/findy-universal-background.png");
+  background-repeat: no-repeat, no-repeat;
+  background-position: center center, center center;
+  background-size: cover, cover;
+  background-attachment: fixed, fixed;
+}
+
 @keyframes findy-warm-rise {
   from {
     opacity: 0;
