@@ -2,6 +2,13 @@
 
 .workbench .topbar { padding-bottom: 6px; }
 
+.workbench .brand-logo {
+  display: block;
+  width: auto;
+  height: 36px;
+  flex: none;
+}
+
 .wb-top-actions {
   display: flex;
   align-items: center;

@@ -143,35 +143,14 @@ body.app-main .app-header-main {
 body.app-main .app-brand {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
   flex: none;
   text-decoration: none;
 }
 
-body.app-main .app-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  background: #1d1b17;
-  box-shadow: none;
-  font-size: 19px;
-  font-weight: 760;
-}
-
-body.app-main .app-brand-copy {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
-
-body.app-main .app-brand-copy strong {
-  color: var(--site-text);
-  font-size: 20px;
-  font-weight: 760;
-  letter-spacing: -0.03em;
+body.app-main .app-brand-logo {
+  display: block;
+  width: auto;
+  height: 36px;
 }
 
 body.app-main .app-nav {
@@ -3996,17 +3975,6 @@ body.app-main .timeline-event.is-entering {
   body.app-main .app-header-main {
     border-radius: 18px;
     padding: 9px 10px;
-  }
-
-  body.app-main .app-logo {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    font-size: 16px;
-  }
-
-  body.app-main .app-brand-copy strong {
-    font-size: 18px;
   }
 
   body.app-main .device-chip {

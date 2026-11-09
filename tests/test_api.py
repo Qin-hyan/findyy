@@ -442,7 +442,7 @@ def test_warm_minimal_theme_is_isolated_from_workbench(api_client):
     for path in ("/", "/observe", "/search", "/items", "/timeline"):
         page = api_client.get(path)
         assert page.status_code == 200
-        assert 'name="theme-color" content="#F6F3EC"' in page.text
+        assert 'name="theme-color" content="#111111"' in page.text
         assert "/static/warm.css" in page.text
         assert page.text.index("/static/main.css") < page.text.index("/static/warm.css")
 
@@ -464,3 +464,88 @@ def test_warm_minimal_theme_is_isolated_from_workbench(api_client):
     assert base.status_code == 200
     assert "--bg: #070b13" in base.text
     assert "--text: #e8eefc" in base.text
+
+
+def test_brand_assets_and_manifest_are_served(api_client):
+    favicon = api_client.get("/brand/favicon.ico")
+    assert favicon.status_code == 200
+    assert favicon.headers["content-type"].startswith("image/")
+    assert len(favicon.content) > 1000
+
+    lockup = api_client.get("/brand/svg/logo-lockup.svg")
+    assert lockup.status_code == 200
+    assert lockup.headers["content-type"].startswith("image/svg+xml")
+    assert 'viewBox="0 0 159.1 52.0"' in lockup.text
+    assert 'fill="currentColor"' in lockup.text
+
+    inverse = api_client.get("/brand/svg/logo-lockup-inverse.svg")
+    assert inverse.status_code == 200
+    assert 'fill="#ffffff"' in inverse.text
+
+    icon = api_client.get("/brand/png/app-icon/findy-app-192.png")
+    assert icon.status_code == 200
+    assert icon.headers["content-type"].startswith("image/png")
+    with Image.open(io.BytesIO(icon.content)) as image:
+        assert image.size == (192, 192)
+
+    og_image = api_client.get("/brand/og-image-1200x630.png")
+    assert og_image.status_code == 200
+    with Image.open(io.BytesIO(og_image.content)) as image:
+        assert image.size == (1200, 630)
+
+    manifest = api_client.get("/manifest.webmanifest")
+    assert manifest.status_code == 200
+    assert manifest.headers["content-type"].startswith("application/manifest+json")
+    data = manifest.json()
+    assert data["name"] == "Findy"
+    assert data["start_url"] == "/"
+    assert data["display"] == "standalone"
+    assert data["theme_color"] == "#111111"
+    assert {item["sizes"] for item in data["icons"]} == {"192x192", "256x256", "512x512"}
+    for item in data["icons"]:
+        response = api_client.get(item["src"])
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("image/png")
+
+
+def test_pages_use_brand_head_references_and_nav_lockups(api_client):
+    app_pages = ("/", "/observe", "/search", "/items", "/timeline")
+    for path in app_pages:
+        page = api_client.get(path)
+        assert page.status_code == 200
+        assert '<link rel="icon" href="/brand/favicon.ico" sizes="any" />' in page.text
+        assert (
+            '<link rel="icon" type="image/png" sizes="32x32" '
+            'href="/brand/png/app-icon/findy-app-32.png" />'
+        ) in page.text
+        assert (
+            '<link rel="apple-touch-icon" sizes="192x192" '
+            'href="/brand/png/app-icon/findy-app-192.png" />'
+        ) in page.text
+        assert '<link rel="manifest" href="/manifest.webmanifest" />' in page.text
+        assert '<meta property="og:image" content="/brand/og-image-1200x630.png" />' in page.text
+        assert (
+            '<img class="app-brand-logo" src="/brand/svg/logo-lockup.svg" '
+            'alt="Findy" width="110" height="36" />'
+        ) in page.text
+        assert 'class="logo app-logo"' not in page.text
+        assert "app-brand-copy" not in page.text
+
+    workbench = api_client.get("/workbench")
+    assert workbench.status_code == 200
+    assert '<link rel="manifest" href="/manifest.webmanifest" />' in workbench.text
+    assert (
+        '<img class="brand-logo" src="/brand/svg/logo-lockup-inverse.svg" '
+        'alt="Findy" width="110" height="36" />'
+    ) in workbench.text
+    assert "filter:" not in workbench.text
+
+    theme = api_client.get("/static/warm.css")
+    assert theme.status_code == 200
+    assert "body.app-main .app-brand-logo" in theme.text
+    assert "height: 36px" in theme.text
+
+    workbench_theme = api_client.get("/static/workbench.css")
+    assert workbench_theme.status_code == 200
+    assert ".workbench .brand-logo" in workbench_theme.text
+    assert "height: 36px" in workbench_theme.text

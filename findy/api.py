@@ -40,6 +40,7 @@ from .zones import load_regions
 
 log = logging.getLogger(__name__)
 WEB_DIR = REPO_ROOT / "web"
+PUBLIC_DIR = WEB_DIR / "public"
 THUMB_DIR = REPO_ROOT / "data" / "cache" / "thumbs"
 
 
@@ -135,6 +136,15 @@ def create_app(config_path: str | None = None) -> FastAPI:
     # ---------------- 页面与静态资源 ----------------
     if (WEB_DIR / "static").exists():
         app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")
+    if (PUBLIC_DIR / "brand").exists():
+        app.mount("/brand", StaticFiles(directory=str(PUBLIC_DIR / "brand")), name="brand")
+
+    @app.get("/manifest.webmanifest")
+    def manifest():
+        path = PUBLIC_DIR / "manifest.webmanifest"
+        if not path.exists():
+            raise HTTPException(status_code=404, detail="manifest.webmanifest 不存在")
+        return FileResponse(path, media_type="application/manifest+json")
 
     @app.get("/")
     def index():

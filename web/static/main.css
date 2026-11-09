@@ -32,36 +32,15 @@ body.app-main {
 .app-main .app-brand {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
   color: var(--text);
   text-decoration: none;
   flex: none;
 }
 
-.app-main .app-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  font-size: 19px;
-  box-shadow: 0 8px 22px rgba(55, 211, 192, 0.22);
-}
-
-.app-main .app-brand-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  line-height: 1.12;
-}
-
-.app-main .app-brand-copy strong {
-  font-size: 18px;
-  letter-spacing: 0.4px;
-}
-
-.app-main .app-brand-copy small {
-  color: var(--muted);
-  font-size: 11.5px;
-  letter-spacing: 0.2px;
+.app-main .app-brand-logo {
+  display: block;
+  width: auto;
+  height: 36px;
 }
 
 .app-main .app-nav {
@@ -1322,21 +1301,6 @@ body.app-main {
 }
 
 @media (max-width: 540px) {
-  .app-main .app-brand-copy small {
-    display: none;
-  }
-
-  .app-main .app-brand-copy strong {
-    font-size: 16px;
-  }
-
-  .app-main .app-logo {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    font-size: 16px;
-  }
-
   .app-main .app-local-badge {
     display: none;
   }

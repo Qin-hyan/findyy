@@ -47,6 +47,14 @@
 - 阴影：`0 10px 30px rgba(57,49,37,.06)` 至 `0 30px 80px rgba(57,49,37,.13)`，不使用冷色/霓虹阴影。
 - 动效：统一 `findy-warm-rise`，`0.42s`，`cubic-bezier(.22,.75,.2,1)`，位移 14px；`prefers-reduced-motion` 全部关闭。
 
+### 品牌资源与图标
+- 品牌素材完整复制到 `web/public/brand/`，包含 6 个 SVG、20 个 PNG、`favicon.ico`、`og-image-1200x630.png` 与 `logo-usage.md`。
+- FastAPI 挂载 `/brand` 静态目录，并提供 `/manifest.webmanifest`；manifest 位于 `web/public/manifest.webmanifest`。
+- 所有页面统一引用 `/brand/favicon.ico`、32px app icon、192px apple-touch-icon、manifest 与 `og:image`。
+- 五个主页面导航使用 `/brand/svg/logo-lockup.svg`，显示高度 36px、宽度 110px，保持 159.1:52 原始比例。
+- 深色工作台顶栏使用 `/brand/svg/logo-lockup-inverse.svg`，不使用 CSS 滤镜、不拉伸、不改比例。
+- favicon 为 16/24/32/48/64 多尺寸松鼠图标；manifest 引用 192/256/512 三个 App 图标。
+
 ## 3. 页面改造
 
 ### 首页 `/`
@@ -111,15 +119,18 @@
 .\.venv314\Scripts\python.exe -m pytest -q
 node --check web\static\app.js
 D:\Anaconda3\python.exe .tmp\acceptance_fullsite.py
+D:\Anaconda3\python.exe .tmp\acceptance_brand.py
 ```
 
-- 自动化测试：**103 passed**
-- 浏览器验收：**142 项全部通过**
+- 自动化测试：**105 passed**
+- 浏览器验收：全站 **142 项**、品牌专项 **56 项**，全部通过
 - 覆盖：五个页面的真实数据、首页双背景轮播 / 6 秒切换 / 800ms 淡入淡出 / 圆点切换 / 悬停暂停、标题排版、首页不显示内容区、全站无句号与英文眉题、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
+- 品牌专项覆盖：favicon / manifest / og:image 路径、品牌文件完整复制、正片与反白 logo 使用场景、36px 显示尺寸、159.1:52 比例、SVG 1x/2x 清晰度、无滤镜、无横向溢出、无 404。
 - 验收期间未触发 `/api/capture`、`/api/observe`、`/api/service/*`、`/api/acceptance/*`。
 
 截图目录：`docs/evidence/full-site-redesign/`。
 验证明细：`docs/evidence/full-site-redesign/verification.json`。
+品牌验证明细：`docs/evidence/full-site-redesign/brand_verification.json`。
 
 ## 6. 已知限制
 
