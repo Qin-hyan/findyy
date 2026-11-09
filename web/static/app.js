@@ -240,13 +240,6 @@ async function loadStatus() {
     state.warmupDone = !!data.warmup_done;
     state.autoRunning = !!(data.service && data.service.running);
 
-    const deviceChip = $("header-device");
-    if (deviceChip) {
-      deviceChip.classList.remove("is-warn");
-      const label = deviceChip.querySelector("span");
-      if (label) label.textContent = "本机在线";
-    }
-
     const stats = data.pipeline?.stats || {};
     setPill("pill-db", `数据库 · ${stats.captures ?? 0} 帧 / ${stats.active_tracks ?? 0} 物品`, "ok");
 
@@ -292,12 +285,6 @@ async function loadStatus() {
     }
   } catch (err) {
     setPill("pill-db", "服务不可用", "bad");
-    const deviceChip = $("header-device");
-    if (deviceChip) {
-      deviceChip.classList.add("is-warn");
-      const label = deviceChip.querySelector("span");
-      if (label) label.textContent = "本机离线";
-    }
   }
 }
 
@@ -747,24 +734,6 @@ async function loadSearchBase() {
     state.searchQuery = "";
     state.searchCategory = "all";
     state.searchRange = "all";
-    const heroImage = $("search-hero-img");
-    const heroArt = document.querySelector(".search-hero-art");
-    const heroSource = state.searchBase.find((object) => object.evidence_image_url);
-    if (heroImage && heroSource) {
-      heroImage.src = heroSource.evidence_image_url;
-      heroImage.alt = "最近一次真实抓拍";
-      heroImage.hidden = false;
-      heroImage.addEventListener(
-        "error",
-        () => {
-          heroImage.hidden = true;
-          if (heroArt) heroArt.hidden = true;
-        },
-        { once: true }
-      );
-    } else if (heroArt) {
-      heroArt.hidden = true;
-    }
     const answer = $("answer");
     if (answer) {
       answer.classList.add("hidden");

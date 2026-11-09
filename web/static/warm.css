@@ -203,35 +203,26 @@ body.app-main .app-header-actions {
   flex: none;
 }
 
-body.app-main .device-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  color: #52603f;
-  background: rgba(237, 240, 226, 0.72);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
+/* 桌面顶栏：logo 固定左侧，导航相对整条顶栏居中，右侧只保留头像。 */
+@media (min-width: 861px) {
+  body.app-main .app-header-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
 
-body.app-main .device-chip i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #6f8b4f;
-  box-shadow: 0 0 0 3px rgba(111, 139, 79, 0.13);
-}
+  body.app-main .app-brand {
+    justify-self: start;
+  }
 
-body.app-main .device-chip.is-warn {
-  color: var(--site-warn);
-  background: var(--site-warn-soft);
-}
+  body.app-main .app-nav {
+    justify-self: center;
+    margin: 0;
+  }
 
-body.app-main .device-chip.is-warn i {
-  background: var(--site-warn);
-  box-shadow: 0 0 0 3px rgba(138, 90, 36, 0.13);
+  body.app-main .app-header-actions {
+    justify-self: end;
+    margin-left: 0;
+  }
 }
 
 body.app-main .avatar {
@@ -457,10 +448,14 @@ body.app-main .text-button:hover {
 }
 
 /* ---------------- 首页 ---------------- */
+body.app-main.home-page {
+  --home-header-height: 81px;
+}
+
 body.app-main.home-page .home-wrap {
   width: 100%;
   max-width: none;
-  padding: 112px 0 0;
+  padding: var(--home-header-height) 0 0;
 }
 
 body.app-main .home-hero {
@@ -468,7 +463,7 @@ body.app-main .home-hero {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: calc(100vh - 112px);
+  min-height: calc(100vh - var(--home-header-height, 81px));
   margin: 0;
   overflow: hidden;
   background-color: #f2ede4;
@@ -1883,10 +1878,7 @@ body.app-main .search-page {
 }
 
 body.app-main .search-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.38fr);
-  align-items: end;
-  gap: 36px;
+  display: block;
   padding: 14px 0 28px;
 }
 
@@ -1903,39 +1895,6 @@ body.app-main .search-lede {
   margin: 13px 0 0;
   color: var(--site-muted);
   font-size: 14.5px;
-}
-
-body.app-main .search-hero-art {
-  position: relative;
-  height: 196px;
-  margin: 0;
-  overflow: hidden;
-  border-radius: 24px;
-  background: var(--site-surface-soft);
-}
-
-body.app-main .search-hero-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 42%, rgba(29, 27, 23, 0.34));
-}
-
-body.app-main .search-hero-art img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-body.app-main .search-art-label {
-  position: absolute;
-  left: 16px;
-  bottom: 14px;
-  z-index: 2;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 10.5px;
-  font-weight: 600;
 }
 
 body.app-main .search-bar {
@@ -3027,6 +2986,38 @@ body.app-main .timeline-event.is-open .timeline-event-card {
   box-shadow: var(--site-shadow-sm);
 }
 
+/* 最新一条略放大，作为时间线的视觉落点。 */
+body.app-main .timeline-event.is-latest .timeline-event-card {
+  grid-template-columns: 136px minmax(0, 1fr) 18px;
+  gap: 19px;
+  padding: 14px 16px 14px 13px;
+  border-color: rgba(111, 119, 82, 0.38);
+  background: var(--site-surface-strong);
+  box-shadow: var(--site-shadow-sm);
+}
+
+body.app-main .timeline-event.is-latest .timeline-thumb-wrap {
+  width: 136px;
+  height: 94px;
+}
+
+body.app-main .timeline-event.is-latest .timeline-clock {
+  font-size: 15px;
+}
+
+body.app-main .timeline-event.is-latest .timeline-object {
+  font-size: 12.8px;
+}
+
+body.app-main .timeline-event.is-latest .timeline-event-summary {
+  font-size: 12px;
+}
+
+body.app-main .timeline-event.is-latest .timeline-latest-mark {
+  padding: 3px 7px;
+  font-size: 9.5px;
+}
+
 body.app-main .timeline-thumb-wrap {
   position: relative;
   display: block;
@@ -3631,9 +3622,28 @@ body.app-main .timeline-event.is-entering {
     width: 112px;
     height: 80px;
   }
+
+  body.app-main .timeline-event.is-latest .timeline-event-card {
+    grid-template-columns: 120px minmax(0, 1fr) 18px;
+    gap: 17px;
+    padding: 13px 15px 13px 12px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-thumb-wrap {
+    width: 120px;
+    height: 86px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-clock {
+    font-size: 14.5px;
+  }
 }
 
 @media (max-width: 1080px) {
+  body.app-main.home-page {
+    --home-header-height: 75px;
+  }
+
   body.app-main .app-header {
     padding: 12px 16px 0;
   }
@@ -3654,10 +3664,6 @@ body.app-main .timeline-event.is-entering {
   body.app-main .home-hero {
     gap: 0;
     padding-top: 0;
-  }
-
-  body.app-main.home-page .home-wrap {
-    padding-top: 108px;
   }
 
   body.app-main .home-hero-copy {
@@ -3715,16 +3721,6 @@ body.app-main .timeline-event.is-entering {
     padding-top: 16px;
   }
 
-  body.app-main .search-hero {
-    grid-template-columns: 1fr;
-    gap: 22px;
-  }
-
-  body.app-main .search-hero-art {
-    width: min(100%, 560px);
-    height: 160px;
-  }
-
   body.app-main .search-workspace {
     grid-template-columns: 220px minmax(0, 1fr);
     gap: 22px;
@@ -3755,8 +3751,8 @@ body.app-main .timeline-event.is-entering {
     --site-gutter: 18px;
   }
 
-  body.app-main .home-hero {
-    min-height: calc(100vh - 142px);
+  body.app-main.home-page {
+    --home-header-height: 115px;
   }
 
   body.app-main .hero-slide--camera {
@@ -3813,10 +3809,6 @@ body.app-main .timeline-event.is-entering {
 
   body.app-main.home-page .app-header-main {
     padding: 6px 2px;
-  }
-
-  body.app-main.home-page .home-wrap {
-    padding-top: 142px;
   }
 
   body.app-main .home-hero h1 {
@@ -3953,6 +3945,17 @@ body.app-main .timeline-event.is-entering {
     height: 70px;
   }
 
+  body.app-main .timeline-event.is-latest .timeline-event-card {
+    grid-template-columns: 100px minmax(0, 1fr) 16px;
+    gap: 14px;
+    padding: 12px 13px 12px 11px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-thumb-wrap {
+    width: 100px;
+    height: 76px;
+  }
+
   body.app-main .timeline-detail-inner {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -3968,6 +3971,10 @@ body.app-main .timeline-event.is-entering {
     --site-gutter: 16px;
   }
 
+  body.app-main.home-page {
+    --home-header-height: 105px;
+  }
+
   body.app-main .app-header {
     padding: 10px 12px 0;
   }
@@ -3975,11 +3982,6 @@ body.app-main .timeline-event.is-entering {
   body.app-main .app-header-main {
     border-radius: 18px;
     padding: 9px 10px;
-  }
-
-  body.app-main .device-chip {
-    padding: 6px 9px;
-    font-size: 10.5px;
   }
 
   body.app-main .avatar {
@@ -3996,12 +3998,8 @@ body.app-main .timeline-event.is-entering {
     padding-top: 12px;
   }
 
-  body.app-main.home-page .home-wrap {
-    padding-top: 130px;
-  }
-
   body.app-main .home-hero {
-    min-height: max(720px, calc(100vh - 130px));
+    min-height: max(720px, calc(100vh - var(--home-header-height, 105px)));
     padding: 0;
   }
 
@@ -4229,10 +4227,6 @@ body.app-main .timeline-event.is-entering {
     font-size: 13px;
   }
 
-  body.app-main .search-hero-art {
-    display: none;
-  }
-
   body.app-main .search-bar {
     margin-bottom: 24px;
   }
@@ -4383,6 +4377,29 @@ body.app-main .timeline-event.is-entering {
     width: 74px;
     height: 60px;
     border-radius: 8px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-event-card {
+    grid-template-columns: 80px minmax(0, 1fr) 12px;
+    gap: 10px;
+    padding: 9px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-thumb-wrap {
+    width: 80px;
+    height: 64px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-clock {
+    font-size: 12.5px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-object {
+    font-size: 11px;
+  }
+
+  body.app-main .timeline-event.is-latest .timeline-event-summary {
+    font-size: 10.5px;
   }
 
   body.app-main .timeline-event-body {

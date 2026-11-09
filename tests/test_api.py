@@ -127,6 +127,9 @@ def test_main_pages_are_distinct_navigation_targets(api_client):
         assert f'data-page="{page}"' in response.text
         assert marker in response.text
         assert 'href="/workbench"' in response.text
+        assert 'id="header-device"' not in response.text
+        assert "本机在线" not in response.text
+        assert 'class="device-chip"' not in response.text
         assert "/static/main.css" in response.text
         for href in nav_hrefs:
             assert href in response.text
@@ -142,6 +145,11 @@ def test_main_pages_are_distinct_navigation_targets(api_client):
     stylesheet = api_client.get("/static/main.css")
     assert stylesheet.status_code == 200
     assert ".app-main" in stylesheet.text
+
+    script = api_client.get("/static/app.js")
+    assert "header-device" not in script.text
+    assert "本机在线" not in script.text
+    assert "本机离线" not in script.text
 
     observe_alias = api_client.get("/observe?capture=1")
     assert observe_alias.status_code == 200
@@ -190,9 +198,14 @@ def test_search_page_has_workspace_filters_and_results(api_client):
     assert 'class="search-side"' not in page.text
     assert "可以这样问" not in page.text
     assert "example-chips" not in page.text
+    assert "最近一次本机观察" not in page.text
+    assert "search-hero-art" not in page.text
+    assert "search-hero-img" not in page.text
 
     script = api_client.get("/static/app.js")
     assert script.status_code == 200
+    assert "search-hero-img" not in script.text
+    assert "search-hero-art" not in script.text
     for token in (
         "loadSearchBase",
         "renderFilterCategories",
@@ -206,6 +219,7 @@ def test_search_page_has_workspace_filters_and_results(api_client):
     assert theme.status_code == 200
     assert ".filter-panel" in theme.text
     assert ".result" in theme.text
+    assert ".search-hero-art" not in theme.text
 
 
 def test_items_page_has_orb_gallery_and_mode_switch(api_client):
@@ -349,6 +363,9 @@ def test_product_and_universal_backgrounds_are_local_originals(api_client):
     assert 'url("/static/images/findy_homepage_ecosystem_scene.png")' in theme.text
     assert 'url("/static/images/findy-universal-background.png")' in theme.text
     assert "body.app-main:not(.home-page)" in theme.text
+    assert "--home-header-height" in theme.text
+    assert "padding: var(--home-header-height) 0 0" in theme.text
+    assert "grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)" in theme.text
     assert "background-size: cover" in theme.text
     assert "background-repeat: no-repeat" in theme.text
     assert "#f6f3ec" in theme.text
@@ -369,7 +386,6 @@ def test_search_and_items_expose_real_data_contracts(api_client):
     assert script.status_code == 200
     for token in (
         "evidence_crop_url",
-        "evidence_image_url",
         "openItemDetail",
         "objectSearchHref",
         "localDateLabel",
@@ -430,6 +446,8 @@ def test_timeline_is_grouped_expandable_activity_feed(api_client):
         ".timeline-day-head",
         ".timeline-events::before",
         ".timeline-event-card",
+        ".timeline-event.is-latest .timeline-event-card",
+        ".timeline-event.is-latest .timeline-thumb-wrap",
         ".timeline-detail-inner",
         ".timeline-evidence-box",
         "@keyframes findy-timeline-detail-in",
