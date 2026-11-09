@@ -50,16 +50,20 @@
 ## 3. 页面改造
 
 ### 首页 `/`
-- 首页只保留产品 Hero 与搜索，不展示本机概览、最近观察或最近物品。
+- 首页 Hero 使用两张产品摄影背景轮播，间隔 6 秒、800ms 淡入淡出；两个圆点可手动切换。
+- 鼠标悬停暂停轮播，标题、副标题和搜索框始终固定。
 - 标题为 `Findy，记住你的物品`，副标题为 `自然界的Ctrl+F`。
+- 标题行高 1.18、字重 600、字距放松；桌面 Hero 高度控制在 620–700px。
+- Hero 下方恢复三个轻量区域：本机概览、最近观察、最近记住的物品。
+- 最近观察使用真实抓拍；最近物品过滤掉最近一次抓拍，避免重复图片。
 - 全站移除英文眉题；功能说明只保留必要操作提示。
 - 所有主页面与工作台文案不再使用中文句号。
 
-### 首页产品摄影与统一背景（本轮增量）
-- 首页 Hero 使用 `web/static/images/findy_homepage_camera_original_proportions.png` 整张产品摄影作为 CSS `background-image`，原始尺寸 `1672×941`，不使用独立 `<img>` 容器。
-- 背景使用 `background-size: cover`、`background-position: center right`，原始比例不变；左侧叠加米白渐变保证标题、介绍和搜索框可读，摄像头保留在画面右侧。
-- 移动端单独设置 `background-position` 与纵向渐变，优先保证摄像头主体完整可见；不裁切、不拉伸、不重绘。
-- 产品图仅用于首页 Hero，不参与“最近观察”实时画面，避免把静态产品图伪装成实时抓拍。
+### 首页产品摄影与统一背景
+- 首页 Hero 使用 `web/static/images/findy_homepage_camera_original_proportions.png` 和 `web/static/images/findy_homepage_ecosystem_scene.png` 两张原图作为 CSS 背景，不使用独立 `<img>` 卡片。
+- 单品图 `background-size: cover`；生态图桌面 `120% auto`、窄屏 `140% auto` 或 `cover`，只做等比缩放与裁切，不拉伸、不压扁。
+- 左侧叠加米白渐变保证文字可读；桌面与移动端分别设置背景定位。
+- 移动端切换为上下结构，背景优先保证摄像头主体完整可见。
 - 其他四个主页面统一使用 `web/static/images/findy-universal-background.png`（同为 `1672×941`），通过 `body.app-main:not(.home-page)` 的 `background` 应用一次，不在每个页面复制图片。
 - 通用背景使用 `cover`、`no-repeat`、`fixed`，叠加 84%–94% 暖白遮罩；保持宽高比例，低视觉权重，不干扰物品照片与文字。
 - 首页与通用背景严格区分：首页不加载通用背景，其他页面不加载产品图。
@@ -93,9 +97,9 @@
 
 ## 4. 真实图片与数据来源
 
-- 首页产品背景：`/static/images/findy_homepage_camera_original_proportions.png`，静态产品摄影。
+- 首页轮播背景：`/static/images/findy_homepage_camera_original_proportions.png`、`/static/images/findy_homepage_ecosystem_scene.png`，均为静态产品摄影。
 - 其他页面统一背景：`/static/images/findy-universal-background.png`，原始无摄像头背景。
-- 最近观察页、时间线：`/api/captures/{id}/image` 或 `?thumb=1`。
+- 首页最近观察、最近观察页、时间线：`/api/captures/{id}/image` 或 `?thumb=1`。
 - 物品网格、球体、搜索结果：`/api/detections/{detection_id}/crop`。
 - 物品详情：`/api/tracks/{track_id}` 返回的检测裁剪图。
 - 所有图片均在本机 SQLite 与本地文件中；没有外链图片、没有 AI 生成图、没有图库图片。
@@ -111,8 +115,8 @@ D:\Anaconda3\python.exe .tmp\acceptance_fullsite.py
 ```
 
 - 自动化测试：**103 passed**
-- 浏览器验收：**129 项全部通过**
-- 覆盖：五个页面的真实数据、首页整图背景 / cover / 移动端背景定位 / 左侧文字可读 / 无数据概览区、全站无句号与英文眉题、最近观察页、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
+- 浏览器验收：**146 项全部通过**
+- 覆盖：五个页面的真实数据、首页双背景轮播 / 6 秒切换 / 800ms 淡入淡出 / 圆点切换 / 悬停暂停、标题排版、三块内容区、最近观察与最近物品不重复、全站无句号与英文眉题、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
 - 验收期间未触发 `/api/capture`、`/api/observe`、`/api/service/*`、`/api/acceptance/*`。
 
 截图目录：`docs/evidence/full-site-redesign/`。

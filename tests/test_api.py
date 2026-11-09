@@ -268,7 +268,7 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
         assert token in script.text
 
 
-def test_home_is_focused_product_landing(api_client):
+def test_home_has_carousel_and_three_content_sections(api_client):
     page = api_client.get("/")
     assert page.status_code == 200
     assert 'id="home-hero"' in page.text
@@ -276,29 +276,34 @@ def test_home_is_focused_product_landing(api_client):
     assert "Findy，" in page.text
     assert "记住你的物品" in page.text
     assert "自然界的Ctrl+F" in page.text
-    assert 'id="home-capture-img"' not in page.text
-    assert 'id="home-objects"' not in page.text
-    assert 'id="home-object-count"' not in page.text
-    assert 'id="home-source-state"' not in page.text
-    assert "home-dashboard" not in page.text
-    assert "本机概览" not in page.text
-    assert "最近记住的物品" not in page.text
-    # 产品图改为 Hero CSS 背景，不再使用独立 img 容器。
+    assert page.text.count("data-hero-slide") == 2
+    assert page.text.count("data-hero-dot") == 2
+    assert 'id="home-object-count"' in page.text
+    assert 'id="home-capture-count"' in page.text
+    assert 'id="home-device-state"' in page.text
+    assert 'id="home-capture-img"' in page.text
+    assert 'id="home-objects"' in page.text
+    assert 'id="home-capture"' in page.text
+    assert "本机概览" in page.text
+    assert "最近观察" in page.text
+    assert "最近记住的物品" in page.text
+    # 产品图作为 Hero CSS 背景，不使用独立 img 容器。
     assert 'id="home-product-img"' not in page.text
     assert 'src="/static/images/findy_homepage_camera_original_proportions.png"' not in page.text
+    assert 'src="/static/images/findy_homepage_ecosystem_scene.png"' not in page.text
 
     theme = api_client.get("/static/warm.css")
     assert theme.status_code == 200
     assert 'url("/static/images/findy_homepage_camera_original_proportions.png")' in theme.text
-    assert "body.app-main .home-hero" in theme.text
+    assert 'url("/static/images/findy_homepage_ecosystem_scene.png")' in theme.text
+    assert "body.app-main .hero-slide" in theme.text
+    assert "transition: opacity 0.8s ease" in theme.text
     assert "background-size: cover" in theme.text
 
     script = api_client.get("/static/app.js")
     assert script.status_code == 200
-    assert "async function loadHome" in script.text
-    # 首页不再加载物品和最近观察数据。
-    assert "renderHomeObjects" not in script.text
-    assert "home-capture-img" not in script.text
+    for token in ("async function loadHome", "initHeroCarousel", "setInterval", "6000", "renderHomeObjects", "renderHomeCapture"):
+        assert token in script.text
     # 首页不使用外部图库、AI 生成图或跨站图片。
     assert "findy-tips" not in page.text
     assert not re.search(r'(?:src|href)="https?://', page.text)
@@ -322,6 +327,12 @@ def test_product_and_universal_backgrounds_are_local_originals(api_client):
     with Image.open(io.BytesIO(product.content)) as image:
         assert image.size == (1672, 941)
 
+    ecosystem = api_client.get("/static/images/findy_homepage_ecosystem_scene.png")
+    assert ecosystem.status_code == 200
+    assert ecosystem.headers["content-type"].startswith("image/png")
+    with Image.open(io.BytesIO(ecosystem.content)) as image:
+        assert image.size == (1672, 941)
+
     universal = api_client.get("/static/images/findy-universal-background.png")
     assert universal.status_code == 200
     assert universal.headers["content-type"].startswith("image/png")
@@ -331,6 +342,7 @@ def test_product_and_universal_backgrounds_are_local_originals(api_client):
     theme = api_client.get("/static/warm.css")
     assert theme.status_code == 200
     assert 'url("/static/images/findy_homepage_camera_original_proportions.png")' in theme.text
+    assert 'url("/static/images/findy_homepage_ecosystem_scene.png")' in theme.text
     assert 'url("/static/images/findy-universal-background.png")' in theme.text
     assert "body.app-main:not(.home-page)" in theme.text
     assert "background-size: cover" in theme.text
