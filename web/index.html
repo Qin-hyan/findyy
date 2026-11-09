@@ -34,35 +34,20 @@
   </header>
 
   <main class="app-page home-wrap">
-    <section class="home-hero">
-      <div class="home-hero-copy wm-enter" style="--enter-delay: 0ms">
-        <p class="home-eyebrow">FINDY CAMERA / LOCAL MEMORY</p>
-        <h1><span>记住每一件物品。</span><span>需要时，找到它。</span></h1>
-        <p class="home-lede">一台把物品记忆留在本机的桌面相机。看见、记住，随时找到。</p>
-        <form class="hero-search" id="home-search-form" role="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-          <input id="home-search-input" type="search" placeholder="例如：我的耳机最后出现在哪里？" autocomplete="off" aria-label="询问 Findy 物品位置" />
-          <button type="submit" aria-label="开始查找">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
-          </button>
-        </form>
-      </div>
-
-      <div class="home-hero-media wm-enter" style="--enter-delay: 90ms">
-        <figure class="hero-product">
-          <img
-            id="home-product-img"
-            src="/static/images/findy_homepage_camera_original_proportions.png"
-            width="1672"
-            height="941"
-            alt="Findy Camera 黑色智能相机产品图"
-            decoding="async"
-          />
-          <figcaption class="hero-product-caption">
-            <span class="hero-product-dot" aria-hidden="true"></span>
-            Findy Camera · 端侧识别 · 本地存储
-          </figcaption>
-        </figure>
+    <section class="home-hero" id="home-hero" aria-label="Findy Camera 产品背景">
+      <div class="home-hero-inner">
+        <div class="home-hero-copy wm-enter" style="--enter-delay: 0ms">
+          <p class="home-eyebrow">FINDY CAMERA / LOCAL MEMORY</p>
+          <h1><span>记住每一件物品。</span><span>需要时，找到它。</span></h1>
+          <p class="home-lede">一台把物品记忆留在本机的桌面相机。看见、记住，随时找到。</p>
+          <form class="hero-search" id="home-search-form" role="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input id="home-search-input" type="search" placeholder="例如：我的耳机最后出现在哪里？" autocomplete="off" aria-label="询问 Findy 物品位置" />
+            <button type="submit" aria-label="开始查找">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+            </button>
+          </form>
+        </div>
       </div>
     </section>
 

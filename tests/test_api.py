@@ -112,7 +112,7 @@ def test_health_and_index(api_client):
 
 def test_main_pages_are_distinct_navigation_targets(api_client):
     pages = {
-        "/": ("home", 'id="home-product-img"'),
+        "/": ("home", 'id="home-hero"'),
         "/observe": ("observe", 'id="capture-img"'),
         "/search": ("search", 'id="query-form"'),
         "/items": ("items", 'id="objects"'),
@@ -134,7 +134,7 @@ def test_main_pages_are_distinct_navigation_targets(api_client):
     # 五个 URL 返回不同页面，而不是同一页面的隐藏区块。
     bodies = {path: api_client.get(path).text for path in pages}
     assert len({body for body in bodies.values()}) == 5
-    assert 'id="home-product-img"' not in bodies["/observe"]
+    assert 'id="home-hero"' not in bodies["/observe"]
     assert 'id="capture-img"' not in bodies["/search"]
     assert 'id="query-form"' not in bodies["/"]
     assert 'id="objects"' not in bodies["/timeline"]
@@ -268,18 +268,24 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
         assert token in script.text
 
 
-def test_home_uses_product_image_and_real_capture_data(api_client):
+def test_home_uses_product_background_and_real_capture_data(api_client):
     page = api_client.get("/")
     assert page.status_code == 200
-    assert 'id="home-product-img"' in page.text
-    assert "/static/images/findy_homepage_camera_original_proportions.png" in page.text
-    assert 'width="1672"' in page.text and 'height="941"' in page.text
+    assert 'id="home-hero"' in page.text
+    assert 'id="home-search-form"' in page.text
     assert 'id="home-capture-img"' in page.text
     assert 'id="home-objects"' in page.text
     assert 'id="home-object-count"' in page.text
     assert 'id="home-source-state"' in page.text
-    assert 'id="home-hero-img"' not in page.text
-    assert "hero-float" not in page.text
+    # 产品图改为 Hero CSS 背景，不再使用独立 img 容器。
+    assert 'id="home-product-img"' not in page.text
+    assert 'src="/static/images/findy_homepage_camera_original_proportions.png"' not in page.text
+
+    theme = api_client.get("/static/warm.css")
+    assert theme.status_code == 200
+    assert 'url("/static/images/findy_homepage_camera_original_proportions.png")' in theme.text
+    assert "body.app-main .home-hero" in theme.text
+    assert "background-size: cover" in theme.text
 
     script = api_client.get("/static/app.js")
     assert script.status_code == 200
@@ -308,15 +314,16 @@ def test_product_and_universal_backgrounds_are_local_originals(api_client):
 
     theme = api_client.get("/static/warm.css")
     assert theme.status_code == 200
+    assert 'url("/static/images/findy_homepage_camera_original_proportions.png")' in theme.text
     assert 'url("/static/images/findy-universal-background.png")' in theme.text
     assert "body.app-main:not(.home-page)" in theme.text
-    assert "background-size: cover, cover" in theme.text
-    assert "background-repeat: no-repeat, no-repeat" in theme.text
+    assert "background-size: cover" in theme.text
+    assert "background-repeat: no-repeat" in theme.text
     assert "#f6f3ec" in theme.text
 
-    # 产品图只用于首页；通用背景图只通过 warm.css 应用到其他页面。
+    # 产品图只作为首页 Hero 背景；通用背景图只通过 warm.css 应用到其他页面。
     home = api_client.get("/").text
-    assert "/static/images/findy_homepage_camera_original_proportions.png" in home
+    assert "/static/images/findy_homepage_camera_original_proportions.png" not in home
     assert "/static/images/findy-universal-background.png" not in home
     for path in ("/observe", "/search", "/items", "/timeline"):
         page = api_client.get(path).text

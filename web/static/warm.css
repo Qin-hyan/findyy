@@ -479,16 +479,38 @@ body.app-main .text-button:hover {
 
 /* ---------------- 首页 ---------------- */
 body.app-main.home-page .home-wrap {
-  padding-top: 112px;
+  width: 100%;
+  max-width: none;
+  padding: 112px 0 0;
 }
 
 body.app-main .home-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: clamp(40px, 5vw, 82px);
-  min-height: 420px;
-  padding: 8px 0 14px;
+  width: 100%;
+  min-height: clamp(560px, 72vh, 760px);
+  margin: 0;
+  background-color: #f2ede4;
+  background-image:
+    linear-gradient(90deg, rgba(246, 243, 236, 0.98) 0%, rgba(246, 243, 236, 0.95) 28%, rgba(246, 243, 236, 0.72) 48%, rgba(246, 243, 236, 0.2) 68%, rgba(246, 243, 236, 0) 82%),
+    url("/static/images/findy_homepage_camera_original_proportions.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center right;
+}
+
+body.app-main .home-hero-inner {
+  width: min(100%, var(--site-max));
+  min-height: inherit;
+  margin: 0 auto;
+  padding: 0 var(--site-gutter);
+  display: flex;
+  align-items: center;
+}
+
+body.app-main .home-hero-copy {
+  width: min(100%, 640px);
 }
 
 body.app-main .home-eyebrow {
@@ -792,10 +814,12 @@ body.app-main .hero-product-dot {
 }
 
 body.app-main .home-dashboard {
+  width: min(100%, var(--site-max));
+  margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
   gap: clamp(34px, 4vw, 64px);
-  padding-top: 34px;
+  padding: 34px var(--site-gutter) 0;
   border-top: 1px solid rgba(228, 222, 210, 0.8);
 }
 
@@ -3450,9 +3474,8 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero {
-    grid-template-columns: 1fr;
-    gap: 30px;
-    padding-top: 8px;
+    gap: 0;
+    padding-top: 0;
   }
 
   body.app-main.home-page .home-wrap {
@@ -3460,7 +3483,7 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero-copy {
-    max-width: 760px;
+    max-width: 500px;
   }
 
   body.app-main .home-hero h1 span {
@@ -3554,6 +3577,15 @@ body.app-main .timeline-event.is-entering {
     --site-gutter: 18px;
   }
 
+  body.app-main .home-hero {
+    min-height: 660px;
+    background-position: 64% center;
+  }
+
+  body.app-main .home-hero-copy {
+    max-width: 420px;
+  }
+
   body.app-main .app-header-main {
     flex-wrap: wrap;
     gap: 8px 14px;
@@ -3588,7 +3620,7 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero h1 {
-    font-size: clamp(40px, 8.4vw, 58px);
+    font-size: clamp(38px, 6.2vw, 48px);
   }
 
   body.app-main .home-lede {
@@ -3780,8 +3812,24 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero {
-    min-height: 0;
-    gap: 24px;
+    min-height: 820px;
+    padding: 0;
+    background-image:
+      linear-gradient(180deg, rgba(246, 243, 236, 0.99) 0%, rgba(246, 243, 236, 0.98) 22%, rgba(246, 243, 236, 0.82) 31%, rgba(246, 243, 236, 0.2) 40%, rgba(246, 243, 236, 0) 48%),
+      url("/static/images/findy_homepage_camera_original_proportions.png");
+    background-position: center top, 82% center;
+    background-size: cover, cover;
+    background-repeat: no-repeat;
+  }
+
+  body.app-main .home-hero-inner {
+    align-items: flex-start;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  body.app-main .home-hero-copy {
+    max-width: 100%;
   }
 
   body.app-main .home-eyebrow {
