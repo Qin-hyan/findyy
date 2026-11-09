@@ -36,9 +36,7 @@
   <main class="app-page search-page">
     <section class="search-hero">
       <div class="search-hero-copy wm-enter" style="--enter-delay: 0ms">
-        <p class="page-kicker">ASK YOUR LOCAL MEMORY</p>
         <h1>找找你想要的物品</h1>
-        <p class="search-lede">试试用自然语言描述，例如：“我的耳机在哪？”</p>
       </div>
       <figure class="search-hero-art wm-enter" style="--enter-delay: 90ms" aria-hidden="true">
         <img id="search-hero-img" alt="" hidden />
@@ -48,7 +46,7 @@
 
     <form class="search-bar wm-enter" id="query-form" style="--enter-delay: 150ms" role="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-      <input id="query-input" type="search" placeholder="我的耳机最后出现在哪里？" autocomplete="off" aria-label="用自然语言询问物品位置" />
+      <input id="query-input" type="search" placeholder="我的耳机在哪" autocomplete="off" aria-label="用自然语言询问物品位置" />
       <span class="query-intent" id="query-intent"></span>
       <button type="submit" aria-label="查找">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
@@ -86,7 +84,6 @@
             </button>
           </div>
         </div>
-        <p class="filter-note">筛选仅作用于本机已记录的观察，不会上传查询内容。</p>
       </aside>
 
       <section class="search-results wm-enter" style="--enter-delay: 250ms" aria-live="polite">
@@ -101,8 +98,8 @@
   </main>
 
   <footer class="app-footer">
-    <p>Findy MVP · 本地检测：OWLv2 开放词表 · 实例关联：DINOv2 + 区域/时间先验 · 存储：SQLite + 本地文件</p>
-    <p class="muted small">所有图像与查询都在本机处理，不上传云端。识别能力受词表与画面分辨率限制，结果仅供参考。 <a href="/workbench">验收工作台</a></p>
+    <p>Findy · 本地运行 · 图像与查询不上传 · 识别结果仅供参考</p>
+    <p class="muted small"><a href="/workbench">验收工作台</a></p>
   </footer>
 
   <div class="toast hidden" id="toast"></div>

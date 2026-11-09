@@ -1,12 +1,5 @@
 const PAGE = document.body.dataset.page || "observe";
 
-const DEFAULT_EXAMPLES = [
-  "我的钥匙最后出现在哪里？",
-  "红色杯子在哪？",
-  "手机是什么时候最后一次看到的？",
-  "桌上都有哪些东西？",
-];
-
 const state = {
   status: null,
   currentCapture: null,
@@ -28,8 +21,6 @@ const state = {
   gridEntrancePending: false,
   gridAnimationTimer: 0,
   itemsOrb: null,
-  homeObjects: [],
-  homeCaptureId: null,
   searchBase: [],
   searchItems: [],
   searchCategory: "all",
@@ -49,9 +40,13 @@ function escapeHtml(text) {
     .replaceAll('"', "&quot;");
 }
 
+function stripPeriods(text) {
+  return String(text ?? "").replaceAll("\u3002", "");
+}
+
 function setText(id, text) {
   const el = $(id);
-  if (el) el.textContent = text;
+  if (el) el.textContent = stripPeriods(text);
 }
 
 function setPill(id, text, cls) {
@@ -64,7 +59,7 @@ function setPill(id, text, cls) {
 function toast(message, ok = false) {
   const el = $("toast");
   if (!el) return;
-  el.textContent = message;
+  el.textContent = stripPeriods(message);
   el.classList.toggle("ok", ok);
   el.classList.remove("hidden");
   clearTimeout(el._timer);
@@ -178,7 +173,7 @@ function renderObserveFeature(cap, detections) {
   const source = $("observe-feature-source");
 
   if (!cap) {
-    if (list) list.innerHTML = '<span class="muted small">还没有检测结果。</span>';
+    if (list) list.innerHTML = '<span class="muted small">还没有检测结果</span>';
     if (count) count.textContent = "—";
     if (time) time.textContent = "还没有抓拍记录";
     if (zone) zone.textContent = "点击“立即抓拍”开始记录";
@@ -206,7 +201,7 @@ function renderObserveFeature(cap, detections) {
   }
   if (!list) return;
   if (!detections?.length) {
-    list.innerHTML = '<span class="muted small">这一帧没有识别到词表内物品。</span>';
+    list.innerHTML = '<span class="muted small">这一帧没有识别到词表内物品</span>';
     return;
   }
   list.innerHTML = detections
@@ -303,10 +298,6 @@ async function loadStatus() {
     if (data.pipeline?.model_errors?.length) {
       setText("capture-status", "模型错误：" + data.pipeline.model_errors.join(" | "));
     }
-
-    const examples = data.examples?.length ? data.examples : DEFAULT_EXAMPLES;
-    const input = $("query-input");
-    if (input && examples[0]) input.placeholder = `例如：${examples[0]}`;
   } catch (err) {
     setPill("pill-db", "服务不可用", "bad");
     const deviceChip = $("header-device");
@@ -352,7 +343,7 @@ function renderDetectionList(detections, highlightId = null) {
   if (!list) return;
   list.innerHTML = "";
   if (!detections?.length) {
-    list.innerHTML = '<p class="empty-note">这一帧没有识别到词表内物品。</p>';
+    list.innerHTML = '<p class="empty-note">这一帧没有识别到词表内物品</p>';
     return;
   }
   detections.forEach((d) => {
@@ -378,8 +369,8 @@ function renderDetectionList(detections, highlightId = null) {
 
 function summarizeCapture(cap, detections) {
   const labels = [...new Set((detections || []).map((d) => d.class_zh).filter(Boolean))];
-  if (!labels.length) return "这一帧没有识别到词表内物品。";
-  return `识别到 ${labels.length} 类物品：${labels.slice(0, 6).join("、")}${labels.length > 6 ? " 等" : ""}。`;
+  if (!labels.length) return "这一帧没有识别到词表内物品";
+  return `识别到 ${labels.length} 类物品：${labels.slice(0, 6).join("、")}${labels.length > 6 ? " 等" : ""}`;
 }
 
 function setSummaryOpen(open) {
@@ -496,14 +487,14 @@ function showEmptyCapture() {
   clearOverlay();
   setText("capture-time", "—");
   setStageCount(0);
-  setText("capture-summary", "还没有抓拍记录。点击“立即抓拍”，或运行演示数据脚本后再回来。");
+  setText("capture-summary", "还没有抓拍记录");
   const source = $("capture-source");
   if (source) {
     source.className = "source-badge src-unknown";
     source.textContent = "未知来源";
   }
   const list = $("detections-list");
-  if (list) list.innerHTML = '<p class="empty-note">还没有检测结果。</p>';
+  if (list) list.innerHTML = '<p class="empty-note">还没有检测结果</p>';
   renderObserveFeature(null, []);
   closeSummary();
 }
@@ -577,7 +568,7 @@ async function doCapture() {
     btn.disabled = true;
     btn.textContent = "抓拍与识别中…";
   }
-  setText("capture-status", "正在抓拍并运行检测（CPU 上约需数秒）…");
+  setText("capture-status", "正在抓拍…");
   try {
     const data = await api("/api/capture", { method: "POST" });
     if (!data.ok) {
@@ -586,9 +577,7 @@ async function doCapture() {
       toast(`抓拍失败：${msg}`);
       return;
     }
-    setText(
-      "capture-status",
-      `本次识别到 ${(data.detections || []).length} 个物品` +
+    setText("capture-status", `本次识别到 ${(data.detections || []).length} 个物品` +
         (data.warnings?.length ? ` · ${data.warnings.join("；")}` : "")
     );
     await Promise.all([showCapture(data.capture_id), loadStatus()]);
@@ -751,7 +740,7 @@ function renderSearchItems() {
   }
   if (!visible.length) {
     results.innerHTML =
-      '<p class="search-empty">当前筛选条件下没有记录。可以放宽物品类型或时间范围后再试。</p>';
+      '<p class="search-empty">没有符合条件的记录</p>';
     return;
   }
   results.innerHTML = visible.map(buildSearchCard).join("");
@@ -796,7 +785,7 @@ async function loadSearchBase() {
     renderSearchItems();
   } catch (error) {
     if (results) {
-      results.innerHTML = '<p class="search-empty">读取本地物品库失败，请确认本地服务正常。</p>';
+      results.innerHTML = '<p class="search-empty">读取本地物品库失败，请确认本地服务正常</p>';
     }
   }
 }
@@ -823,7 +812,7 @@ async function runQuery(text) {
     renderAnswer(data);
   } catch (err) {
     if (answer) answer.textContent = `查询失败：${err}`;
-    if (results) results.innerHTML = '<p class="search-empty">查询失败，请确认本地服务正常。</p>';
+    if (results) results.innerHTML = '<p class="search-empty">查询失败，请确认本地服务正常</p>';
   }
 }
 
@@ -833,7 +822,7 @@ function renderAnswer(data) {
   answer.classList.remove("hidden", "notfound", "help");
   if (data.status === "not_found" || data.status === "empty") answer.classList.add("notfound");
   if (data.status === "help") answer.classList.add("help");
-  answer.textContent = data.answer || "（没有回答）";
+  answer.textContent = stripPeriods(data.answer || "（没有回答）");
   setText("query-intent", data.intent_zh ? `意图：${data.intent_zh}` : "");
 
   const oldNotes = document.getElementById("answer-notes");
@@ -845,7 +834,7 @@ function renderAnswer(data) {
     data.notes.forEach((n) => {
       const p = document.createElement("div");
       p.className = "note";
-      p.textContent = "⚠ " + n;
+      p.textContent = "⚠ " + stripPeriods(n);
       nb.appendChild(p);
     });
     answer.after(nb);
@@ -1115,7 +1104,7 @@ function createItemsOrb(stage) {
       try {
         stage.releasePointerCapture(event.pointerId);
       } catch (error) {
-        // 指针已释放时无需处理。
+        // 指针已释放时无需处理
       }
     }
     if (cancelled) {
@@ -1156,7 +1145,7 @@ function createItemsOrb(stage) {
     try {
       stage.setPointerCapture(event.pointerId);
     } catch (error) {
-      // 触屏浏览器可能不支持捕获，指针事件仍可继续。
+      // 触屏浏览器可能不支持捕获，指针事件仍可继续
     }
     event.preventDefault();
   }
@@ -1329,14 +1318,14 @@ function renderOrb(objects) {
   sphere.innerHTML = "";
   if (empty) {
     empty.hidden = !!objects.length;
-    empty.textContent = "还没有记录到物品。";
+    empty.textContent = "还没有记录到物品";
   }
   const stage = $("orb-stage");
   if (stage) {
     stage.setAttribute(
       "aria-label",
       objects.length
-        ? `可拖动物品图片球，共 ${objects.length} 件，可拖动或使用方向键旋转`
+        ? `可拖动物品图片球，共 ${objects.length} 件`
         : "物品图片球，暂无物品"
     );
   }
@@ -1385,7 +1374,7 @@ function renderObjectGrid(objects) {
   grid.innerHTML = "";
   setText("grid-count", `（${objects.length}）`);
   if (!objects.length) {
-    grid.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
+    grid.innerHTML = '<p class="empty-note">还没有记录到物品</p>';
     return;
   }
   objects.forEach((o, index) => {
@@ -1534,7 +1523,6 @@ async function openItemDetail(trackId, origin) {
         ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(label)} 的真实裁剪图" data-fallback-class="thumb-empty" data-fallback-text="图片不可用" />` : '<span class="thumb-empty">暂无图片</span>'}
       </div>
       <div class="item-detail-copy">
-        <p class="item-detail-kicker">OBJECT DETAIL</p>
         <h2 id="item-dialog-title">${escapeHtml(label)}</h2>
         <p class="item-detail-sub" id="item-dialog-sub">${escapeHtml(latest.zone || "未分区")} · ${escapeHtml(sources.join(" / ") || "来源未知")}</p>
         <div class="item-detail-stats">
@@ -1547,13 +1535,13 @@ async function openItemDetail(trackId, origin) {
           <a href="/timeline">观察时间线</a>
         </div>
         <p class="item-history-title">最近观测记录</p>
-        <ul class="item-history">${history || '<li class="timeline-detail-empty">还没有观测记录。</li>'}</ul>
+        <ul class="item-history">${history || '<li class="timeline-detail-empty">还没有观测记录</li>'}</ul>
       </div>`;
     const title = $("item-dialog-title");
     if (title) title.setAttribute("tabindex", "-1");
   } catch (error) {
     if (state.itemDetailTrackId === trackId) {
-      body.innerHTML = `<p class="empty-note">读取物品详情失败：${escapeHtml(error.message || error)}</p>`;
+      body.innerHTML = `<p class="empty-note">读取物品详情失败：${escapeHtml(stripPeriods(error.message || error))}</p>`;
     }
   }
 }
@@ -1635,11 +1623,7 @@ function initItems() {
   state.itemsHoverCapable = hoverQuery.matches;
   const stage = $("orb-stage");
   const hint = $("orb-hint");
-  if (hint) {
-    hint.textContent = state.itemsHoverCapable
-      ? "拖动或使用方向键旋转 · 悬停暂停 · 点击查看物品详情"
-      : "单指拖动旋转 · 轻点查看物品详情";
-  }
+  if (hint) hint.textContent = "拖动旋转 · 点击查看";
   if (hoverQuery.addEventListener) {
     hoverQuery.addEventListener("change", (event) => {
       state.itemsHoverCapable = event.matches;
@@ -1657,7 +1641,7 @@ function initItems() {
     if (event.key === "Escape") closeItemDetail();
   });
   applyItemsMode("orb");
-  // 首屏动画结束后移除类名，避免球体/平铺切换时重播。
+  // 首屏动画结束后移除类名，避免球体/平铺切换时重播
   window.setTimeout(() => {
     document.querySelectorAll(".items-page .wm-enter").forEach((el) => {
       el.classList.remove("wm-enter");
@@ -1674,7 +1658,7 @@ async function loadObjects() {
   }
   const grid = $("objects");
   if (!data.ok) {
-    const message = "读取物品库失败，请确认本地服务正常。";
+    const message = "读取物品库失败，请确认本地服务正常";
     if (grid) grid.innerHTML = `<p class="empty-note">${message}</p>`;
     if (!state.objects.length) {
       setText("objects-count", "0");
@@ -1703,91 +1687,6 @@ async function loadObjects() {
 }
 
 // ---------------- 首页 ----------------
-function renderHomeObjects(objects, excludeCaptureId = null) {
-  const box = $("home-objects");
-  if (!box) return;
-  const distinct = excludeCaptureId
-    ? objects.filter((object) => object.capture_id !== excludeCaptureId)
-    : objects;
-  const seenLabels = new Set();
-  const distinctLabels = distinct.filter((object) => {
-    const label = objectLabel(object);
-    if (seenLabels.has(label)) return false;
-    seenLabels.add(label);
-    return true;
-  });
-  const items = (distinctLabels.length >= 3 ? distinctLabels : distinct).slice(0, 5);
-  if (!items.length) {
-    box.innerHTML = '<p class="empty-note">还没有记录到物品。先到“最近观察”抓拍一张。</p>';
-    return;
-  }
-  box.innerHTML = items
-    .map((object) => {
-      const label = objectLabel(object);
-      const image = objectImage(object)
-        ? `<img src="${escapeHtml(objectImage(object))}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" data-fallback-class="tile-no-image" data-fallback-text="暂无图片" />`
-        : '<span class="tile-no-image">暂无图片</span>';
-      return `<a class="mini-object" href="${escapeHtml(objectSearchHref(label))}">
-        <span class="mini-object-media">${image}</span>
-        <span class="mini-object-copy">
-          <strong>${escapeHtml(label)}</strong>
-          <span>${escapeHtml(objectWhen(object))}</span>
-        </span>
-      </a>`;
-    })
-    .join("");
-}
-
-function renderHomeCapture(capture, detail) {
-  const image = $("home-capture-img");
-  const empty = $("home-capture-empty");
-  const card = $("home-capture");
-  const detections = detail?.detections || [];
-  const labels = [...new Set(detections.map((detection) => detection.class_zh).filter(Boolean))];
-  if (!capture) {
-    if (empty) empty.textContent = "还没有真实抓拍记录。";
-    if (image) image.hidden = true;
-    return;
-  }
-  const imageUrl = capture.image_url || `/api/captures/${capture.id}/image`;
-  if (card) card.href = `/observe?capture=${encodeURIComponent(capture.id)}`;
-  if (image) {
-    image.src = imageUrl;
-    image.alt = `抓拍 #${capture.id}，${observeTimeLabel(capture)}`;
-    image.hidden = false;
-    if (empty) empty.hidden = true;
-    image.addEventListener(
-      "error",
-      () => {
-        image.hidden = true;
-        if (empty) {
-          empty.hidden = false;
-          empty.textContent = "图像文件不可用。";
-        }
-      },
-      { once: true }
-    );
-  }
-  setText("home-capture-time", observeTimeLabel(capture));
-  const source = $("home-capture-source");
-  if (source) {
-    const kind = ["esp32", "replay", "upload", "webcam"].includes(capture.source_kind)
-      ? capture.source_kind
-      : "unknown";
-    source.className = `source-badge src-${kind}`;
-    source.textContent = sourceName(kind);
-  }
-  const objects = $("home-capture-objects");
-  if (objects) {
-    objects.innerHTML = labels.length
-      ? labels
-          .slice(0, 4)
-          .map((label) => `<span class="object-pill">${escapeHtml(label)}</span>`)
-          .join("")
-      : '<span class="muted small">这一帧没有识别到词表内物品。</span>';
-  }
-}
-
 async function loadHome() {
   const form = $("home-search-form");
   const input = $("home-search-input");
@@ -1800,27 +1699,6 @@ async function loadHome() {
       else input?.focus();
     });
   }
-  const [objectsData, capturesData] = await Promise.all([
-    api("/api/objects").catch(() => ({ ok: false })),
-    api("/api/captures?limit=1").catch(() => ({ ok: false })),
-  ]);
-  const objects = objectsData.ok ? objectsData.objects || [] : [];
-  const capture = capturesData.ok ? (capturesData.captures || [])[0] : null;
-  state.homeObjects = objects;
-  setText("home-object-count", String(objects.length));
-  renderHomeObjects(objects, capture?.id);
-  if (!capture) {
-    renderHomeCapture(null);
-    return;
-  }
-  let detail = null;
-  try {
-    const response = await api(`/api/captures/${capture.id}`);
-    if (response.ok) detail = response;
-  } catch (error) {
-    detail = null;
-  }
-  renderHomeCapture(capture, detail);
 }
 
 // ---------------- 最近观察 · 历史列表 ----------------
@@ -1828,7 +1706,7 @@ function renderObserveRecent(captures, details) {
   const box = $("observe-recent");
   if (!box) return;
   if (!captures.length) {
-    box.innerHTML = '<p class="empty-note">还没有历史抓拍。点击“立即抓拍”开始记录。</p>';
+    box.innerHTML = '<p class="empty-note">还没有历史抓拍</p>';
     return;
   }
   const detailById = new Map();
@@ -1888,7 +1766,7 @@ async function loadObserveRecent() {
   if (!box) return;
   const data = await api("/api/captures?limit=6");
   if (!data.ok) {
-    box.innerHTML = '<p class="empty-note">读取历史抓拍失败，请确认本地服务正常。</p>';
+    box.innerHTML = '<p class="empty-note">读取历史抓拍失败，请确认本地服务正常</p>';
     return;
   }
   const captures = data.captures || [];
@@ -1997,7 +1875,7 @@ function timelineEvidenceBoxes(detections) {
 
 function timelineDetectionList(detections) {
   if (!detections?.length) {
-    return '<p class="timeline-detail-empty">这一帧没有识别到词表内物品。</p>';
+    return '<p class="timeline-detail-empty">这一帧没有识别到词表内物品</p>';
   }
   return `<ul class="timeline-detections">${detections
     .map((detection) => {
@@ -2207,14 +2085,14 @@ async function loadTimeline() {
   if (!box) return;
   if (!data.ok) {
     state.timelineSignature = null;
-    renderTimelineEmpty("读取历史抓拍失败", "请确认本地服务正常后稍后重试。");
+    renderTimelineEmpty("读取历史抓拍失败", "请确认本地服务正常后稍后重试");
     return;
   }
   const captures = data.captures || [];
   setText("timeline-count", `${captures.length} 帧`);
   if (!captures.length) {
     state.timelineSignature = "";
-    renderTimelineEmpty("还没有抓拍记录", "先到“最近观察”抓拍一张，活动记录会自动出现在这里。");
+    renderTimelineEmpty("还没有抓拍记录", "先去最近观察抓拍一张");
     return;
   }
 

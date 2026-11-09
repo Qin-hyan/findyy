@@ -489,7 +489,7 @@ body.app-main .home-hero {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: clamp(560px, 72vh, 760px);
+  min-height: calc(100vh - 112px);
   margin: 0;
   background-color: #f2ede4;
   background-image:
@@ -536,10 +536,12 @@ body.app-main .home-hero h1 span {
 }
 
 body.app-main .home-lede {
-  margin: 22px 0 30px;
-  color: var(--site-muted);
-  font-size: 16px;
-  line-height: 1.7;
+  margin: 18px 0 30px;
+  color: var(--site-text-soft);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.03em;
 }
 
 body.app-main .hero-search,
@@ -3578,12 +3580,12 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero {
-    min-height: 660px;
-    background-position: 64% center;
+    min-height: calc(100vh - 142px);
+    background-position: 74% center;
   }
 
   body.app-main .home-hero-copy {
-    max-width: 420px;
+    max-width: 400px;
   }
 
   body.app-main .app-header-main {
@@ -3626,7 +3628,7 @@ body.app-main .timeline-event.is-entering {
   body.app-main .home-lede {
     margin-top: 16px;
     margin-bottom: 24px;
-    font-size: 14.5px;
+    font-size: 18px;
   }
 
   body.app-main .hero-search,

@@ -1,6 +1,6 @@
 /* Findy 端到端验收工作台前端逻辑
- * 约束：不使用 ES module、不使用任何外部资源；所有请求同源相对路径。
- * 所有动态文本均通过 textContent / DOM 节点写入，避免 XSS。
+ * 约束：不使用 ES module、不使用任何外部资源；所有请求同源相对路径
+ * 所有动态文本均通过 textContent / DOM 节点写入，避免 XSS
  */
 (function () {
   "use strict";
@@ -711,7 +711,7 @@
           $("last-probe").textContent = probeSummaryText(probe);
           if (probe && probe.ok === true) {
             logAction("检查设备连接", "OK · " + textOr(probe.summary && probe.summary.device, "设备在线"), true);
-            setCaptureStatus("设备连接正常，可以抓拍。", "ok");
+            setCaptureStatus("设备连接正常，可以抓拍", "ok");
             toast("设备连接正常", true);
           } else {
             var failMsg = "设备检查失败：" + textOr(probe && probe.error, "未知错误");
@@ -786,7 +786,7 @@
         .then(function (data) {
           if (!data || data.ok === false) throw new Error(pickError(data, "启动自动采集失败"));
           logAction("开始自动采集", "OK", true);
-          setCaptureStatus("自动采集已启动。", "ok");
+          setCaptureStatus("自动采集已启动", "ok");
           toast("自动采集已启动", true);
           return loadStatus({ quiet: true }).then(function () {
             return Promise.allSettled([loadLatestCapture(false), loadTracks(true)]);
@@ -808,7 +808,7 @@
         .then(function (data) {
           if (!data || data.ok === false) throw new Error(pickError(data, "停止自动采集失败"));
           logAction("停止自动采集", "OK", true);
-          setCaptureStatus("自动采集已停止。", "ok");
+          setCaptureStatus("自动采集已停止", "ok");
           toast("自动采集已停止", true);
           return loadStatus({ quiet: true });
         })
@@ -870,7 +870,7 @@
       .catch(function (err) {
         if (err && err.isTimeout) {
           var timeoutMsg =
-            "抓拍请求超时（" + Math.round(CAPTURE_TIMEOUT_MS / 1000) + " 秒）：后台可能仍在处理，请稍后刷新状态。";
+            "抓拍请求超时（" + Math.round(CAPTURE_TIMEOUT_MS / 1000) + " 秒）：后台可能仍在处理，请稍后刷新状态";
           logAction("立即抓拍", timeoutMsg, false);
           setCaptureStatus(timeoutMsg, "bad");
           toast(timeoutMsg, false);
@@ -1027,7 +1027,7 @@
     lines.push("状态：" + textOr(capture.status, "未知") + (capture.time_ago ? " · 距今 " + capture.time_ago : ""));
     if (capture.detect_error) lines.push("检测失败原文：" + capture.detect_error);
     if (capture.error) lines.push("错误原文：" + capture.error);
-    if (extra && extra.duplicate) lines.push("提示：本次被判定为重复帧，复用了已有抓拍记录。");
+    if (extra && extra.duplicate) lines.push("提示：本次被判定为重复帧，复用了已有抓拍记录");
     var meta = $("capture-meta");
     meta.textContent = lines.join("\n");
     meta.classList.toggle("bad", !!capture.detect_error || capture.status === "failed");
@@ -1095,7 +1095,7 @@
     clear(box);
     $("tracks-count").textContent = objects.length + " 条";
     if (!objects.length) {
-      box.appendChild(node("p", "muted small", "还没有轨迹记录。先抓拍一张。"));
+      box.appendChild(node("p", "muted small", "还没有轨迹记录先抓拍一张"));
       return;
     }
     objects.forEach(function (o) {
@@ -1181,7 +1181,7 @@
           "wb-track-warn",
           "mixed_sources：该轨迹包含多个来源（" +
             (track.source_kinds || []).map(sourceLabel).join("、") +
-            "），跨来源关联结果可能不可靠，请人工核对。"
+            "），跨来源关联结果可能不可靠，请人工核对"
         )
       );
     }
@@ -1202,7 +1202,7 @@
 
     var timeline = node("div", "wb-timeline");
     if (!detections.length) {
-      timeline.appendChild(node("p", "muted small", "该轨迹暂无跨帧记录。"));
+      timeline.appendChild(node("p", "muted small", "该轨迹暂无跨帧记录"));
     } else {
       detections.forEach(function (d) {
         var row = node("div", "wb-timeline-item");
@@ -1279,7 +1279,7 @@
     var q = String(text !== undefined && text !== null ? text : $("query-input").value || "").trim();
     if (!q) {
       $("answer").className = "answer help";
-      $("answer").textContent = "请输入要查询的内容。";
+      $("answer").textContent = "请输入要查询的内容";
       return;
     }
     if (state.queryBusy) return;
@@ -1351,7 +1351,7 @@
       renderResultEntry(r, results);
     });
     if (!results.children.length && status !== "not_found" && status !== "empty") {
-      results.appendChild(node("p", "muted small", "本次查询没有可展示的证据。"));
+      results.appendChild(node("p", "muted small", "本次查询没有可展示的证据"));
     }
 
     var suggestions = $("query-suggestions");
@@ -1575,7 +1575,7 @@
             key: pair[0],
             title: pair[1],
             status: "not_verified",
-            reason: "尚无验收运行，所有项为 NOT VERIFIED。",
+            reason: "尚无验收运行，所有项为 NOT VERIFIED",
             evidence: [],
           })
         );
@@ -1587,7 +1587,7 @@
       seenKeys[String(item.key || "")] = true;
       box.appendChild(buildAcceptanceRow(item));
     });
-    // 若后端返回项少于六项，用固定的 NOT VERIFIED 行补齐，避免"六行"缺失。
+    // 若后端返回项少于六项，用固定的 NOT VERIFIED 行补齐，避免"六行"缺失
     if (box.children.length < 6) {
       DEFAULT_ACCEPTANCE_ITEMS.forEach(function (pair) {
         if (box.children.length >= 6) return;
@@ -1597,7 +1597,7 @@
             key: pair[0],
             title: pair[1],
             status: "not_verified",
-            reason: "后端未返回该验收项结果（NOT VERIFIED）。",
+            reason: "后端未返回该验收项结果（NOT VERIFIED）",
             evidence: [],
           })
         );
@@ -1679,7 +1679,7 @@
       return;
     }
     if (running) {
-      setRunHint("本轮验收进行中：请完成证据采集后点击“结束本轮验收”。", false);
+      setRunHint("本轮验收进行中：请完成证据采集后点击“结束本轮验收”", false);
       return;
     }
     setRunHint(
@@ -1718,7 +1718,7 @@
   function finishRun() {
     var run = currentRun();
     if (!run || run.id === undefined || run.id === null) {
-      setRunHint("没有进行中的验收运行。", true);
+      setRunHint("没有进行中的验收运行", true);
       return Promise.resolve();
     }
     return withBusy(function () {
@@ -1752,7 +1752,7 @@
   function exportEvidence() {
     var run = currentRun();
     if (!run || run.id === undefined || run.id === null) {
-      setRunHint("没有可导出的验收运行。", true);
+      setRunHint("没有可导出的验收运行", true);
       logAction("导出证据 JSON", "没有可导出的验收运行", false);
       return;
     }
