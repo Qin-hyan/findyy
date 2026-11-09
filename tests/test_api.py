@@ -471,6 +471,15 @@ def test_brand_assets_and_manifest_are_served(api_client):
     assert favicon.status_code == 200
     assert favicon.headers["content-type"].startswith("image/")
     assert len(favicon.content) > 1000
+    with Image.open(io.BytesIO(favicon.content)) as image:
+        assert {(16, 16), (24, 24), (32, 32), (48, 48), (64, 64)} <= image.info["sizes"]
+
+    home = api_client.get("/").text
+    versioned_favicon = re.search(r'href="(/brand/favicon\.ico\?v=[^"]+)"', home)
+    assert versioned_favicon is not None
+    served_version = api_client.get(versioned_favicon.group(1))
+    assert served_version.status_code == 200
+    assert served_version.content == favicon.content
 
     lockup = api_client.get("/brand/svg/logo-lockup.svg")
     assert lockup.status_code == 200
@@ -515,14 +524,15 @@ def test_pages_use_brand_head_references_and_nav_lockups(api_client):
         page = api_client.get(path)
         assert page.status_code == 200
         assert "no-store" in page.headers.get("cache-control", "")
-        assert '<link rel="icon" href="/brand/favicon.ico" sizes="any" />' in page.text
+        assert '<link rel="icon" href="/brand/favicon.ico?v=' in page.text
+        assert 'sizes="any" />' in page.text
         assert (
             '<link rel="icon" type="image/png" sizes="32x32" '
-            'href="/brand/png/app-icon/findy-app-32.png" />'
+            'href="/brand/png/app-icon/findy-app-32.png?v='
         ) in page.text
         assert (
             '<link rel="apple-touch-icon" sizes="192x192" '
-            'href="/brand/png/app-icon/findy-app-192.png" />'
+            'href="/brand/png/app-icon/findy-app-192.png?v='
         ) in page.text
         assert '<link rel="manifest" href="/manifest.webmanifest" />' in page.text
         assert '<meta property="og:image" content="/brand/og-image-1200x630.png" />' in page.text
@@ -537,6 +547,7 @@ def test_pages_use_brand_head_references_and_nav_lockups(api_client):
     assert workbench.status_code == 200
     assert "no-store" in workbench.headers.get("cache-control", "")
     assert '<link rel="manifest" href="/manifest.webmanifest" />' in workbench.text
+    assert '<link rel="icon" href="/brand/favicon.ico?v=' in workbench.text
     assert (
         '<img class="brand-logo" src="/brand/svg/logo-lockup-inverse.svg" '
         'alt="Findy" width="110" height="36" />'

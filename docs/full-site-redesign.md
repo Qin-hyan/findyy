@@ -54,6 +54,7 @@
 - 五个主页面导航使用 `/brand/svg/logo-lockup.svg`，显示高度 36px、宽度 110px，保持 159.1:52 原始比例。
 - 深色工作台顶栏使用 `/brand/svg/logo-lockup-inverse.svg`，不使用 CSS 滤镜、不拉伸、不改比例。
 - favicon 为 16/24/32/48/64 多尺寸松鼠图标；manifest 引用 192/256/512 三个 App 图标。
+- 所有页面的 favicon 与 apple-touch-icon 引用带 `?v=c360e51c8471` 版本参数，强制浏览器重新拉取图标，避免标签页继续显示旧 “F” 图标。
 - 页面 HTML 与 manifest 响应使用 `no-cache, no-store, must-revalidate`，避免在多个页面之间切换时继续显示旧导航或旧 favicon。
 
 ## 3. 页面改造
