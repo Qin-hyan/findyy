@@ -489,18 +489,48 @@ body.app-main .home-hero {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: calc(100vh - 112px);
+  min-height: clamp(620px, 68vh, 700px);
   margin: 0;
+  overflow: hidden;
   background-color: #f2ede4;
-  background-image:
-    linear-gradient(90deg, rgba(246, 243, 236, 0.98) 0%, rgba(246, 243, 236, 0.95) 28%, rgba(246, 243, 236, 0.72) 48%, rgba(246, 243, 236, 0.2) 68%, rgba(246, 243, 236, 0) 82%),
-    url("/static/images/findy_homepage_camera_original_proportions.png");
+}
+
+body.app-main .hero-slide {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+body.app-main .hero-slide.is-active {
+  opacity: 1;
+}
+
+body.app-main .hero-slide--camera {
+  background-image: url("/static/images/findy_homepage_camera_original_proportions.png");
   background-size: cover;
   background-position: center right;
 }
 
+body.app-main .hero-slide--ecosystem {
+  background-image: url("/static/images/findy_homepage_ecosystem_scene.png");
+  background-size: 120% auto;
+  background-position: left center;
+}
+
+body.app-main .hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(246, 243, 236, 0.98) 0%, rgba(246, 243, 236, 0.96) 24%, rgba(246, 243, 236, 0.82) 36%, rgba(246, 243, 236, 0.35) 46%, rgba(246, 243, 236, 0.08) 54%, rgba(246, 243, 236, 0) 62%);
+}
+
 body.app-main .home-hero-inner {
+  position: relative;
+  z-index: 2;
   width: min(100%, var(--site-max));
   min-height: inherit;
   margin: 0 auto;
@@ -510,24 +540,16 @@ body.app-main .home-hero-inner {
 }
 
 body.app-main .home-hero-copy {
-  width: min(100%, 640px);
-}
-
-body.app-main .home-eyebrow {
-  margin: 0 0 20px;
-  color: var(--site-sage-deep);
-  font-size: 10.5px;
-  font-weight: 760;
-  letter-spacing: 0.18em;
+  width: min(100%, 560px);
 }
 
 body.app-main .home-hero h1 {
   margin: 0;
   color: var(--site-text);
-  font-size: clamp(50px, 5.1vw, 80px);
-  font-weight: 800;
-  line-height: 1.03;
-  letter-spacing: -0.065em;
+  font-size: clamp(50px, 4.8vw, 76px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
 }
 
 body.app-main .home-hero h1 span {
@@ -536,12 +558,190 @@ body.app-main .home-hero h1 span {
 }
 
 body.app-main .home-lede {
-  margin: 18px 0 30px;
+  margin: 22px 0 34px;
   color: var(--site-text-soft);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: -0.03em;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+}
+
+body.app-main.home-page .hero-search {
+  width: min(100%, 560px);
+}
+
+body.app-main .hero-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+body.app-main .hero-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: rgba(29, 27, 23, 0.38);
+  box-shadow: 0 1px 4px rgba(57, 49, 37, 0.14);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+body.app-main .hero-dot.is-active {
+  background: var(--site-ink);
+  transform: scale(1.15);
+}
+
+body.app-main .home-sections {
+  width: min(100%, var(--site-max));
+  margin: 0 auto;
+  padding: 44px var(--site-gutter) 64px;
+}
+
+body.app-main .home-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--site-line);
+}
+
+body.app-main .home-overview .section-head {
+  margin: 0;
+}
+
+body.app-main .overview-stats {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  flex-wrap: wrap;
+}
+
+body.app-main .overview-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+body.app-main .overview-stat strong {
+  color: var(--site-text);
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+body.app-main .overview-stat span {
+  color: var(--site-muted);
+  font-size: 11.5px;
+}
+
+body.app-main .home-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+  gap: 44px;
+  align-items: start;
+  margin-top: 32px;
+}
+
+body.app-main .home-observation-section,
+body.app-main .home-objects-section {
+  min-width: 0;
+}
+
+body.app-main .home-observation {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+body.app-main .home-observation-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--site-surface-soft);
+}
+
+body.app-main .home-observation-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.32s ease;
+}
+
+body.app-main .home-observation:hover .home-observation-media img {
+  transform: scale(1.02);
+}
+
+body.app-main .home-observation-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: var(--site-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+body.app-main .home-observation-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 2px 0;
+}
+
+body.app-main .home-observation-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.app-main .home-observation-top time {
+  color: var(--site-text);
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+body.app-main .home-capture-objects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 26px;
+}
+
+body.app-main .home-objects-section .recent-objects {
+  display: grid;
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 12px;
+  overflow: visible;
+  padding: 0;
+}
+
+body.app-main .home-objects-section .mini-object-media {
+  border-radius: 13px;
+}
+
+body.app-main .home-objects-section .mini-object-copy strong {
+  font-size: 12px;
+}
+
+body.app-main .home-objects-section .mini-object-copy span {
+  font-size: 10.5px;
 }
 
 body.app-main .hero-search,
@@ -3424,22 +3624,19 @@ body.app-main .timeline-event.is-entering {
 }
 
 /* ---------------- 响应式 ---------------- */
+@media (max-width: 1400px) {
+  body.app-main .hero-slide--ecosystem {
+    background-size: 140% auto;
+  }
+}
+
 @media (max-width: 1240px) {
   body.app-main {
     --site-gutter: 26px;
   }
 
-  body.app-main .home-hero {
-    gap: 46px;
-  }
-
   body.app-main .home-hero h1 {
     font-size: clamp(48px, 5.4vw, 70px);
-  }
-
-  body.app-main .home-dashboard {
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 0.8fr);
-    gap: 36px;
   }
 
   body.app-main .object-grid {
@@ -3485,7 +3682,7 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero-copy {
-    max-width: 500px;
+    max-width: 420px;
   }
 
   body.app-main .home-hero h1 span {
@@ -3580,12 +3777,34 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero {
-    min-height: calc(100vh - 142px);
-    background-position: 74% center;
+    min-height: 660px;
+  }
+
+  body.app-main .hero-slide--camera {
+    background-size: cover;
+    background-position: 60% center;
+  }
+
+  body.app-main .hero-slide--ecosystem {
+    background-size: cover;
+    background-position: left center;
+  }
+
+  body.app-main .hero-scrim {
+    background: linear-gradient(90deg, rgba(246, 243, 236, 0.98) 0%, rgba(246, 243, 236, 0.95) 30%, rgba(246, 243, 236, 0.8) 42%, rgba(246, 243, 236, 0.35) 50%, rgba(246, 243, 236, 0.06) 57%, rgba(246, 243, 236, 0) 64%);
   }
 
   body.app-main .home-hero-copy {
-    max-width: 400px;
+    max-width: 380px;
+  }
+
+  body.app-main .home-content-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  body.app-main .home-objects-section .recent-objects {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   body.app-main .app-header-main {
@@ -3814,14 +4033,22 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero {
-    min-height: 820px;
+    min-height: 720px;
     padding: 0;
-    background-image:
-      linear-gradient(180deg, rgba(246, 243, 236, 0.99) 0%, rgba(246, 243, 236, 0.98) 22%, rgba(246, 243, 236, 0.82) 31%, rgba(246, 243, 236, 0.2) 40%, rgba(246, 243, 236, 0) 48%),
-      url("/static/images/findy_homepage_camera_original_proportions.png");
-    background-position: center top, 82% center;
-    background-size: cover, cover;
-    background-repeat: no-repeat;
+  }
+
+  body.app-main .hero-slide--camera {
+    background-size: cover;
+    background-position: 82% center;
+  }
+
+  body.app-main .hero-slide--ecosystem {
+    background-size: cover;
+    background-position: 37% center;
+  }
+
+  body.app-main .hero-scrim {
+    background: linear-gradient(180deg, rgba(246, 243, 236, 0.99) 0%, rgba(246, 243, 236, 0.98) 22%, rgba(246, 243, 236, 0.82) 31%, rgba(246, 243, 236, 0.2) 40%, rgba(246, 243, 236, 0) 48%);
   }
 
   body.app-main .home-hero-inner {
@@ -3840,7 +4067,16 @@ body.app-main .timeline-event.is-entering {
 
   body.app-main .home-hero h1 {
     font-size: clamp(38px, 11.4vw, 54px);
-    letter-spacing: -0.065em;
+    letter-spacing: -0.035em;
+  }
+
+  body.app-main .home-lede {
+    margin: 16px 0 24px;
+    font-size: 17px;
+  }
+
+  body.app-main .hero-dots {
+    bottom: 16px;
   }
 
   body.app-main .hero-search,
@@ -3858,6 +4094,39 @@ body.app-main .timeline-event.is-entering {
   body.app-main .search-bar button {
     width: 44px;
     height: 44px;
+  }
+
+  body.app-main .home-sections {
+    padding: 30px var(--site-gutter) 48px;
+  }
+
+  body.app-main .home-overview {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 20px;
+  }
+
+  body.app-main .overview-stats {
+    gap: 20px;
+  }
+
+  body.app-main .overview-stat strong {
+    font-size: 20px;
+  }
+
+  body.app-main .home-content-grid {
+    gap: 30px;
+    margin-top: 26px;
+  }
+
+  body.app-main .home-observation-media {
+    aspect-ratio: 4 / 3;
+  }
+
+  body.app-main .home-objects-section .recent-objects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 10px;
   }
 
   body.app-main .hero-frame {

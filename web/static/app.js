@@ -257,6 +257,13 @@ async function loadStatus() {
         "本地采集"
     );
     setText("home-source-note", `${stats.captures ?? 0} 帧观察 · 本地运行`);
+    setText("home-capture-count", String(stats.captures ?? 0));
+    const deviceState =
+      data.device?.last_probe?.ok
+        ? "在线"
+        : { replay: "回放模式", esp32: "真机", webcam: "摄像头", upload: "上传模式" }[sourceKind] ||
+          "未知";
+    setText("home-device-state", deviceState);
 
     const det = data.pipeline?.detector || {};
     const emb = data.pipeline?.embedder || {};
@@ -308,6 +315,7 @@ async function loadStatus() {
     }
     setText("home-source-state", "服务离线");
     setText("home-source-note", "请检查本地服务");
+    setText("home-device-state", "离线");
   }
 }
 
@@ -1687,6 +1695,136 @@ async function loadObjects() {
 }
 
 // ---------------- 首页 ----------------
+function initHeroCarousel() {
+  const hero = $("home-hero");
+  if (!hero || hero.dataset.carouselBound) return;
+  const slides = [...hero.querySelectorAll("[data-hero-slide]")];
+  const dots = [...hero.querySelectorAll("[data-hero-dot]")];
+  if (slides.length < 2 || dots.length < 2) return;
+  hero.dataset.carouselBound = "1";
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let index = 0;
+  let timer = 0;
+
+  const show = (next) => {
+    index = (next + slides.length) % slides.length;
+    slides.forEach((slide, slideIndex) => {
+      slide.classList.toggle("is-active", slideIndex === index);
+    });
+    dots.forEach((dot, dotIndex) => {
+      const active = dotIndex === index;
+      dot.classList.toggle("is-active", active);
+      dot.setAttribute("aria-pressed", String(active));
+    });
+  };
+
+  const stop = () => {
+    if (timer) window.clearInterval(timer);
+    timer = 0;
+  };
+
+  const start = () => {
+    stop();
+    if (reduced.matches) return;
+    timer = window.setInterval(() => show(index + 1), 6000);
+  };
+
+  dots.forEach((dot, dotIndex) => {
+    dot.addEventListener("click", () => {
+      show(dotIndex);
+      start();
+    });
+  });
+  hero.addEventListener("mouseenter", stop);
+  hero.addEventListener("mouseleave", start);
+  hero.addEventListener("focusin", stop);
+  hero.addEventListener("focusout", (event) => {
+    if (!hero.contains(event.relatedTarget)) start();
+  });
+  show(0);
+  start();
+}
+
+function renderHomeObjects(objects, excludeCaptureId = null) {
+  const box = $("home-objects");
+  if (!box) return;
+  const distinct = objects.filter((object) => object.capture_id !== excludeCaptureId);
+  const seen = new Set();
+  const items = distinct
+    .filter((object) => {
+      const label = objectLabel(object);
+      if (seen.has(label)) return false;
+      seen.add(label);
+      return true;
+    })
+    .slice(0, 4);
+  if (!items.length) {
+    box.innerHTML = '<p class="empty-note">还没有记录到物品</p>';
+    return;
+  }
+  box.innerHTML = items
+    .map((object) => {
+      const label = objectLabel(object);
+      const image = objectImage(object)
+        ? `<img src="${escapeHtml(objectImage(object))}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" data-fallback-class="tile-no-image" data-fallback-text="暂无图片" />`
+        : '<span class="tile-no-image">暂无图片</span>';
+      return `<a class="mini-object" href="${escapeHtml(objectSearchHref(label))}">
+        <span class="mini-object-media">${image}</span>
+        <span class="mini-object-copy">
+          <strong>${escapeHtml(label)}</strong>
+          <span>${escapeHtml(objectWhen(object))}</span>
+        </span>
+      </a>`;
+    })
+    .join("");
+}
+
+function renderHomeCapture(capture, detail) {
+  const image = $("home-capture-img");
+  const empty = $("home-capture-empty");
+  const link = $("home-capture");
+  const detections = detail?.detections || [];
+  const labels = [...new Set(detections.map((detection) => detection.class_zh).filter(Boolean))];
+  if (!capture) {
+    if (empty) empty.hidden = false;
+    if (image) image.hidden = true;
+    return;
+  }
+  if (link) link.href = `/observe?capture=${encodeURIComponent(capture.id)}`;
+  if (image) {
+    image.src = capture.image_url || `/api/captures/${capture.id}/image`;
+    image.alt = `抓拍 #${capture.id}，${observeTimeLabel(capture)}`;
+    image.hidden = false;
+    if (empty) empty.hidden = true;
+    image.addEventListener(
+      "error",
+      () => {
+        image.hidden = true;
+        if (empty) empty.hidden = false;
+      },
+      { once: true }
+    );
+  }
+  setText("home-capture-time", observeTimeLabel(capture));
+  const source = $("home-capture-source");
+  if (source) {
+    const kind = ["esp32", "replay", "upload", "webcam"].includes(capture.source_kind)
+      ? capture.source_kind
+      : "unknown";
+    source.className = `source-badge src-${kind}`;
+    source.textContent = sourceName(kind);
+  }
+  const objects = $("home-capture-objects");
+  if (objects) {
+    objects.innerHTML = labels.length
+      ? labels
+          .slice(0, 3)
+          .map((label) => `<span class="object-pill">${escapeHtml(label)}</span>`)
+          .join("")
+      : '<span class="muted small">没有识别结果</span>';
+  }
+}
+
 async function loadHome() {
   const form = $("home-search-form");
   const input = $("home-search-input");
@@ -1699,6 +1837,28 @@ async function loadHome() {
       else input?.focus();
     });
   }
+  initHeroCarousel();
+  const [objectsData, capturesData] = await Promise.all([
+    api("/api/objects").catch(() => ({ ok: false })),
+    api("/api/captures?limit=1").catch(() => ({ ok: false })),
+  ]);
+  const objects = objectsData.ok ? objectsData.objects || [] : [];
+  const capture = capturesData.ok ? (capturesData.captures || [])[0] : null;
+  setText("home-object-count", String(objects.length));
+  setText("home-capture-count", String(state.status?.pipeline?.stats?.captures ?? "—"));
+  renderHomeObjects(objects, capture?.id);
+  if (!capture) {
+    renderHomeCapture(null);
+    return;
+  }
+  let detail = null;
+  try {
+    const response = await api(`/api/captures/${capture.id}`);
+    if (response.ok) detail = response;
+  } catch (error) {
+    detail = null;
+  }
+  renderHomeCapture(capture, detail);
 }
 
 // ---------------- 最近观察 · 历史列表 ----------------

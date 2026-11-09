@@ -35,6 +35,9 @@
 
   <main class="app-page home-wrap">
     <section class="home-hero" id="home-hero" aria-label="Findy 相机产品背景">
+      <div class="hero-slide hero-slide--camera is-active" data-hero-slide aria-hidden="true"></div>
+      <div class="hero-slide hero-slide--ecosystem" data-hero-slide aria-hidden="true"></div>
+      <div class="hero-scrim" aria-hidden="true"></div>
       <div class="home-hero-inner">
         <div class="home-hero-copy wm-enter" style="--enter-delay: 0ms">
           <h1><span>Findy，</span><span>记住你的物品</span></h1>
@@ -47,6 +50,69 @@
             </button>
           </form>
         </div>
+      </div>
+      <div class="hero-dots" role="group" aria-label="背景切换">
+        <button class="hero-dot is-active" type="button" data-hero-dot="0" aria-label="显示单品场景" aria-pressed="true"></button>
+        <button class="hero-dot" type="button" data-hero-dot="1" aria-label="显示生态场景" aria-pressed="false"></button>
+      </div>
+    </section>
+
+    <section class="home-sections">
+      <section class="home-overview" aria-label="本机概览">
+        <div class="section-head">
+          <span class="section-mark" aria-hidden="true"></span>
+          <h2>本机概览</h2>
+        </div>
+        <div class="overview-stats">
+          <div class="overview-stat">
+            <strong id="home-object-count">—</strong>
+            <span>件物品</span>
+          </div>
+          <div class="overview-stat">
+            <strong id="home-capture-count">—</strong>
+            <span>条观察</span>
+          </div>
+          <div class="overview-stat">
+            <strong id="home-device-state">—</strong>
+            <span>设备状态</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="home-content-grid">
+        <section class="home-observation-section" aria-label="最近观察">
+          <div class="section-head">
+            <h2>最近观察</h2>
+            <a href="/observe">查看全部 <span aria-hidden="true">→</span></a>
+          </div>
+          <a class="home-observation" id="home-capture" href="/observe">
+            <div class="home-observation-media">
+              <div class="home-observation-empty" id="home-capture-empty">还没有抓拍记录</div>
+              <img id="home-capture-img" alt="最近一次抓拍" hidden />
+              <span class="live-pill"><i aria-hidden="true"></i>最近一次观察</span>
+            </div>
+            <div class="home-observation-meta">
+              <div class="home-observation-top">
+                <span class="source-badge src-esp32" id="home-capture-source">真实设备</span>
+                <time id="home-capture-time">—</time>
+              </div>
+              <div class="home-capture-objects" id="home-capture-objects">—</div>
+            </div>
+          </a>
+        </section>
+
+        <section class="home-objects-section" aria-label="最近记住的物品">
+          <div class="section-head">
+            <h2>最近记住的物品</h2>
+            <a href="/items">查看全部 <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="recent-objects" id="home-objects" aria-live="polite">
+            <div class="mini-object is-skeleton"></div>
+            <div class="mini-object is-skeleton"></div>
+            <div class="mini-object is-skeleton"></div>
+            <div class="mini-object is-skeleton"></div>
+          </div>
+        </section>
       </div>
     </section>
   </main>
