@@ -40,6 +40,7 @@ from .zones import load_regions
 
 log = logging.getLogger(__name__)
 WEB_DIR = REPO_ROOT / "web"
+PUBLIC_DIR = WEB_DIR / "public"
 THUMB_DIR = REPO_ROOT / "data" / "cache" / "thumbs"
 
 
@@ -135,13 +136,39 @@ def create_app(config_path: str | None = None) -> FastAPI:
     # ---------------- 页面与静态资源 ----------------
     if (WEB_DIR / "static").exists():
         app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")
+    if (PUBLIC_DIR / "brand").exists():
+        app.mount("/brand", StaticFiles(directory=str(PUBLIC_DIR / "brand")), name="brand")
+
+    no_cache_headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    }
+
+    def _page_response(page: Path) -> FileResponse:
+        return FileResponse(
+            page,
+            media_type="text/html; charset=utf-8",
+            headers=no_cache_headers,
+        )
+
+    @app.get("/manifest.webmanifest")
+    def manifest():
+        path = PUBLIC_DIR / "manifest.webmanifest"
+        if not path.exists():
+            raise HTTPException(status_code=404, detail="manifest.webmanifest 不存在")
+        return FileResponse(
+            path,
+            media_type="application/manifest+json",
+            headers=no_cache_headers,
+        )
 
     @app.get("/")
     def index():
         page = WEB_DIR / "index.html"
         if not page.exists():
             return JSONResponse({"ok": False, "error": "web/index.html 不存在"}, status_code=500)
-        return FileResponse(page, media_type="text/html; charset=utf-8")
+        return _page_response(page)
 
     def _static_page(filename: str, label: str):
         page = WEB_DIR / filename
@@ -150,11 +177,11 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 {"ok": False, "error": f"{label}页面文件不存在（{filename}）"},
                 status_code=500,
             )
-        return FileResponse(page, media_type="text/html; charset=utf-8")
+        return _page_response(page)
 
     @app.get("/observe")
     def observe_page():
-        return _static_page("index.html", "最近观察")
+        return _static_page("observe.html", "最近观察")
 
     @app.get("/search")
     def search_page():
@@ -176,7 +203,7 @@ def create_app(config_path: str | None = None) -> FastAPI:
                 {"ok": False, "error": "web/workbench.html 不存在（工作台尚未部署）"},
                 status_code=500,
             )
-        return FileResponse(page, media_type="text/html; charset=utf-8")
+        return _page_response(page)
 
     # ---------------- 状态 ----------------
     @app.get("/api/health")
