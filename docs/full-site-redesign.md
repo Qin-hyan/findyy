@@ -56,6 +56,14 @@
 - “最近记住的物品”直接取 `/api/objects` 的真实裁剪图。
 - “最近观察”取 `/api/captures?limit=1`，显示真实抓拍、ESP32 来源、时间与识别物品。
 
+### 首页产品摄影与统一背景（本轮增量）
+- 首页 Hero 右侧改用 `web/static/images/findy_homepage_camera_original_proportions.png`，原始尺寸 `1672×941`，以 `<img width="1672" height="941">` + `height:auto` 直接展示，不拉伸、不裁切、不 AI 重绘。
+- 产品图通过暖米白边缘遮罩融入页面背景，不出现明显矩形边框；移动端保持完整摄像头主体。
+- 产品图仅用于首页 Hero，不参与“最近观察”实时画面，避免把静态产品图伪装成实时抓拍。
+- 其他四个主页面统一使用 `web/static/images/findy-universal-background.png`（同为 `1672×941`），通过 `body.app-main:not(.home-page)` 的 `background` 应用一次，不在每个页面复制图片。
+- 通用背景使用 `cover`、`no-repeat`、`fixed`，叠加 84%–94% 暖白遮罩；保持宽高比例，低视觉权重，不干扰物品照片与文字。
+- 首页与通用背景严格区分：首页不加载通用背景，其他页面不加载产品图。
+
 ### 最近观察 `/observe`
 - 保留原抓拍、自动采集、识别摘要、检测框叠加能力。
 - 大图 + 右侧摘要卡；点击“查看识别详情”打开原有识别摘要。
@@ -85,7 +93,9 @@
 
 ## 4. 真实图片与数据来源
 
-- 首页主图、最近观察、时间线：`/api/captures/{id}/image` 或 `?thumb=1`。
+- 首页 Hero 产品图：`/static/images/findy_homepage_camera_original_proportions.png`，原始产品摄影。
+- 其他页面统一背景：`/static/images/findy-universal-background.png`，原始无摄像头背景。
+- 首页最近观察、最近观察页、时间线：`/api/captures/{id}/image` 或 `?thumb=1`。
 - 物品网格、球体、搜索结果：`/api/detections/{detection_id}/crop`。
 - 物品详情：`/api/tracks/{track_id}` 返回的检测裁剪图。
 - 所有图片均在本机 SQLite 与本地文件中；没有外链图片、没有 AI 生成图、没有图库图片。
@@ -100,9 +110,9 @@ node --check web\static\app.js
 D:\Anaconda3\python.exe .tmp\acceptance_fullsite.py
 ```
 
-- 自动化测试：**101 passed**
-- 浏览器验收：**87 项全部通过**
-- 覆盖：五个页面的真实数据、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
+- 自动化测试：**102 passed**
+- 浏览器验收：**116 项全部通过**
+- 覆盖：五个页面的真实数据、首页产品图原比例与不遮挡、最近观察/最近物品不重复、通用背景仅用于非首页、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
 - 验收期间未触发 `/api/capture`、`/api/observe`、`/api/service/*`、`/api/acceptance/*`。
 
 截图目录：`docs/evidence/full-site-redesign/`。
