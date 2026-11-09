@@ -57,8 +57,9 @@
 - “最近观察”取 `/api/captures?limit=1`，显示真实抓拍、ESP32 来源、时间与识别物品。
 
 ### 首页产品摄影与统一背景（本轮增量）
-- 首页 Hero 右侧改用 `web/static/images/findy_homepage_camera_original_proportions.png`，原始尺寸 `1672×941`，以 `<img width="1672" height="941">` + `height:auto` 直接展示，不拉伸、不裁切、不 AI 重绘。
-- 产品图通过暖米白边缘遮罩融入页面背景，不出现明显矩形边框；移动端保持完整摄像头主体。
+- 首页 Hero 使用 `web/static/images/findy_homepage_camera_original_proportions.png` 整张产品摄影作为 CSS `background-image`，原始尺寸 `1672×941`，不使用独立 `<img>` 容器。
+- 背景使用 `background-size: cover`、`background-position: center right`，原始比例不变；左侧叠加米白渐变保证标题、介绍和搜索框可读，摄像头保留在画面右侧。
+- 移动端单独设置 `background-position` 与纵向渐变，优先保证摄像头主体完整可见；不裁切、不拉伸、不重绘。
 - 产品图仅用于首页 Hero，不参与“最近观察”实时画面，避免把静态产品图伪装成实时抓拍。
 - 其他四个主页面统一使用 `web/static/images/findy-universal-background.png`（同为 `1672×941`），通过 `body.app-main:not(.home-page)` 的 `background` 应用一次，不在每个页面复制图片。
 - 通用背景使用 `cover`、`no-repeat`、`fixed`，叠加 84%–94% 暖白遮罩；保持宽高比例，低视觉权重，不干扰物品照片与文字。
@@ -111,8 +112,8 @@ D:\Anaconda3\python.exe .tmp\acceptance_fullsite.py
 ```
 
 - 自动化测试：**102 passed**
-- 浏览器验收：**116 项全部通过**
-- 覆盖：五个页面的真实数据、首页产品图原比例与不遮挡、最近观察/最近物品不重复、通用背景仅用于非首页、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
+- 浏览器验收：**122 项全部通过**
+- 覆盖：五个页面的真实数据、首页整图背景 / cover / 移动端背景定位 / 左侧文字可读、最近观察与最近物品不重复、通用背景仅用于非首页、搜索筛选与空状态、物品详情弹层、时间线展开与防重播、桌面/平板/手机横向溢出、减少动态效果、工作台隔离、抓拍数量与轨迹数量不变。
 - 验收期间未触发 `/api/capture`、`/api/observe`、`/api/service/*`、`/api/acceptance/*`。
 
 截图目录：`docs/evidence/full-site-redesign/`。
