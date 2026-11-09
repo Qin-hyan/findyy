@@ -56,6 +56,7 @@
 - favicon 为 16/24/32/48/64 多尺寸松鼠图标；manifest 引用 192/256/512 三个 App 图标。
 - 所有页面的 favicon 与 apple-touch-icon 引用带 `?v=c360e51c8471` 版本参数，强制浏览器重新拉取图标，避免标签页继续显示旧 “F” 图标。
 - 页面 HTML 与 manifest 响应使用 `no-cache, no-store, must-revalidate`，避免在多个页面之间切换时继续显示旧导航或旧 favicon。
+- 主页面 CSS 与 `app.js` 引用带 `?v=20261109-2` 版本参数，确保样式和交互脚本不会被旧缓存拖住。
 
 ## 3. 页面改造
 
