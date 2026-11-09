@@ -495,6 +495,7 @@ def test_brand_assets_and_manifest_are_served(api_client):
 
     manifest = api_client.get("/manifest.webmanifest")
     assert manifest.status_code == 200
+    assert "no-store" in manifest.headers.get("cache-control", "")
     assert manifest.headers["content-type"].startswith("application/manifest+json")
     data = manifest.json()
     assert data["name"] == "Findy"
@@ -513,6 +514,7 @@ def test_pages_use_brand_head_references_and_nav_lockups(api_client):
     for path in app_pages:
         page = api_client.get(path)
         assert page.status_code == 200
+        assert "no-store" in page.headers.get("cache-control", "")
         assert '<link rel="icon" href="/brand/favicon.ico" sizes="any" />' in page.text
         assert (
             '<link rel="icon" type="image/png" sizes="32x32" '
@@ -533,6 +535,7 @@ def test_pages_use_brand_head_references_and_nav_lockups(api_client):
 
     workbench = api_client.get("/workbench")
     assert workbench.status_code == 200
+    assert "no-store" in workbench.headers.get("cache-control", "")
     assert '<link rel="manifest" href="/manifest.webmanifest" />' in workbench.text
     assert (
         '<img class="brand-logo" src="/brand/svg/logo-lockup-inverse.svg" '
