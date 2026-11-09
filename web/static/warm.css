@@ -489,7 +489,7 @@ body.app-main .home-hero {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: clamp(620px, 68vh, 700px);
+  min-height: calc(100vh - 112px);
   margin: 0;
   overflow: hidden;
   background-color: #f2ede4;
@@ -3777,7 +3777,7 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero {
-    min-height: 660px;
+    min-height: calc(100vh - 142px);
   }
 
   body.app-main .hero-slide--camera {
@@ -4033,7 +4033,7 @@ body.app-main .timeline-event.is-entering {
   }
 
   body.app-main .home-hero {
-    min-height: 720px;
+    min-height: max(720px, calc(100vh - 130px));
     padding: 0;
   }
 

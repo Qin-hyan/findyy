@@ -268,7 +268,7 @@ def test_items_page_has_orb_gallery_and_mode_switch(api_client):
         assert token in script.text
 
 
-def test_home_has_carousel_and_three_content_sections(api_client):
+def test_home_has_carousel_without_content_sections(api_client):
     page = api_client.get("/")
     assert page.status_code == 200
     assert 'id="home-hero"' in page.text
@@ -278,15 +278,17 @@ def test_home_has_carousel_and_three_content_sections(api_client):
     assert "自然界的Ctrl+F" in page.text
     assert page.text.count("data-hero-slide") == 2
     assert page.text.count("data-hero-dot") == 2
-    assert 'id="home-object-count"' in page.text
-    assert 'id="home-capture-count"' in page.text
-    assert 'id="home-device-state"' in page.text
-    assert 'id="home-capture-img"' in page.text
-    assert 'id="home-objects"' in page.text
-    assert 'id="home-capture"' in page.text
-    assert "本机概览" in page.text
-    assert "最近观察" in page.text
-    assert "最近记住的物品" in page.text
+    # 首页只保留 Hero 轮播与搜索，不恢复数据内容区。
+    assert "home-sections" not in page.text
+    assert "home-overview" not in page.text
+    assert 'id="home-object-count"' not in page.text
+    assert 'id="home-capture-count"' not in page.text
+    assert 'id="home-device-state"' not in page.text
+    assert 'id="home-capture-img"' not in page.text
+    assert 'id="home-objects"' not in page.text
+    assert 'id="home-capture"' not in page.text
+    assert "本机概览" not in page.text
+    assert "最近记住的物品" not in page.text
     # 产品图作为 Hero CSS 背景，不使用独立 img 容器。
     assert 'id="home-product-img"' not in page.text
     assert 'src="/static/images/findy_homepage_camera_original_proportions.png"' not in page.text
@@ -302,8 +304,10 @@ def test_home_has_carousel_and_three_content_sections(api_client):
 
     script = api_client.get("/static/app.js")
     assert script.status_code == 200
-    for token in ("async function loadHome", "initHeroCarousel", "setInterval", "6000", "renderHomeObjects", "renderHomeCapture"):
+    for token in ("async function loadHome", "initHeroCarousel", "setInterval", "6000"):
         assert token in script.text
+    assert "renderHomeObjects" not in script.text
+    assert "renderHomeCapture" not in script.text
     # 首页不使用外部图库、AI 生成图或跨站图片。
     assert "findy-tips" not in page.text
     assert not re.search(r'(?:src|href)="https?://', page.text)
