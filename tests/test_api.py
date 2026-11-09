@@ -167,6 +167,13 @@ def test_observe_uses_in_frame_summary_overlay(api_client):
     assert 'class="capture-stage"' in page.text
     assert 'id="summary-panel"' in page.text
     assert 'id="summary-trigger"' in page.text
+    assert ">识别摘要</button>" in page.text
+    assert "summary-trigger-pulse" not in page.text
+    assert 'id="summary-trigger-count"' not in page.text
+    assert "summary-trigger-caret" not in page.text
+    script = api_client.get("/static/app.js")
+    assert "summary-trigger-count" not in script.text
+    assert "summary-trigger-pulse" not in script.text
     assert 'aria-expanded="false"' in page.text
     assert 'id="summary-hotzone"' in page.text
     assert 'id="stage-detections"' in page.text
@@ -220,6 +227,10 @@ def test_search_page_has_workspace_filters_and_results(api_client):
     assert ".filter-panel" in theme.text
     assert ".result" in theme.text
     assert ".search-hero-art" not in theme.text
+    assert (
+        "body.app-main .search-bar {\n  width: 100%;\n  margin: 0 0 36px;\n}"
+        in theme.text
+    )
 
 
 def test_items_page_has_orb_gallery_and_mode_switch(api_client):
@@ -363,9 +374,10 @@ def test_product_and_universal_backgrounds_are_local_originals(api_client):
     assert 'url("/static/images/findy_homepage_ecosystem_scene.png")' in theme.text
     assert 'url("/static/images/findy-universal-background.png")' in theme.text
     assert "body.app-main:not(.home-page)" in theme.text
-    assert "--home-header-height" in theme.text
-    assert "padding: var(--home-header-height) 0 0" in theme.text
+    assert "--app-header-height: 80px" in theme.text
+    assert "min-height: var(--app-header-height)" in theme.text
     assert "grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)" in theme.text
+    assert "background: #111" in theme.text
     assert "background-size: cover" in theme.text
     assert "background-repeat: no-repeat" in theme.text
     assert "#f6f3ec" in theme.text

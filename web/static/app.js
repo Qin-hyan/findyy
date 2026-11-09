@@ -446,7 +446,6 @@ function bindSummaryOverlay() {
 
 function setStageCount(count) {
   setText("stage-detections", `${count} 检测`);
-  setText("summary-trigger-count", String(count));
 }
 
 function showEmptyCapture() {
